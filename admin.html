@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkeds Letter · Administración</title>
+<link rel="stylesheet" href="/estilo.css">
+<style>
+  .pestanas { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:4px; }
+  .pestanas button { background:transparent; border-color:transparent; color:var(--mut); }
+  .pestanas button.activa { background:var(--suave); border-color:var(--bd); color:var(--acc2); }
+  .biblioteca { display:grid; gap:18px; }
+</style>
+</head>
+<body>
+<header>
+  <p class="marca">Monkeds Letter</p>
+  <nav>
+    <a href="/">Generador</a>
+    <a href="/generaciones">Mis generaciones</a>
+    <a href="/licencias">Mis licencias</a>
+    <a href="/admin" class="activo">Administración</a>
+    <a href="/salir">Salir</a>
+  </nav>
+</header>
+
+<main>
+  <div class="pestanas">
+    <button data-vista="usuarios" class="activa">Usuarios y licencias</button>
+    <button data-vista="generaciones">Generaciones</button>
+    <button data-vista="biblioteca">Biblioteca de SVG</button>
+  </div>
+
+  <!-- ============ usuarios ============ -->
+  <div id="vista_usuarios">
+    <main style="padding:0; gap:16px;">
+      <section>
+        <h2>Crear usuario</h2>
+        <div class="fila">
+          <div><label>Usuario<input id="nu_usuario" autocomplete="off"></label></div>
+          <div><label>Contraseña (mín. 6)<input id="nu_clave" autocomplete="new-password"></label></div>
+          <div><label style="display:flex;gap:6px;align-items:center;margin-top:18px">
+            <input id="nu_admin" type="checkbox"> Es administrador</label></div>
+          <div><button class="p" id="btn_usuario">Crear usuario</button></div>
+        </div>
+        <div id="msg_usuario" class="msg"></div>
+      </section>
+
+      <section>
+        <h2>Dar licencia</h2>
+        <p class="ayuda">Deja un campo vacío para no poner ese límite. Ej.: 30 días y 50 generaciones,
+           o solo 100 generaciones sin caducidad.</p>
+        <div class="fila">
+          <div><label>Usuario<select id="nl_usuario"></select></label></div>
+          <div><label>Días de validez<input id="nl_dias" type="number" min="1" placeholder="sin caducidad"></label></div>
+          <div><label>Cantidad máxima<input id="nl_max" type="number" min="1" placeholder="ilimitada"></label></div>
+          <div><label>Nota<input id="nl_nota" placeholder="opcional"></label></div>
+          <div><button class="p" id="btn_licencia">Crear licencia</button></div>
+        </div>
+        <div id="msg_licencia" class="msg"></div>
+      </section>
+
+      <section>
+        <h2>Usuarios</h2>
+        <table>
+          <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th><th>Generó</th>
+                     <th>Disponibles</th><th>Vence</th><th></th></tr></thead>
+          <tbody id="tabla_usuarios"></tbody>
+        </table>
+      </section>
+
+      <section id="sec_licencias" hidden>
+        <h2>Licencias de <span id="lic_de"></span></h2>
+        <table>
+          <thead><tr><th>#</th><th>Estado</th><th>Usadas</th><th>Disponibles</th>
+                     <th>Vence</th><th>Creada</th><th>Nota</th><th></th></tr></thead>
+          <tbody id="tabla_licencias"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ generaciones de todos ============ -->
+  <div id="vista_generaciones" hidden>
+    <main style="padding:0; gap:16px;">
+      <section>
+        <h2>Generaciones de todos</h2>
+        <p class="ayuda">Todo lo que han generado usuarios e invitados. Desde aquí puedes
+           descargar cualquiera y bloquear la IP de quien esté abusando.</p>
+        <div class="fila">
+          <div><label><input id="solo_invitados" type="checkbox" style="width:auto"> Solo invitados</label></div>
+          <div><button id="btn_refrescar">Actualizar</button></div>
+        </div>
+      </section>
+      <section>
+        <table>
+          <thead><tr><th></th><th>Diseño</th><th>Quién</th><th>IP</th><th>Fecha</th><th></th></tr></thead>
+          <tbody id="tabla_gen"></tbody>
+        </table>
+        <div id="msg_gen" class="msg"></div>
+      </section>
+
+      <section>
+        <h2>IPs bloqueadas</h2>
+        <p class="ayuda">Una IP bloqueada no puede abrir el sitio. Tu IP actual es
+           <b id="mi_ip">…</b> y no se puede bloquear a sí misma.</p>
+        <div class="fila">
+          <div><label>IP<input id="nb_ip" placeholder="1.2.3.4"></label></div>
+          <div><label>Motivo<input id="nb_motivo" placeholder="opcional"></label></div>
+          <div><button class="p" id="btn_bloquear">Bloquear</button></div>
+        </div>
+        <table style="margin-top:12px">
+          <thead><tr><th>IP</th><th>Motivo</th><th>Desde</th><th></th></tr></thead>
+          <tbody id="tabla_ips"></tbody>
+        </table>
+        <div id="msg_ip" class="msg"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ biblioteca ============ -->
+  <div id="vista_biblioteca" hidden>
+    <main style="padding:0; gap:16px;">
+      <section>
+        <h2>Patrones</h2>
+        <p class="ayuda">Se reparten al azar por dentro de la letra. Cada figura suelta del SVG es un
+           motivo distinto (ej. una estrella y un punto). Deben ser formas rellenas: en Inkscape usa
+           Trayecto → Trazo a trayecto antes de guardar.</p>
+        <div id="rejilla_patrones" class="rejilla"></div>
+      </section>
+
+      <section>
+        <h2>Adornos</h2>
+        <p class="ayuda">Se colocan sobre la letra (ej. los cuernos), a la altura del nivel 2 y con su
+           propio color. Pueden sobresalir de la letra y llevan copia reflejada.</p>
+        <div id="rejilla_adornos" class="rejilla"></div>
+      </section>
+
+      <div id="msg_svg" class="msg"></div>
+      <input id="archivo_patron" type="file" accept=".svg,image/svg+xml" hidden>
+      <input id="archivo_adorno" type="file" accept=".svg,image/svg+xml" hidden>
+    </main>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fecha = s => s ? s.replace('T', ' ').slice(0, 16) : '—';
+let usuarios = [], verLicenciasDe = null;
+
+const aviso = (id, texto, ok) => {
+  const el = $(id); el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = texto;
+};
+
+async function pedir(url, opciones) {
+  const r = await fetch(url, opciones);
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Error inesperado');
+  return d;
+}
+const enviar = (url, cuerpo) => pedir(url, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(cuerpo) });
+
+// ---------- pestañas
+document.querySelectorAll('.pestanas button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.pestanas button').forEach(x => x.classList.toggle('activa', x === b));
+  for (const v of ['usuarios', 'generaciones', 'biblioteca'])
+    $('vista_' + v).hidden = b.dataset.vista !== v;
+  if (b.dataset.vista === 'generaciones') cargarGeneraciones();
+});
+
+// ---------- generaciones de todos + bloqueo por IP
+async function cargarGeneraciones() {
+  try {
+    const solo = $('solo_invitados').checked ? '?invitados=1' : '';
+    const gs = (await pedir('/api/admin/generaciones' + solo)).generaciones;
+    $('tabla_gen').innerHTML = gs.length ? gs.map(g => `<tr>
+        <td><img src="/api/generacion/${g.id}/miniatura" alt="" loading="lazy"
+                 style="width:54px;height:54px;object-fit:contain;background:#fff;border:1px solid var(--bd);border-radius:5px"></td>
+        <td>${esc(g.nombre)}</td>
+        <td>${esc(g.alias || g.usuario)}${g.es_invitado ? ' <span class="chip gris">invitado</span>' : ''}</td>
+        <td>${esc(g.ip || '—')}</td>
+        <td>${fecha(g.creada)}</td>
+        <td class="acc">
+          <a class="boton" href="/api/generacion/${g.id}/3mf">3MF</a>
+          <a class="boton" href="/api/generacion/${g.id}/stl">STL</a>
+          ${g.ip ? `<button class="chico" data-bloquear="${esc(g.ip)}">Bloquear IP</button>` : ''}
+        </td></tr>`).join('')
+      : '<tr><td colspan="6" class="vacio">Todavía no hay generaciones.</td></tr>';
+    await cargarIps();
+  } catch (e) { aviso('msg_gen', e.message); }
+}
+
+async function cargarIps() {
+  const d = await pedir('/api/admin/ips');
+  $('mi_ip').textContent = d.mi_ip;
+  $('tabla_ips').innerHTML = d.bloqueadas.length ? d.bloqueadas.map(b => `<tr>
+      <td><b>${esc(b.ip)}</b></td><td>${esc(b.motivo)}</td><td>${fecha(b.creada)}</td>
+      <td class="acc"><button class="chico" data-desbloquear="${esc(b.ip)}">Desbloquear</button></td>
+    </tr>`).join('') : '<tr><td colspan="4" class="vacio">Ninguna IP bloqueada.</td></tr>';
+}
+
+async function cambiarIp(ip, bloquear, motivo) {
+  await enviar('/api/admin/ips', { ip, bloquear, motivo: motivo || '' });
+  await cargarIps();
+  aviso('msg_ip', bloquear ? `IP ${ip} bloqueada.` : `IP ${ip} desbloqueada.`, true);
+}
+
+$('btn_refrescar').onclick = cargarGeneraciones;
+$('solo_invitados').onchange = cargarGeneraciones;
+$('tabla_gen').onclick = async e => {
+  const b = e.target.closest('button[data-bloquear]'); if (!b) return;
+  if (!confirm(`¿Bloquear la IP ${b.dataset.bloquear}? No podrá abrir el sitio.`)) return;
+  try { await cambiarIp(b.dataset.bloquear, true, 'desde generaciones'); }
+  catch (err) { aviso('msg_ip', err.message); }
+};
+$('tabla_ips').onclick = async e => {
+  const b = e.target.closest('button[data-desbloquear]'); if (!b) return;
+  try { await cambiarIp(b.dataset.desbloquear, false); } catch (err) { aviso('msg_ip', err.message); }
+};
+$('btn_bloquear').onclick = async () => {
+  try {
+    await cambiarIp($('nb_ip').value.trim(), true, $('nb_motivo').value);
+    $('nb_ip').value = $('nb_motivo').value = '';
+  } catch (e) { aviso('msg_ip', e.message); }
+};
+
+// ---------- usuarios
+async function cargarUsuarios() {
+  usuarios = (await pedir('/api/admin/usuarios')).usuarios;
+  $('tabla_usuarios').innerHTML = usuarios.map(u => {
+    const r = u.resumen;
+    return `<tr>
+      <td><b>${esc(u.usuario)}</b></td>
+      <td>${u.es_admin ? '<span class="chip gris">admin</span>' : ''}</td>
+      <td><span class="chip ${u.activo ? 'si">activo' : 'no">desactivado'}</span></td>
+      <td>${r.generaciones}</td>
+      <td>${r.restantes === null ? 'ilimitadas' : r.restantes}</td>
+      <td>${r.vence ? r.vence.slice(0, 10) : '—'}</td>
+      <td class="acc">
+        <button class="chico" data-lic="${u.id}">Licencias</button>
+        <button class="chico" data-clave="${u.id}">Cambiar clave</button>
+        <button class="chico" data-activo="${u.id}" data-val="${u.activo ? 0 : 1}">${u.activo ? 'Desactivar' : 'Activar'}</button>
+      </td></tr>`;
+  }).join('');
+  $('nl_usuario').innerHTML = usuarios.map(u => `<option value="${u.id}">${esc(u.usuario)}</option>`).join('');
+  if (verLicenciasDe) cargarLicencias(verLicenciasDe);
+}
+
+$('tabla_usuarios').onclick = async e => {
+  const b = e.target.closest('button'); if (!b) return;
+  try {
+    if (b.dataset.lic) return cargarLicencias(+b.dataset.lic);
+    if (b.dataset.clave) {
+      const clave = prompt('Nueva contraseña (mínimo 6 caracteres):');
+      if (!clave) return;
+      await enviar('/api/admin/usuarios/' + b.dataset.clave, { clave });
+      aviso('msg_usuario', 'Contraseña cambiada.', true);
+    }
+    if (b.dataset.activo) {
+      await enviar('/api/admin/usuarios/' + b.dataset.activo, { activo: b.dataset.val === '1' });
+      await cargarUsuarios();
+    }
+  } catch (err) { aviso('msg_usuario', err.message); }
+};
+
+$('btn_usuario').onclick = async () => {
+  try {
+    await enviar('/api/admin/usuarios', {
+      usuario: $('nu_usuario').value, clave: $('nu_clave').value, es_admin: $('nu_admin').checked });
+    $('nu_usuario').value = $('nu_clave').value = ''; $('nu_admin').checked = false;
+    aviso('msg_usuario', 'Usuario creado.', true);
+    await cargarUsuarios();
+  } catch (e) { aviso('msg_usuario', e.message); }
+};
+
+// ---------- licencias
+async function cargarLicencias(uid) {
+  verLicenciasDe = uid;
+  const u = usuarios.find(x => x.id === uid);
+  $('lic_de').textContent = u ? u.usuario : '';
+  const ls = (await pedir('/api/admin/licencias/' + uid)).licencias;
+  $('sec_licencias').hidden = false;
+  $('tabla_licencias').innerHTML = ls.length ? ls.map(l => {
+    const est = l.vigente ? '<span class="chip si">vigente</span>'
+      : `<span class="chip no">${!l.activa ? 'anulada' : l.vencida ? 'vencida' : 'agotada'}</span>`;
+    return `<tr>
+      <td>${l.id}</td><td>${est}</td>
+      <td>${l.usadas}${l.max_generaciones ? ' de ' + l.max_generaciones : ''}</td>
+      <td>${l.restantes === null ? 'ilimitadas' : l.restantes}</td>
+      <td>${l.expira ? fecha(l.expira) : 'sin caducidad'}</td>
+      <td>${fecha(l.creada)}</td><td>${esc(l.nota)}</td>
+      <td class="acc"><button class="chico" data-activa="${l.id}" data-val="${l.activa ? 0 : 1}">${l.activa ? 'Anular' : 'Reactivar'}</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="vacio">Este usuario todavía no tiene licencias.</td></tr>';
+}
+
+$('tabla_licencias').onclick = async e => {
+  const b = e.target.closest('button[data-activa]'); if (!b) return;
+  try {
+    await enviar('/api/admin/licencias/' + b.dataset.activa, { activa: b.dataset.val === '1' });
+    await cargarUsuarios();
+  } catch (err) { aviso('msg_licencia', err.message); }
+};
+
+$('btn_licencia').onclick = async () => {
+  try {
+    await enviar('/api/admin/licencias', {
+      usuario_id: +$('nl_usuario').value, dias: $('nl_dias').value,
+      max_generaciones: $('nl_max').value, nota: $('nl_nota').value });
+    $('nl_dias').value = $('nl_max').value = $('nl_nota').value = '';
+    aviso('msg_licencia', 'Licencia creada.', true);
+    await cargarUsuarios();
+  } catch (e) { aviso('msg_licencia', e.message); }
+};
+
+// ---------- biblioteca de SVG
+function pintarBiblioteca(tipo, nombres) {
+  const rejilla = $(tipo === 'patron' ? 'rejilla_patrones' : 'rejilla_adornos');
+  const tarjetas = nombres.map(n => `
+    <div class="tarjeta">
+      <img src="/api/svg/${tipo}/${encodeURIComponent(n)}" alt="${esc(n)}">
+      <div class="nom">${esc(n)}</div>
+    </div>`).join('');
+  rejilla.innerHTML = tarjetas + `
+    <div class="tarjeta nueva" data-subir="${tipo}">
+      <div class="mas">+</div>
+      <div>Subir ${tipo === 'patron' ? 'patrón' : 'adorno'}</div>
+    </div>`;
+}
+
+async function cargarBiblioteca() {
+  const cfg = await pedir('/api/config');
+  pintarBiblioteca('patron', cfg.patrones);
+  pintarBiblioteca('adorno', cfg.adornos);
+}
+
+document.querySelectorAll('.rejilla').forEach(r => r.onclick = e => {
+  const nueva = e.target.closest('[data-subir]');
+  if (nueva) $(nueva.dataset.subir === 'patron' ? 'archivo_patron' : 'archivo_adorno').click();
+});
+
+function subidor(campo, url, etiqueta) {
+  $(campo).onchange = async e => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    aviso('msg_svg', 'Subiendo…', true);
+    try {
+      const d = await enviar(url, { nombre: f.name, svg: await f.text() });
+      aviso('msg_svg', `${etiqueta} "${d.nombre}" añadido.`, true);
+      await cargarBiblioteca();
+    } catch (err) { aviso('msg_svg', err.message); }
+  };
+}
+subidor('archivo_patron', '/api/patron', 'Patrón');
+subidor('archivo_adorno', '/api/adorno', 'Adorno');
+
+cargarUsuarios().catch(e => aviso('msg_usuario', e.message));
+cargarBiblioteca().catch(e => aviso('msg_svg', e.message));
+</script>
+</body>
+</html>

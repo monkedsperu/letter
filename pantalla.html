@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkeds Letter</title>
+<link rel="stylesheet" href="/estilo.css">
+<style>
+  body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt);
+         height:100vh; display:flex; flex-direction:column; }
+  .cuerpo { flex:1; display:flex; min-height:0; }
+  aside { width:340px; min-width:300px; background:var(--panel); border-right:1px solid var(--bd); padding:16px; overflow-y:auto; }
+  main { flex:1; position:relative; padding:0; margin:0; max-width:none; display:block; }
+  h1 { font-size:20px; margin:0 0 14px; color:var(--acc2); letter-spacing:.3px; }
+  .check { display:flex; gap:8px; align-items:center; color:var(--txt); }
+  .check input { width:auto; margin:0; }
+  fieldset { border:1px solid var(--bd); border-radius:10px; background:var(--panel); margin:0 0 12px; padding:10px 12px 12px; }
+  legend { font-size:13px; font-weight:600; padding:0 6px; color:var(--acc); }
+  label { display:block; font-size:12px; color:var(--mut); margin-top:8px; }
+  input, select { width:100%; padding:6px 8px; margin-top:3px; border:1px solid var(--bd); border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
+  input[type=color] { padding:2px; height:32px; }
+  .fila { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  button { width:100%; padding:10px; border:0; border-radius:8px; font-size:15px; cursor:pointer; background:var(--acc); color:#fff; font-weight:600; }
+  button:hover { background:var(--acc2); }
+  button.sec { background:var(--suave); color:var(--acc2); border:1px solid var(--bd); margin-top:8px; }
+  button:disabled { opacity:.5; cursor:wait; }
+  #msg { font-size:13px; margin-top:10px; min-height:18px; }
+  #msg.err { color:#d9534f; }
+  #visor { position:absolute; inset:0; }
+  #barra { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px;
+           background:var(--campo); border:1px solid var(--bd); border-radius:8px; padding:7px 10px; margin-bottom:12px; }
+  .cupo { color:var(--mut); }
+  .aviso-inv { display:flex; gap:7px; align-items:flex-start; margin:10px 0 0; font-size:11.5px;
+               line-height:1.45; color:#8a6116; background:#fdf3dc; border:1px solid #e8d49a;
+               border-radius:7px; padding:8px 10px; }
+  .aviso-inv b { font-size:14px; line-height:1; }
+  .nota { font-size:11px; color:var(--mut); line-height:1.45; margin:8px 0 0; }
+  .mover { font-weight:600; font-size:10px; color:var(--acc2); background:var(--suave);
+           border:1px solid var(--bd); border-radius:20px; padding:1px 7px; margin-left:4px; }
+  fieldset > div[id^="caja-"][hidden] { display:none; }
+  #generar-archivos { margin-top:8px; background:#2e7d4f; }
+  #generar-archivos:hover:not(:disabled) { background:#276a43; }
+  #resultado { border:1px solid #bcd8c6; background:#e7f3ec; border-radius:9px; padding:10px 12px; margin-top:10px; }
+  #resultado .listo { margin:0 0 8px; font-size:13px; font-weight:600; color:#2e7d4f; }
+  a.descarga { flex:1; text-align:center; text-decoration:none; font-size:13px; font-weight:600;
+               padding:8px 0; border-radius:7px; background:var(--acc); color:#fff; }
+  a.descarga:hover { background:var(--acc2); }
+  /* diálogo de confirmación */
+  #modal { position:fixed; inset:0; background:rgba(25,32,42,.55); display:flex;
+           align-items:center; justify-content:center; z-index:50; padding:16px; }
+  #modal[hidden] { display:none; }
+  #modal .caja { background:var(--panel); border:1px solid var(--bd); border-radius:12px;
+                 padding:20px; max-width:380px; width:100%; }
+  #modal h3 { margin:0 0 8px; font-size:17px; color:var(--acc2); }
+  #modal p { margin:0 0 6px; font-size:13px; line-height:1.5; }
+  #modal .destacado { font-weight:600; }
+  #modal .acciones { margin-top:16px; }
+  .fila3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .fila3[hidden] { display:none; }
+  .acciones { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .acciones button { margin-top:0; font-size:13px; padding:8px; }
+  #centrar { position:absolute; right:12px; bottom:10px; width:auto; padding:5px 10px; font-size:12px; }
+  #info { position:absolute; left:12px; bottom:10px; font-size:12px; color:var(--mut); background:var(--panel); padding:4px 8px; border-radius:6px; border:1px solid var(--bd); }
+  @media (max-width: 760px) { body { flex-direction:column; height:auto; } aside { width:auto; } main { height:60vh; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "/web/three.module.js",
+  "three/addons/": "/web/addons/" } }
+</script>
+</head>
+<body>
+<header>
+  <p class="marca">Monkeds Letter</p>
+  <nav>
+    <a href="/" class="activo">Generador</a>
+    <a href="/generaciones">Mis generaciones</a>
+    <a href="/licencias">Mis licencias</a>
+    <a id="nav_admin" href="/admin" hidden>Administración</a>
+    <a href="/salir">Salir</a>
+  </nav>
+</header>
+
+<div class="cuerpo">
+<aside>
+  <div id="barra">
+    <b id="yo_usuario">…</b>
+    <span id="yo_invitado" class="chip gris" hidden>invitado</span>
+    <span id="yo_cupo" class="cupo"></span>
+  </div>
+
+  <fieldset>
+    <legend>Letra inicial</legend>
+    <div class="fila">
+      <div><label>Letras (1 o 2)<input id="inicial" maxlength="2" value="M"></label></div>
+      <div><label>Fuente<select id="fuente_inicial"></select></label></div>
+    </div>
+    <div class="fila">
+      <div><label>Altura de la letra (mm)<input id="tam_inicial" type="number" step="1" min="1"></label></div>
+      <div><label>Borde (mm, 0 = sin borde)<input id="borde" type="number" step="0.5" min="0"></label></div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Texto</legend>
+    <label>Texto<input id="texto" placeholder="ej. aria"></label>
+    <div class="fila">
+      <div><label>Fuente<select id="fuente_texto"></select></label></div>
+      <div><label>Tamaño (mm)<input id="tam_texto" type="number" step="1" min="1"></label></div>
+    </div>
+    <div class="fila">
+      <div><label>Borde 1, exterior (mm)<input id="borde_texto1" type="number" step="0.5" min="0"></label></div>
+      <div><label>Borde 2, interior (mm)<input id="borde_texto2" type="number" step="0.5" min="0"></label></div>
+    </div>
+    <div class="fila">
+      <div><label>Giro (grados)<input id="giro_texto" type="number" step="1"></label></div>
+      <div><label>Posición
+        <select id="posicion">
+          <option value="sobre">Sobre la letra</option>
+          <option value="arriba">Arriba de la letra</option>
+          <option value="derecha">A la derecha</option>
+        </select></label></div>
+    </div>
+    <label>Separación (mm, arriba / derecha)<input id="separacion" type="number" step="1" min="0"></label>
+    <label class="check"><input id="cortar_letra" type="checkbox"> El borde 1 del texto corta la letra</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Capas (apiladas, una sobre otra)</legend>
+    <label>Nivel 1 · base: borde letra + borde 1 del texto</label>
+    <div class="fila">
+      <div><label>Termina a (mm)<input id="alto_nivel1" type="number" step="0.5" min="0.2"></label></div>
+      <div><label>Color<input id="color_nivel1" type="color"></label></div>
+    </div>
+    <label>Nivel 2 · letra + borde 2 del texto (sobre el nivel 1)</label>
+    <div class="fila">
+      <div><label>Termina a (mm)<input id="alto_nivel2" type="number" step="0.5" min="0.2"></label></div>
+      <div><label>Color<input id="color_nivel2" type="color"></label></div>
+    </div>
+    <label>Nivel 3 · texto + patrón (sobre el nivel 2)</label>
+    <div class="fila">
+      <div><label>Termina a (mm)<input id="alto_nivel3" type="number" step="0.5" min="0.2"></label></div>
+      <div><label>Color<input id="color_nivel3" type="color"></label></div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Adorno · cuernos <span class="mover">✥ se arrastra</span></legend>
+    <label class="check"><input id="usar_adorno" type="checkbox"> Poner adorno sobre la letra</label>
+    <div id="caja-adorno">
+    <div class="fila">
+      <div><label>SVG<select id="adorno"></select></label></div>
+      <div><label>Color<input id="color_adorno" type="color"></label></div>
+    </div>
+    <div class="fila">
+      <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
+      <div><label>Giro (°)<input id="giro_adorno" type="number" step="5"></label></div>
+    </div>
+    <div class="fila">
+      <div><label>X (mm)<input id="adorno_x" type="number" step="0.5"></label></div>
+      <div><label>Y (mm)<input id="adorno_y" type="number" step="0.5"></label></div>
+    </div>
+    <label>Segundo adorno (forma reflejada, ej. cuerno derecho)
+      <select id="segundo_adorno">
+        <option value="espejo">Espejo automático</option>
+        <option value="libre">Posición libre (ej. letra L)</option>
+        <option value="ninguno">Sin segundo adorno</option>
+      </select></label>
+    <div id="pos-adorno2" class="fila3" hidden>
+      <div><label>X2 (mm)<input id="adorno2_x" type="number" step="0.5"></label></div>
+      <div><label>Y2 (mm)<input id="adorno2_y" type="number" step="0.5"></label></div>
+      <div><label>Giro 2 (°)<input id="giro_adorno2" type="number" step="5"></label></div>
+    </div>
+    <label class="check"><input id="cortar_adorno" type="checkbox"> El borde del adorno corta la letra</label>
+    <label>Va a la altura del nivel 2 y con el borde del nivel 1. Arrástralo en la vista 3D.</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Aro para llavero <span class="mover">✥ se arrastra</span></legend>
+    <label class="check"><input id="aro" type="checkbox"> Añadir aro para llavero</label>
+    <div id="caja-aro">
+      <div class="fila">
+        <div><label>Diámetro (mm)<input id="aro_diametro" type="number" step="0.5" min="2"></label></div>
+        <div><label>Agujero (mm)<input id="aro_agujero" type="number" step="0.5" min="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>X (mm)<input id="aro_x" type="number" step="0.5"></label></div>
+        <div><label>Y (mm)<input id="aro_y" type="number" step="0.5"></label></div>
+      </div>
+      <label>Tiene el grosor del nivel 1 y su mismo color. Si lo mueves lejos de la letra,
+             se le añade solo un cuello para que no quede suelto.</label>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Patrón de la letra (nivel 3)</legend>
+    <label class="check"><input id="usar_patron" type="checkbox"> Repartir un patrón por la letra</label>
+    <div id="caja-patron">
+    <label>Patrón SVG<select id="patron"></select></label>
+    <div class="fila">
+      <div><label>Tamaño motivo (mm)<input id="tam_patron" type="number" step="0.5" min="1"></label></div>
+      <div><label>Separación (mm)<input id="separacion_patron" type="number" step="0.5" min="0"></label></div>
+    </div>
+    <div class="fila">
+      <div><label>Margen texto/borde (mm)<input id="margen_patron" type="number" step="0.5" min="0"></label></div>
+      <div><label>Semilla<input id="semilla" type="number" step="1"></label></div>
+    </div>
+    <label class="check"><input id="girar_patron" type="checkbox"> Girar motivos al azar (desactívalo para arbolitos)</label>
+    <div class="acciones">
+      <button id="otro-reparto" class="sec">🎲 Otro reparto</button>
+      <button id="subir-patron" class="sec solo-admin" hidden>Subir SVG…</button>
+    </div>
+    <input id="archivo-svg" type="file" accept=".svg,image/svg+xml" hidden>
+    <label>Cada figura separada del SVG es un motivo; se reparten al azar por la letra.</label>
+    </div>
+  </fieldset>
+
+  <button id="generar">Actualizar vista previa</button>
+  <button id="generar-archivos" disabled>Generar archivos (3MF + STL)</button>
+  <div id="msg"></div>
+
+  <div id="resultado" hidden>
+    <p class="listo">Archivos listos ✔</p>
+    <div class="acciones">
+      <a id="baja-3mf" class="descarga">Descargar 3MF</a>
+      <a id="baja-stl" class="descarga">Descargar STL</a>
+    </div>
+    <p id="aviso-invitado" class="aviso-inv" hidden><b>⚠</b><span>El texto sale modificado
+       (<i id="texto-invitado"></i>). Contacta al administrador para generar textos sin
+       modificaciones.</span></p>
+    <p class="nota">Quedan guardados en <a href="/generaciones">Mis generaciones</a>: puedes volver a
+       bajarlos cuando quieras sin gastar otra generación.</p>
+  </div>
+
+  <p class="nota">La vista previa es gratis y puedes cambiarla todas las veces que quieras.
+     Solo «Generar archivos» descuenta 1 de tu licencia.</p>
+</aside>
+
+<main>
+  <div id="visor"></div>
+  <div id="info">Arrastra para girar · rueda para zoom · clic derecho para mover · arrastra el adorno para moverlo</div>
+  <button id="centrar" class="sec">Centrar vista</button>
+</main>
+</div>
+
+<div id="modal" hidden>
+  <div class="caja">
+    <h3>Generar archivos</h3>
+    <p id="modal_txt" class="destacado"></p>
+    <p id="modal_sub" class="nota"></p>
+    <div class="acciones">
+      <button id="modal_no" class="sec">Cancelar</button>
+      <button id="modal_si">Sí, generar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
+
+const CAMPOS = ['inicial','fuente_inicial','tam_inicial','borde',
+                'texto','fuente_texto','tam_texto','borde_texto1','borde_texto2','giro_texto','posicion','separacion',
+                'alto_nivel1','color_nivel1','alto_nivel2','color_nivel2','alto_nivel3','color_nivel3','cortar_letra',
+                'patron','tam_patron','separacion_patron','margen_patron','semilla','girar_patron',
+                'adorno','tam_adorno','adorno_x','adorno_y','giro_adorno','segundo_adorno','adorno2_x','adorno2_y','giro_adorno2',
+                'cortar_adorno','color_adorno',
+                'aro','aro_diametro','aro_agujero','aro_x','aro_y'];
+const valor = el => el.type === 'checkbox' ? el.checked : el.value;
+const $ = id => document.getElementById(id);
+let generacion = null, resumen = null, invitado = false, pedido = 0, temporizador = null;
+const pronto = () => { clearTimeout(temporizador); temporizador = setTimeout(generar, 350); };
+
+// ---------- visor 3D
+const visor = $('visor');
+const escena = new THREE.Scene();
+const camara = new THREE.PerspectiveCamera(40, 1, 0.1, 5000);
+camara.up.set(0, 0, 1);
+const render = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+render.setPixelRatio(devicePixelRatio);
+visor.appendChild(render.domElement);
+const controles = new OrbitControls(camara, render.domElement);
+controles.zoomToCursor = true; controles.enableDamping = true; controles.dampingFactor = 0.12;
+controles.minDistance = 5; controles.maxDistance = 2000;
+escena.add(new THREE.HemisphereLight(0xffffff, 0x888888, 1.1));
+const luz = new THREE.DirectionalLight(0xffffff, 1.4); luz.position.set(1, -1.5, 2); escena.add(luz);
+const rejilla = new THREE.GridHelper(300, 30, 0x888888, 0xbbbbbb);
+rejilla.rotation.x = Math.PI / 2; rejilla.material.opacity = .35; rejilla.material.transparent = true;
+escena.add(rejilla);
+let malla = null, encuadrado = false;
+
+function ajustar() {
+  const w = visor.clientWidth, h = visor.clientHeight;
+  render.setSize(w, h); camara.aspect = w / h; camara.updateProjectionMatrix();
+}
+addEventListener('resize', ajustar); ajustar();
+(function bucle() { requestAnimationFrame(bucle); controles.update(); render.render(escena, camara); })();
+
+// ---------- iconos ✥ sobre las piezas que se pueden arrastrar
+const MOVIBLES = ['Adorno', 'Adorno derecho', 'Aro'];
+const iconos = new THREE.Group();
+escena.add(iconos);
+
+const TEXTURA_MOVER = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.beginPath(); g.arc(64, 64, 57, 0, Math.PI * 2);
+  g.fillStyle = 'rgba(48,105,184,.92)'; g.fill();
+  g.lineWidth = 8; g.strokeStyle = '#fff'; g.stroke();
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = 'bold 82px system-ui, sans-serif';
+  g.fillText('✥', 64, 70);
+  return new THREE.CanvasTexture(c);
+})();
+
+function ponerIconos() {
+  iconos.clear();
+  if (!malla) return;
+  const caja = new THREE.Box3().setFromObject(malla);
+  const lado = Math.max(caja.max.x - caja.min.x, caja.max.y - caja.min.y) * 0.04;
+  for (const o of piezasMovibles()) {
+    const b = new THREE.Box3().setFromObject(o), c = new THREE.Vector3();
+    b.getCenter(c);
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: TEXTURA_MOVER, transparent: true, depthTest: false }));
+    s.position.set(c.x, c.y, b.max.z + lado);
+    s.scale.setScalar(lado);
+    s.renderOrder = 10;
+    s.userData.pieza = o.name;
+    iconos.add(s);
+  }
+}
+
+function mostrar(buffer) {
+  const grupo = new ThreeMFLoader().parse(buffer);   // trae los colores de cada nivel
+  const caja = new THREE.Box3().setFromObject(grupo);
+  const c = new THREE.Vector3(); caja.getCenter(c);
+  const tam = new THREE.Vector3(); caja.getSize(tam);
+  if (malla) { escena.remove(malla); malla.traverse(o => o.geometry && o.geometry.dispose()); }
+  malla = grupo;
+  escena.add(malla);
+  ponerIconos();
+  if (!encuadrado) { centrarVista(); encuadrado = true; }
+  $('info').textContent = `${tam.x.toFixed(1)} × ${tam.y.toFixed(1)} × ${tam.z.toFixed(1)} mm  ·  ` +
+    `arrastra para girar · arrastra las piezas con ✥ para moverlas`;
+}
+
+function centrarVista() {
+  if (!malla) return;
+  const caja = new THREE.Box3().setFromObject(malla);
+  const c = new THREE.Vector3(); caja.getCenter(c);
+  const tam = new THREE.Vector3(); caja.getSize(tam);
+  const d = Math.max(tam.x, tam.y, tam.z) * 1.6;
+  controles.target.copy(c);
+  camara.position.set(c.x, c.y - d * .55, c.z + d);
+  controles.update();
+}
+$('centrar').onclick = centrarVista;
+render.domElement.addEventListener('dblclick', centrarVista);
+
+// ---------- patrón
+function listarPatrones(lista, elegido) {
+  // sin opción "(ninguno)": quien manda es la casilla "Repartir un patrón"
+  $('patron').innerHTML = lista.map(n => `<option${n === elegido ? ' selected' : ''}>${n}</option>`).join('');
+}
+$('otro-reparto').onclick = () => { $('semilla').value = Math.floor(Math.random() * 100000); generar(); };
+$('subir-patron').onclick = () => $('archivo-svg').click();
+$('archivo-svg').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  const msg = $('msg'); msg.className = ''; msg.textContent = 'Subiendo…';
+  try {
+    const r = await fetch('/api/patron', { method: 'POST', body: JSON.stringify({ nombre: f.name, svg: await f.text() }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'Error al subir');
+    listarPatrones(d.patrones, d.nombre); generar();
+  } catch (err) { msg.className = 'err'; msg.textContent = err.message; }
+};
+['patron', 'tam_patron', 'separacion_patron', 'margen_patron', 'semilla',
+ 'adorno', 'tam_adorno', 'adorno_x', 'adorno_y', 'giro_adorno', 'adorno2_x', 'adorno2_y', 'giro_adorno2',
+ 'aro_diametro', 'aro_agujero', 'aro_x', 'aro_y']
+  .forEach(k => $(k).addEventListener('input', pronto));
+const libre = () => $('segundo_adorno').value === 'libre';
+$('segundo_adorno').addEventListener('change', () => {
+  if (libre()) {  // arranca donde estaba el espejo, para moverlo desde ahí
+    $('adorno2_x').value = -(+$('adorno_x').value); $('adorno2_y').value = $('adorno_y').value;
+    $('giro_adorno2').value = -(+$('giro_adorno').value);
+  }
+  $('pos-adorno2').hidden = !libre(); generar();
+});
+
+// ---------- arrastrar los adornos en la vista 3D (en modo espejo el otro se mueve reflejado)
+const rayo = new THREE.Raycaster(), puntero = new THREE.Vector2();
+let arrastre = null;
+function apuntar(e) {
+  const r = render.domElement.getBoundingClientRect();
+  puntero.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  rayo.setFromCamera(puntero, camara);
+}
+function puntoEnPlano(z) {
+  const p = new THREE.Vector3();
+  return rayo.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), -z), p);
+}
+function piezasMovibles() {
+  const r = [];
+  if (malla) malla.traverse(o => { if (o.isMesh && MOVIBLES.includes(o.name)) r.push(o); });
+  return r;
+}
+
+// fase de captura: corre antes que OrbitControls y lo apaga si el clic cae sobre una pieza móvil
+render.domElement.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || !malla) return;
+  apuntar(e);
+  const piezas = piezasMovibles();
+  const toque = rayo.intersectObjects([...piezas, ...iconos.children])[0];
+  if (!toque) return;
+  const nombre = toque.object.userData.pieza || toque.object.name;   // icono o la pieza misma
+  const agarrada = piezas.find(o => o.name === nombre);
+  if (!agarrada) return;
+
+  controles.enabled = false;
+  render.domElement.setPointerCapture(e.pointerId);
+
+  // qué campos edita y qué piezas se mueven con ella
+  let cx, cy, compañera = null;
+  if (nombre === 'Aro') {
+    [cx, cy] = ['aro_x', 'aro_y'];
+  } else {
+    const derecho = nombre === 'Adorno derecho';
+    // libre: cada adorno tiene sus campos. espejo: ambos mueven el original (X invertida)
+    [cx, cy] = libre() && derecho ? ['adorno2_x', 'adorno2_y'] : ['adorno_x', 'adorno_y'];
+    if (!libre()) compañera = derecho ? 'Adorno' : 'Adorno derecho';
+  }
+  const signo = (nombre === 'Adorno derecho' && !libre()) ? -1 : 1;
+
+  // cada parte (malla e icono) se mueve desde su posición actual; la compañera, reflejada
+  const partes = [];
+  for (const o of [...piezas, ...iconos.children]) {
+    const quien = o.userData.pieza || o.name;
+    if (quien === nombre) partes.push({ obj: o, base: o.position.clone(), s: 1 });
+    else if (quien === compañera) partes.push({ obj: o, base: o.position.clone(), s: -1 });
+  }
+  const caja = new THREE.Box3().setFromObject(agarrada), c = new THREE.Vector3();
+  caja.getCenter(c);
+  const ini = puntoEnPlano(c.z);
+  if (!ini) return;
+  arrastre = { z: c.z, ini, cx, cy, x0: +$(cx).value, y0: +$(cy).value, signo, partes };
+}, true);
+
+render.domElement.addEventListener('pointermove', e => {
+  if (!arrastre) return;
+  apuntar(e);
+  const p = puntoEnPlano(arrastre.z);
+  if (!p) return;
+  const dx = p.x - arrastre.ini.x, dy = p.y - arrastre.ini.y;
+  for (const { obj, base, s } of arrastre.partes) obj.position.set(base.x + s * dx, base.y + dy, base.z);
+  $(arrastre.cx).value = (Math.round((arrastre.x0 + arrastre.signo * dx) * 2) / 2).toString();
+  $(arrastre.cy).value = (Math.round((arrastre.y0 + dy) * 2) / 2).toString();
+});
+function soltar() {
+  if (!arrastre) return;
+  arrastre = null; controles.enabled = true; generar();
+}
+render.domElement.addEventListener('pointerup', soltar);
+render.domElement.addEventListener('pointercancel', soltar);
+
+// ---------- formulario
+function sincronizarCajas() {
+  $('caja-adorno').hidden = !$('usar_adorno').checked;
+  $('caja-patron').hidden = !$('usar_patron').checked;
+  $('caja-aro').hidden = !$('aro').checked;
+}
+
+function leer() {
+  const o = {};
+  for (const k of CAMPOS) o[k] = valor($(k));
+  if (!$('usar_adorno').checked) o.adorno = '';   // las casillas mandan sobre el desplegable
+  if (!$('usar_patron').checked) o.patron = '';
+  return o;
+}
+
+async function generar() {
+  const msg = $('msg'); msg.className = ''; msg.textContent = 'Generando…';
+  sincronizarCajas();
+  // si el diseño cambió, los archivos ya generados dejan de corresponder
+  if (!generacion || generacion.firma !== firmaActual()) $('resultado').hidden = true;
+  const yo = ++pedido;
+  try {
+    const r = await fetch('/api/preview', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(leer()) });
+    if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Error desconocido');
+    const buf = await r.arrayBuffer();
+    if (yo !== pedido) return;
+    mostrar(buf);
+    $('generar-archivos').disabled = false;
+    msg.textContent = 'Vista previa lista ✔';
+  } catch (e) {
+    if (yo === pedido) { msg.className = 'err'; msg.textContent = e.message; }
+  }
+}
+
+$('generar').onclick = generar;
+
+// ---------- generar archivos (esto SÍ descuenta 1 de la licencia)
+const firmaActual = () => JSON.stringify(leer());
+
+function preguntar(titulo, detalle) {
+  return new Promise(resolver => {
+    $('modal_txt').textContent = titulo;
+    $('modal_sub').textContent = detalle;
+    $('modal').hidden = false;
+    const cerrar = v => { $('modal').hidden = true; resolver(v); };
+    $('modal_si').onclick = () => cerrar(true);
+    $('modal_no').onclick = () => cerrar(false);
+  });
+}
+
+function mostrarResultado(id, textoUsado) {
+  $('baja-3mf').href = `/api/generacion/${id}/3mf`;
+  $('baja-stl').href = `/api/generacion/${id}/stl`;
+  $('aviso-invitado').hidden = !invitado;
+  if (invitado && textoUsado) $('texto-invitado').textContent = textoUsado;
+  $('resultado').hidden = false;
+}
+
+async function generarArchivos() {
+  const msg = $('msg'); msg.className = ''; msg.textContent = '';
+  const firma = firmaActual();
+
+  if (generacion && generacion.firma === firma) {   // ya pagada: solo se vuelve a mostrar
+    mostrarResultado(generacion.id);
+    msg.textContent = 'Estos archivos ya estaban generados (no se descontó nada).';
+    return;
+  }
+  const limitada = !invitado && resumen && resumen.restantes !== null;
+  if (limitada && resumen.restantes <= 0) {
+    msg.className = 'err';
+    msg.textContent = 'No te quedan generaciones. Pídele una licencia al administrador.';
+    return;
+  }
+  if (limitada) {
+    const ok = await preguntar(
+      `Esto consume 1 generación de tu licencia.`,
+      `Te quedan ${resumen.restantes} y quedarán ${resumen.restantes - 1}. ` +
+      `Después podrás bajar el 3MF y el STL las veces que quieras sin gastar más.`);
+    if (!ok) return;
+  }
+
+  $('generar-archivos').disabled = true;
+  msg.textContent = 'Generando los archivos…';
+  try {
+    const r = await fetch('/api/generar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: firma });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'No se pudieron generar');
+    generacion = { id: d.id, firma };
+    resumen = d.resumen;
+    pintarCupo();
+    mostrarResultado(d.id, d.texto);
+    msg.textContent = invitado ? 'Archivos listos.' : 'Listo: se descontó 1 de tu licencia.';
+  } catch (e) {
+    msg.className = 'err'; msg.textContent = e.message;
+  } finally { $('generar-archivos').disabled = false; }
+}
+$('generar-archivos').onclick = generarArchivos;
+
+// ---------- datos de la cuenta
+function pintarCupo() {
+  if (invitado) { $('yo_cupo').textContent = '· sin límite, con el texto modificado'; return; }
+  if (!resumen) return;
+  const disp = resumen.restantes === null ? 'ilimitadas' : resumen.restantes;
+  $('yo_cupo').textContent = `· ${disp} disponibles` +
+    (resumen.vence ? ` · vence ${resumen.vence.slice(0, 10)}` : '');
+}
+
+async function cargarYo() {
+  const r = await fetch('/api/yo');
+  if (!r.ok) return;
+  const d = await r.json();
+  $('yo_usuario').textContent = d.usuario;
+  $('nav_admin').hidden = !d.es_admin;
+  $('yo_invitado').hidden = !d.es_invitado;
+  document.querySelectorAll('.solo-admin').forEach(el => { el.hidden = !d.es_admin; });
+  invitado = !!d.es_invitado;
+  resumen = d.resumen;
+  pintarCupo();
+}
+
+function aplicarParametros(p) {
+  for (const k of CAMPOS) if (k in p) $(k)[$(k).type === 'checkbox' ? 'checked' : 'value'] = p[k];
+  $('usar_adorno').checked = !!p.adorno;        // vacío = sin adorno / sin patrón
+  $('usar_patron').checked = !!p.patron;
+  if (!$('adorno').value) $('adorno').selectedIndex = 0;   // deja uno elegido por si la activan
+  if (!$('patron').value) $('patron').selectedIndex = 0;
+  $('pos-adorno2').hidden = !libre();
+  sincronizarCajas();
+}
+
+async function cargarGeneracion(id) {
+  const r = await fetch(`/api/generacion/${id}/parametros`);
+  if (!r.ok) return false;
+  aplicarParametros((await r.json()).parametros);
+  generacion = { id: +id, firma: firmaActual() };   // ya pagada: no vuelve a cobrar
+  mostrarResultado(id);
+  return true;
+}
+document.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') generar(); }));
+document.querySelectorAll('input[type=color], input[type=checkbox]').forEach(i => i.addEventListener('change', generar));
+['fuente_inicial', 'fuente_texto'].forEach(k => $(k).addEventListener('change', generar));
+
+// ---------- valores por defecto desde el servidor
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cfg = await (await fetch('/api/config')).json();
+// fuentes: dos grupos (las de la carpeta y las del equipo). Se llenan ANTES de poner los valores.
+const opcionesFuentes = g => g.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
+const htmlFuentes = `<optgroup label="De la carpeta fuentes">${opcionesFuentes(cfg.fuentes.carpeta)}</optgroup>` +
+                    `<optgroup label="Instaladas en el equipo">${opcionesFuentes(cfg.fuentes.sistema)}</optgroup>`;
+$('fuente_inicial').innerHTML = $('fuente_texto').innerHTML = htmlFuentes;
+// las listas se llenan ANTES de poner los valores, si no el select no los acepta
+listarPatrones(cfg.patrones, cfg.defaults.patron);
+$('adorno').innerHTML = cfg.adornos
+  .map(n => `<option${n === cfg.defaults.adorno ? ' selected' : ''}>${n}</option>`).join('');
+aplicarParametros(cfg.defaults);
+await cargarYo();
+// si se llega desde "Mis generaciones" con ?cargar=<id>, se abre ese diseño en el editor
+const pedirCargar = new URLSearchParams(location.search).get('cargar');
+if (pedirCargar) await cargarGeneracion(pedirCargar);
+generar();
+</script>
+</body>
+</html>

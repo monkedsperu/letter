@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkeds Letter · Mis generaciones</title>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+<header>
+  <p class="marca">Monkeds Letter</p>
+  <nav>
+    <a href="/">Generador</a>
+    <a href="/generaciones" class="activo">Mis generaciones</a>
+    <a href="/licencias">Mis licencias</a>
+    <a id="nav_admin" href="/admin" hidden>Administración</a>
+    <a href="/salir">Salir</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Mis generaciones</h2>
+    <p class="ayuda">Cada generación guardada se puede volver a descargar en 3MF o STL cuantas veces
+       quieras, sin gastar nuevas de tu licencia. El servidor no guarda los archivos: los rehace con
+       los mismos datos. También puedes abrir cualquiera en el editor para seguir trabajando sobre ella.</p>
+    <div class="cifras" id="cifras"></div>
+  </section>
+
+  <section>
+    <div id="lista" class="rejilla"></div>
+    <div id="msg" class="msg"></div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fecha = s => s ? s.replace('T', ' ').slice(0, 16) : '—';
+
+async function cargar() {
+  try {
+    const yo = await (await fetch('/api/yo')).json();
+    $('nav_admin').hidden = !yo.es_admin;
+    const r = yo.resumen;
+    $('cifras').innerHTML = `
+      <div class="cifra"><div class="n">${r.generaciones}</div><div class="t">Generadas en total</div></div>
+      <div class="cifra"><div class="n">${r.restantes === null ? '∞' : r.restantes}</div><div class="t">Disponibles</div></div>
+      <div class="cifra"><div class="n">${r.vence ? r.vence.slice(0, 10) : '—'}</div><div class="t">Vence</div></div>`;
+
+    const gs = (await (await fetch('/api/generaciones')).json()).generaciones;
+    $('lista').innerHTML = gs.length ? gs.map(g => `
+      <div class="tarjeta">
+        <img src="/api/generacion/${g.id}/miniatura" loading="lazy" alt="${esc(g.nombre)}">
+        <div class="nom">${esc(g.nombre)}</div>
+        <div class="sub">${fecha(g.creada)}</div>
+        <div class="b">
+          <a class="boton" href="/api/generacion/${g.id}/3mf">3MF</a>
+          <a class="boton" href="/api/generacion/${g.id}/stl">STL</a>
+        </div>
+        <a class="boton" href="/?cargar=${g.id}">Abrir en el editor</a>
+      </div>`).join('')
+      : '<p class="vacio">Todavía no has generado archivos. Ve al generador, arma tu letra y pulsa «Generar archivos».</p>';
+  } catch (e) {
+    $('msg').className = 'msg err';
+    $('msg').textContent = 'No se pudo cargar: ' + e.message;
+  }
+}
+cargar();
+</script>
+</body>
+</html>

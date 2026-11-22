@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkeds Letter · Entrar</title>
+<style>
+  :root { color-scheme: light; --bg:#cfd6df; --panel:#dfe4ea; --campo:#eceff3; --txt:#232b36; --mut:#56606d;
+          --bd:#bcc5d1; --acc:#3f7fd4; --acc2:#3069b8; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+         font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt); padding:16px; }
+  .caja { background:var(--panel); border:1px solid var(--bd); border-radius:12px; padding:24px;
+          width:100%; max-width:340px; }
+  form { margin:0; }
+  .separador { display:flex; align-items:center; gap:10px; margin:20px 0 4px; color:var(--mut); font-size:12px; }
+  .separador::before, .separador::after { content:""; flex:1; height:1px; background:var(--bd); }
+  button.sec { background:transparent; color:var(--acc2); border:1px solid var(--acc); }
+  button.sec:hover { background:#dfe9f7; }
+  .nota { font-size:11px; color:var(--mut); line-height:1.5; margin:10px 0 0; }
+  h1 { font-size:22px; margin:0 0 4px; color:var(--acc2); }
+  p.sub { margin:0 0 18px; font-size:13px; color:var(--mut); }
+  label { display:block; font-size:12px; color:var(--mut); margin-top:12px; }
+  input { width:100%; padding:9px 10px; margin-top:4px; border:1px solid var(--bd); border-radius:6px;
+          background:var(--campo); color:var(--txt); font-size:15px; }
+  button { width:100%; margin-top:18px; padding:11px; border:0; border-radius:8px; font-size:15px;
+           font-weight:600; cursor:pointer; background:var(--acc); color:#fff; }
+  button:hover { background:var(--acc2); }
+  .err { margin-top:14px; font-size:13px; color:#b8382f; background:#f7e2e0; border:1px solid #e3bdb9;
+         border-radius:6px; padding:8px 10px; }
+</style>
+</head>
+<body>
+<div class="caja">
+  <h1>Monkeds Letter</h1>
+  <p class="sub">Entra con tu usuario para generar tus letras.</p>
+
+  <form method="post" action="/login">
+    <label>Usuario<input name="usuario" autocomplete="username" autofocus required></label>
+    <label>Contraseña<input name="clave" type="password" autocomplete="current-password" required></label>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <div class="separador">o sin cuenta</div>
+
+  <form method="post" action="/invitado">
+    <label>Alias<input name="alias" minlength="2" maxlength="40" placeholder="cómo te llamamos" required></label>
+    <button type="submit" class="sec">Entrar como invitado</button>
+  </form>
+  <p class="nota">Como invitado puedes diseñar y ver la vista previa sin límite, pero los archivos
+     salen con el texto modificado. Pide una cuenta al administrador para generarlos tal cual.</p>
+
+  <div id="err" class="err" hidden></div>
+</div>
+<script>
+  const e = new URLSearchParams(location.search).get('error');
+  if (e) {
+    const caja = document.getElementById('err');
+    caja.textContent = e === 'espera'
+      ? 'Demasiados intentos fallidos. Espera unos minutos y vuelve a probar.'
+      : e === 'alias' ? 'Pon un alias de al menos 2 caracteres.'
+      : 'Usuario o contraseña incorrectos.';
+    caja.hidden = false;
+  }
+</script>
+</body>
+</html>

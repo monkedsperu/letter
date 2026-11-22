@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monkeds Letter · Mis licencias</title>
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+<header>
+  <p class="marca">Monkeds Letter</p>
+  <nav>
+    <a href="/">Generador</a>
+    <a href="/generaciones">Mis generaciones</a>
+    <a href="/licencias" class="activo">Mis licencias</a>
+    <a id="nav_admin" href="/admin" hidden>Administración</a>
+    <a href="/salir">Salir</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Resumen</h2>
+    <p class="ayuda">Una licencia puede tener un límite de tiempo, un límite de cantidad, los dos o
+       ninguno. Si tienes varias, se gasta primero la que vence antes. La vista previa no consume nada;
+       solo descuenta pulsar «Generar archivos» con un diseño nuevo.</p>
+    <div class="cifras" id="cifras"></div>
+  </section>
+
+  <section>
+    <h2>Detalle</h2>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Estado</th><th>Usadas</th><th>Disponibles</th>
+        <th>Vence</th><th>Creada</th><th>Nota</th>
+      </tr></thead>
+      <tbody id="tabla"></tbody>
+    </table>
+    <div id="msg" class="msg"></div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fecha = s => s ? s.replace('T', ' ').slice(0, 16) : 'sin caducidad';
+
+function estado(l) {
+  if (l.vigente) return '<span class="chip si">vigente</span>';
+  if (!l.activa) return '<span class="chip no">anulada</span>';
+  if (l.vencida) return '<span class="chip no">vencida</span>';
+  return '<span class="chip no">agotada</span>';
+}
+
+async function cargar() {
+  try {
+    const yo = await (await fetch('/api/yo')).json();
+    $('nav_admin').hidden = !yo.es_admin;
+
+    const d = await (await fetch('/api/licencias')).json();
+    const r = d.resumen;
+    $('cifras').innerHTML = `
+      <div class="cifra"><div class="n">${r.restantes === null ? '∞' : r.restantes}</div><div class="t">Generaciones disponibles</div></div>
+      <div class="cifra"><div class="n">${r.licencias_vigentes}</div><div class="t">Licencias vigentes</div></div>
+      <div class="cifra"><div class="n">${r.generaciones}</div><div class="t">Generadas en total</div></div>
+      <div class="cifra"><div class="n">${r.vence ? r.vence.slice(0, 10) : '—'}</div><div class="t">Próximo vencimiento</div></div>`;
+
+    $('tabla').innerHTML = d.licencias.length ? d.licencias.map(l => `<tr>
+        <td>${l.id}</td>
+        <td>${estado(l)}</td>
+        <td>${l.usadas}${l.max_generaciones ? ' de ' + l.max_generaciones : ''}</td>
+        <td>${l.restantes === null ? 'ilimitadas' : l.restantes}</td>
+        <td>${fecha(l.expira)}</td>
+        <td>${fecha(l.creada)}</td>
+        <td>${esc(l.nota)}</td>
+      </tr>`).join('')
+      : '<tr><td colspan="7" class="vacio">Todavía no tienes licencias. Pídele una al administrador.</td></tr>';
+  } catch (e) {
+    $('msg').className = 'msg err';
+    $('msg').textContent = 'No se pudo cargar: ' + e.message;
+  }
+}
+cargar();
+</script>
+</body>
+</html>

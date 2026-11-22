@@ -1,0 +1,105 @@
+MONKEDS LETTER — generador de letras 3D con usuarios y licencias
+================================================================
+
+1) INSTALAR
+   pip install -r requirements.txt
+
+2) CONFIGURAR
+   Copia .env.ejemplo como .env y cambia los valores:
+     ADMIN_USUARIO   tu usuario de administrador
+     ADMIN_CLAVE     tu contraseña (se aplica en cada arranque)
+     SECRET_KEY      clave para firmar las sesiones. Genera una con:
+                     python -c "import secrets; print(secrets.token_hex(32))"
+     COOKIES_SEGURAS 1 cuando el sitio esté detrás de HTTPS
+     MONKEDS_DB      ruta de la base de datos (por defecto monkeds.db junto a app.py)
+   NUNCA subas el .env a un repositorio (ya está en .gitignore).
+
+3) ARRANCAR
+   Local:       python app.py            -> http://127.0.0.1:8000
+   En AWS:      gunicorn -w 3 -b 0.0.0.0:8000 app:app
+                (detrás de nginx o un balanceador con HTTPS)
+
+4) USUARIOS Y LICENCIAS
+   - El administrador entra y va a "Administración".
+   - Crear usuario: nombre + contraseña (mínimo 6 caracteres).
+   - Dar licencia: eliges el usuario, los DÍAS de validez y la CANTIDAD máxima de
+     generaciones. Cualquiera de los dos puede quedar vacío = sin ese límite.
+   - Un usuario puede tener varias licencias; se gasta primero la que vence antes.
+   - Puedes anular una licencia o desactivar un usuario cuando quieras.
+
+5) CÓMO SE CUENTA EL CUPO
+   - La vista previa en 3D es GRATIS e ilimitada (si no, tocar los controles gastaría cupo).
+   - El botón "Generar archivos (3MF + STL)" es el único que descuenta: consume 1 y deja
+     listos LOS DOS formatos. Si la licencia tiene límite de cantidad, antes de cobrar
+     aparece un aviso diciendo cuántas quedan, con opción de cancelar.
+   - Bajar esos archivos, ahora o más tarde, NO vuelve a descontar.
+   - Pantallas del usuario: "Mis generaciones" (miniaturas, volver a bajar en 3MF/STL y
+     abrir cualquiera en el editor) y "Mis licencias" (estado, usadas y vencimiento).
+
+6) QUÉ SE GUARDA EN EL SERVIDOR
+   - NO se guardan los archivos STL ni 3MF (ocuparían demasiado). Se rehacen al vuelo
+     a partir de los parámetros cada vez que se piden.
+   - De cada generación se guardan solo los parámetros y una miniatura PNG (~7 KB).
+   - Si borras un SVG de patrones/adornos, las generaciones antiguas que lo usaban ya
+     no se podrán rehacer.
+
+7) PERMISOS
+   - Solo el administrador puede subir SVG (patrones y adornos) y gestionar usuarios.
+   - Cada usuario solo ve y descarga sus propias generaciones y licencias.
+   - El administrador ve las generaciones de TODOS (pestaña "Generaciones"), con el alias
+     o usuario, la IP y la fecha, y puede descargarlas.
+
+7b) INVITADOS
+   - Desde el login se puede entrar sin cuenta poniendo solo un alias.
+   - Diseñan y previsualizan sin límite y no gastan licencia, pero al generar los archivos
+     el texto sale partido con un "+" por la mitad: Edgar -> Ed+gar, Miriam -> Mir+iam.
+     Bajo los botones de descarga se les avisa de que pidan una cuenta al administrador.
+   - Se les guarda la IP. El administrador puede bloquear IPs (pestaña "Generaciones"):
+     una IP bloqueada no puede abrir el sitio y se le cierra la sesión. No puedes bloquear
+     tu propia IP. Para que la IP sea fiable, el sitio debe ir detrás de nginx o un
+     balanceador que ponga la cabecera X-Forwarded-For.
+
+8) PIEZAS OPCIONALES
+   - Adorno (cuernos), patrón y aro de llavero se activan con su casilla; los tres son
+     opcionales y por defecto vienen: adorno sí, patrón sí, aro no.
+   - El aro de llavero va en el nivel 1 (su mismo grosor y color) y su agujero atraviesa
+     toda la pieza. Si lo mueves lejos de la letra se le añade solo un cuello que lo une,
+     para que nunca salga una rosquilla suelta.
+   - En la vista 3D, las piezas que se pueden arrastrar llevan un icono ✥ encima:
+     los dos adornos y el aro. Se arrastran con el ratón (también desde el icono).
+
+9) PATRONES, ADORNOS Y FUENTES (carpetas junto a app.py)
+   - patrones/ : cada figura separada del SVG es un motivo; se reparten al azar por la
+     letra, enteros y sin tocar el texto. Deben ser formas rellenas
+     (en Inkscape: Trayecto > Trazo a trayecto).
+   - adornos/  : ej. horn.svg. Va a la altura del nivel 2 con su propio color y con el
+     mismo borde que la letra. El segundo adorno (la forma reflejada) puede ir en espejo
+     automático, en posición libre (útil para letras como L) o quitarse.
+   - fuentes/  : .ttf/.otf propios. En la pantalla salen agrupados aparte de los del equipo.
+
+10) CAPAS DEL MODELO
+   Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).
+   Cada capa es maciza y de un solo color. El 3MF lleva los colores en "m:colorgroup",
+   que Bambu Studio / Orca leen para pedirte asignar un filamento a cada uno.
+   El STL es una sola malla sin colores.
+
+11) USO POR CONSOLA (sin servidor, para pruebas)
+   python generador_stl.py --inicial M --texto "Matias" --salida salida.3mf
+   Opciones: --patron, --tam-patron, --separacion-patron, --semilla, --sin-girar-patron,
+             --adorno, --tam-adorno, --adorno-x, --adorno-y, --segundo-adorno libre|espejo|ninguno,
+             --no-cortar-adorno, --cortar-letra, --alto-nivelN, --color-nivelN,
+             --aro, --aro-diametro, --aro-agujero, --aro-x, --aro-y
+
+ARCHIVOS
+   app.py             servidor web (usuarios, licencias, API)
+   datos.py           base de datos SQLite
+   generador_stl.py   motor de geometría y exportación (también funciona por consola)
+   pantalla.html      generador 3D
+   generaciones.html  historial del usuario · licencias.html detalle de sus licencias
+   login.html         entrar · admin.html panel de administración (pestañas: usuarios y
+                      licencias / biblioteca de SVG con vista previa de patrones y adornos)
+   estilo.css         estilo común de las pantallas
+   web/               three.js local (el visor 3D funciona sin internet)
+
+   Obsoletos tras pasar a servidor web (se pueden borrar):
+   servidor_web.py, lanzador.py, crear_portable.bat, minify_html.py, obf/, build/, dist/

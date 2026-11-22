@@ -1,0 +1,83 @@
+/* Estilo común de las pantallas de Monkeds Letter (generaciones, licencias, administración) */
+:root {
+  color-scheme: light;
+  --bg:#cfd6df; --panel:#dfe4ea; --campo:#eceff3; --txt:#232b36; --mut:#56606d;
+  --bd:#bcc5d1; --acc:#3f7fd4; --acc2:#3069b8; --suave:#cfdcee;
+  --ok:#2e7d4f; --okbg:#d6ecdd; --mal:#b8382f; --malbg:#f0dedc;
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt); }
+
+/* ---------- barra superior */
+header { background:var(--panel); border-bottom:1px solid var(--bd); padding:10px 18px;
+         display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:sticky; top:0; z-index:5; }
+header .marca { font-size:17px; font-weight:700; color:var(--acc2); margin:0; }
+header nav { display:flex; gap:4px; flex-wrap:wrap; margin-left:auto; align-items:center; }
+header nav a { color:var(--mut); text-decoration:none; font-size:13px; font-weight:600;
+               padding:6px 11px; border-radius:7px; }
+header nav a:hover { background:var(--campo); color:var(--acc2); }
+header nav a.activo { background:var(--suave); color:var(--acc2); }
+
+/* ---------- estructura */
+main { padding:18px; max-width:1100px; margin:0 auto; display:grid; gap:16px; }
+section { background:var(--panel); border:1px solid var(--bd); border-radius:10px; padding:14px 16px; }
+h2 { font-size:15px; margin:0 0 4px; color:var(--acc2); }
+h2 + .ayuda { margin-top:0; }
+.ayuda { font-size:12px; color:var(--mut); margin:0 0 12px; line-height:1.5; }
+.vacio { color:var(--mut); font-size:13px; padding:18px; text-align:center; }
+
+/* ---------- formularios */
+label { display:block; font-size:12px; color:var(--mut); }
+input, select { width:100%; padding:7px 9px; margin-top:3px; border:1px solid var(--bd);
+                border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
+input[type=checkbox] { width:auto; }
+.fila { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; align-items:end; }
+
+/* ---------- botones */
+button, a.boton { border:1px solid var(--bd); background:var(--suave); color:var(--acc2);
+                  border-radius:7px; padding:7px 12px; font-size:13px; font-weight:600;
+                  cursor:pointer; text-decoration:none; display:inline-block; text-align:center; }
+button:hover, a.boton:hover { border-color:var(--acc); }
+button.p { background:var(--acc); color:#fff; border-color:var(--acc); }
+button.p:hover { background:var(--acc2); }
+button.chico { padding:4px 8px; font-size:12px; }
+
+/* ---------- tablas */
+table { width:100%; border-collapse:collapse; font-size:13px; }
+th, td { text-align:left; padding:8px; border-bottom:1px solid var(--bd); vertical-align:middle; }
+th { color:var(--mut); font-weight:600; font-size:12px; }
+td.acc { white-space:nowrap; display:flex; gap:5px; flex-wrap:wrap; }
+
+/* ---------- etiquetas de estado */
+.chip { display:inline-block; padding:2px 8px; border-radius:20px; font-size:11px; font-weight:600; }
+.chip.si { background:var(--okbg); color:var(--ok); }
+.chip.no { background:var(--malbg); color:var(--mal); }
+.chip.gris { background:var(--campo); color:var(--mut); }
+
+/* ---------- avisos */
+.msg { font-size:13px; margin-top:10px; min-height:18px; }
+.msg.err { color:var(--mal); }
+.msg.ok { color:var(--ok); }
+
+/* ---------- tarjetas (generaciones y biblioteca de SVG) */
+.rejilla { display:grid; grid-template-columns:repeat(auto-fill, minmax(165px, 1fr)); gap:12px; }
+.tarjeta { background:var(--campo); border:1px solid var(--bd); border-radius:9px; padding:8px;
+           display:flex; flex-direction:column; gap:6px; }
+.tarjeta img { width:100%; aspect-ratio:1; object-fit:contain; background:#fff;
+               border:1px solid var(--bd); border-radius:6px; padding:4px; }
+.tarjeta .nom { font-size:12px; font-weight:600; word-break:break-word; line-height:1.3; }
+.tarjeta .sub { font-size:11px; color:var(--mut); }
+.tarjeta .b { display:flex; gap:5px; }
+.tarjeta .b a, .tarjeta .b button { flex:1; font-size:11px; padding:4px 0; }
+
+/* tarjeta "añadir" de la biblioteca */
+.tarjeta.nueva { align-items:center; justify-content:center; border-style:dashed; cursor:pointer;
+                 min-height:150px; color:var(--acc2); font-weight:600; font-size:13px; text-align:center; }
+.tarjeta.nueva:hover { border-color:var(--acc); background:var(--suave); }
+.tarjeta.nueva .mas { font-size:26px; line-height:1; }
+
+/* ---------- resumen en cifras */
+.cifras { display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; }
+.cifra { background:var(--campo); border:1px solid var(--bd); border-radius:9px; padding:10px 12px; }
+.cifra .n { font-size:21px; font-weight:700; color:var(--acc2); }
+.cifra .t { font-size:11px; color:var(--mut); text-transform:uppercase; letter-spacing:.4px; }
