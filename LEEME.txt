@@ -46,6 +46,9 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
 7) PERMISOS
    - Solo el administrador puede subir SVG (patrones y adornos) y gestionar usuarios.
    - Cada usuario solo ve y descarga sus propias generaciones y licencias.
+   - En la biblioteca de SVG, cada patrón o adorno se puede renombrar y borrar. OJO: los
+     diseños antiguos que lo usaban dejan de poder rehacerse, porque el servidor no guarda
+     los archivos: los reconstruye con el SVG.
    - El administrador ve las generaciones de TODOS (pestaña "Generaciones"), con el alias
      o usuario, la IP y la fecha, y puede descargarlas.
    - "Eliminar" borra el usuario junto con sus licencias y sus generaciones, sin vuelta
@@ -53,6 +56,12 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
      (ese se volvería a crear solo en el siguiente arranque).
    - OJO: si cambias ADMIN_USUARIO en el .env, el administrador anterior SIGUE existiendo
      en la base con su contraseña antigua. Entra en Administración y elimínalo.
+   - Códigos canjeables: en la pestaña "Códigos" generas lotes (ej. 30 días / 50 piezas)
+     y el cliente los canjea solo desde "Mis licencias". Así no das de alta cada venta.
+   - Pestaña "Resumen": totales, generaciones por día, quién genera más, lo más usado y
+     descarga en CSV de generaciones y usuarios.
+   - Los invitados sin actividad se borran solos (INVITADOS_DIAS del .env, 2 por defecto).
+   - Las vistas previas tienen un tope por IP y minuto para que nadie sature el servidor.
 
 7b) INVITADOS
    - Desde el login se puede entrar sin cuenta poniendo solo un alias.
@@ -77,15 +86,56 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    - patrones/ : cada figura separada del SVG es un motivo; se reparten al azar por la
      letra, enteros y sin tocar el texto. Deben ser formas rellenas
      (en Inkscape: Trayecto > Trazo a trayecto).
-   - adornos/  : ej. horn.svg. Va a la altura del nivel 2 con su propio color y con el
+   - adornos/  : ej. horn.svg (un color), candy_cane.svg (varios colores). Va a la altura del nivel 2 con su propio color y con el
      mismo borde que la letra. El segundo adorno (la forma reflejada) puede ir en espejo
      automático, en posición libre (útil para letras como L) o quitarse.
+     DELANTE O DETRÁS: por defecto el adorno va delante y tapa la letra. Puedes ponerlo
+     detrás y entonces es la letra la que lo corta (solo se ve lo que sobresale).
+     ADORNOS DE VARIOS COLORES: del SVG solo se usan las FORMAS, nunca sus colores.
+     Al cargarlo se limpia así: se descarta lo negro o casi negro (suele ser el contorno),
+     los tonos casi iguales se juntan en uno (tres rojos distintos = un solo rojo) y queda
+     un máximo de 3 formas, de mayor a menor superficie. Luego tú decides de qué color va
+     cada forma: "Como la letra", "Como el texto" o "Color extra".
+     Se respeta el orden de dibujo: lo que tapa una forma de encima no se duplica debajo.
    - fuentes/  : .ttf/.otf propios. En la pantalla salen agrupados aparte de los del equipo.
 
 9b) EN EL MÓVIL
    El panel de opciones se convierte en un cajón lateral: se abre con el botón
    "☰ Opciones" de la cabecera y se cierra con "✕ Ver el modelo", tocando fuera o con Esc.
    Así el modelo 3D ocupa toda la pantalla. En escritorio no cambia nada.
+
+9c) COSTOS Y PRECIO (opcional, solo para ti)
+   En el generador hay un desplegable "Calcular costo y precio de venta", cerrado por
+   defecto. Al abrirlo muestra los gramos por color, el tiempo aproximado, el costo y el
+   precio con el margen de ganancia que pongas. Nada de esto se guarda en el servidor:
+   se calcula en el navegador y los ajustes (precio del filamento, margen...) quedan solo
+   en ese navegador. El tiempo es una estimación por volumen, no un laminado real.
+
+9d) AVISOS DE IMPRESIÓN
+   Debajo de los botones salen avisos automáticos si el diseño tiene partes más finas de
+   0,8 mm, si quedan piezas separadas o si no cabe en una cama de 25 cm.
+
+9e) OTRAS PIEZAS Y AJUSTES
+   - Hueco para imán por detrás (bolsillo en el nivel 1, con su diámetro y profundidad).
+   - "Bordes biselados": el canto de cada capa sube en escalones de 0,2 mm; impreso se ve
+     como un bisel. Tarda algo más en generar.
+   - Texto: hasta 6 letras en la inicial. El cuadro del texto admite varias líneas
+     (pulsa Enter dentro del recuadro; también vale escribir "|"), tiene curva/arco en
+     grados, y se arrastra en la vista 3D como los adornos y el aro.
+   - Plantillas: el administrador guarda un diseño con nombre y todos pueden partir de él.
+
+9f) LOS 4 COLORES DEL LLAVERO (un AMS tiene 4 ranuras)
+   1. Nivel 1  : la base y el borde de todo, y el aro del llavero.
+   2. Nivel 2  : la letra grande y el borde interior del texto.
+   3. Nivel 3  : el texto y el patrón.
+   4. Extra    : el cuarto color, solo para el adorno si lo necesita.
+   El adorno no tiene colores propios: cada una de sus formas se manda a uno de esos
+   cuatro ("Como la base", "Como la letra", "Como el texto" o "Color extra"). Por eso es imposible pasarse de 4 filamentos, y el 3MF sale con un material
+   por color, sin versiones casi idénticas del mismo tono.
+   Al DESCARGAR, todas las piezas del mismo color se funden en un solo objeto, así que el
+   3MF lleva exactamente un objeto por filamento (3 colores = 3 objetos). En la vista
+   previa siguen sueltas para poder arrastrarlas.
+   Debajo de los botones se ve siempre cuántos filamentos gasta el diseño y cuáles son.
 
 10) CAPAS DEL MODELO
    Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).

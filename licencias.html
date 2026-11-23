@@ -28,6 +28,16 @@
   </section>
 
   <section>
+    <h2>Canjear un código</h2>
+    <p class="ayuda">Si el administrador te dio un código, escríbelo aquí y se añade solo a tu cuenta.</p>
+    <div class="fila">
+      <div><label>Código<input id="codigo" placeholder="XXXX-XXXX-XXXX" autocomplete="off"></label></div>
+      <div><button class="p" id="btn_canjear">Canjear</button></div>
+    </div>
+    <div id="msg_canje" class="msg"></div>
+  </section>
+
+  <section>
     <h2>Detalle</h2>
     <table>
       <thead><tr>
@@ -80,6 +90,21 @@ async function cargar() {
     $('msg').textContent = 'No se pudo cargar: ' + e.message;
   }
 }
+$('btn_canjear').onclick = async () => {
+  const el = $('msg_canje');
+  try {
+    const r = await fetch('/api/canjear', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo: $('codigo').value }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo canjear');
+    el.className = 'msg ok'; el.textContent = 'Código canjeado. Ya tienes tu licencia.';
+    $('codigo').value = '';
+    await cargar();
+  } catch (e) { el.className = 'msg err'; el.textContent = e.message; }
+};
+$('codigo').addEventListener('keydown', e => { if (e.key === 'Enter') $('btn_canjear').click(); });
+
 cargar();
 </script>
 </body>

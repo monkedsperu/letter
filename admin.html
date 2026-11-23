@@ -30,6 +30,8 @@
   <div class="pestanas">
     <button data-vista="usuarios" class="activa">Usuarios y licencias</button>
     <button data-vista="generaciones">Generaciones</button>
+    <button data-vista="codigos">Códigos</button>
+    <button data-vista="resumen">Resumen</button>
     <button data-vista="biblioteca">Biblioteca de SVG</button>
   </div>
 
@@ -120,6 +122,60 @@
     </main>
   </div>
 
+  <!-- ============ códigos canjeables ============ -->
+  <div id="vista_codigos" hidden>
+    <main style="padding:0; gap:16px;">
+      <section>
+        <h2>Generar códigos</h2>
+        <p class="ayuda">El cliente canjea el código solo desde "Mis licencias" y se le crea la
+           licencia. Así no tienes que darla de alta a mano por cada venta. Deja un campo vacío
+           para no poner ese límite.</p>
+        <div class="fila">
+          <div><label>Cuántos<input id="nc_cuantos" type="number" min="1" max="100" value="5"></label></div>
+          <div><label>Días de validez<input id="nc_dias" type="number" min="1" placeholder="sin caducidad"></label></div>
+          <div><label>Cantidad máxima<input id="nc_max" type="number" min="1" placeholder="ilimitada"></label></div>
+          <div><label>Nota<input id="nc_nota" placeholder="ej. lote feria"></label></div>
+          <div><button class="p" id="btn_codigos">Generar</button></div>
+        </div>
+        <div id="msg_codigo" class="msg"></div>
+        <pre id="nuevos_codigos" hidden style="background:var(--campo);border:1px solid var(--bd);
+             border-radius:8px;padding:10px;font-size:13px;white-space:pre-wrap"></pre>
+      </section>
+      <section>
+        <table>
+          <thead><tr><th>Código</th><th>Da</th><th>Estado</th><th>Canjeado por</th><th>Creado</th><th></th></tr></thead>
+          <tbody id="tabla_codigos"></tbody>
+        </table>
+      </section>
+    </main>
+  </div>
+
+  <!-- ============ resumen / estadísticas ============ -->
+  <div id="vista_resumen" hidden>
+    <main style="padding:0; gap:16px;">
+      <section>
+        <h2>Resumen</h2>
+        <div class="cifras" id="cifras_tot"></div>
+        <div class="fila" style="margin-top:14px">
+          <div><a class="boton" href="/api/admin/csv/generaciones">Descargar generaciones (CSV)</a></div>
+          <div><a class="boton" href="/api/admin/csv/usuarios">Descargar usuarios (CSV)</a></div>
+        </div>
+      </section>
+      <section>
+        <h2>Generaciones por día (últimos 30)</h2>
+        <div id="grafico" style="display:flex;align-items:flex-end;gap:3px;height:120px"></div>
+      </section>
+      <section>
+        <h2>Quién genera más</h2>
+        <table><tbody id="tabla_top"></tbody></table>
+      </section>
+      <section>
+        <h2>Lo más usado</h2>
+        <div id="mas_usado" class="cifras"></div>
+      </section>
+    </main>
+  </div>
+
   <!-- ============ biblioteca ============ -->
   <div id="vista_biblioteca" hidden>
     <main style="padding:0; gap:16px;">
@@ -167,10 +223,79 @@ const enviar = (url, cuerpo) => pedir(url, {
 // ---------- pestañas
 document.querySelectorAll('.pestanas button').forEach(b => b.onclick = () => {
   document.querySelectorAll('.pestanas button').forEach(x => x.classList.toggle('activa', x === b));
-  for (const v of ['usuarios', 'generaciones', 'biblioteca'])
+  for (const v of ['usuarios', 'generaciones', 'codigos', 'resumen', 'biblioteca'])
     $('vista_' + v).hidden = b.dataset.vista !== v;
   if (b.dataset.vista === 'generaciones') cargarGeneraciones();
+  if (b.dataset.vista === 'codigos') cargarCodigos();
+  if (b.dataset.vista === 'resumen') cargarResumen();
 });
+
+// ---------- códigos canjeables
+async function cargarCodigos() {
+  try {
+    const cs = (await pedir('/api/admin/codigos')).codigos;
+    $('tabla_codigos').innerHTML = cs.length ? cs.map(c => {
+      const da = [c.dias ? c.dias + ' días' : 'sin caducidad',
+                  c.max_generaciones ? c.max_generaciones + ' piezas' : 'ilimitadas'].join(' · ');
+      return `<tr>
+        <td><code>${esc(c.codigo)}</code></td><td>${da}</td>
+        <td>${c.usado_en ? '<span class="chip gris">canjeado</span>'
+                         : '<span class="chip si">sin usar</span>'}</td>
+        <td>${esc(c.alias || c.usuario || '—')}</td><td>${fecha(c.creado)}</td>
+        <td class="acc">${c.usado_en ? ''
+          : `<button class="chico peligro" data-borrarcod="${esc(c.codigo)}">Borrar</button>`}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="6" class="vacio">Todavía no hay códigos.</td></tr>';
+  } catch (e) { aviso('msg_codigo', e.message); }
+}
+
+$('btn_codigos').onclick = async () => {
+  try {
+    const d = await enviar('/api/admin/codigos', {
+      cuantos: +$('nc_cuantos').value, dias: $('nc_dias').value,
+      max_generaciones: $('nc_max').value, nota: $('nc_nota').value });
+    $('nuevos_codigos').hidden = false;
+    $('nuevos_codigos').textContent = d.nuevos.join('\n');
+    aviso('msg_codigo', `${d.nuevos.length} código(s) listos para repartir.`, true);
+    await cargarCodigos();
+  } catch (e) { aviso('msg_codigo', e.message); }
+};
+
+$('tabla_codigos').onclick = async e => {
+  const b = e.target.closest('button[data-borrarcod]'); if (!b) return;
+  try { await pedir('/api/admin/codigos/' + encodeURIComponent(b.dataset.borrarcod), { method: 'DELETE' });
+        await cargarCodigos(); } catch (err) { aviso('msg_codigo', err.message); }
+};
+
+// ---------- resumen
+async function cargarResumen() {
+  const e = await pedir('/api/admin/estadisticas');
+  const t = e.totales;
+  $('cifras_tot').innerHTML = `
+    <div class="cifra"><div class="n">${t.generaciones}</div><div class="t">Generaciones</div></div>
+    <div class="cifra"><div class="n">${t.usuarios}</div><div class="t">Usuarios con cuenta</div></div>
+    <div class="cifra"><div class="n">${t.invitados}</div><div class="t">Invitados</div></div>
+    <div class="cifra"><div class="n">${t.licencias}</div><div class="t">Licencias activas</div></div>`;
+
+  const maximo = Math.max(1, ...e.por_dia.map(d => d.n));
+  $('grafico').innerHTML = e.por_dia.length ? e.por_dia.map(d => `
+    <div title="${d.dia}: ${d.n}" style="flex:1;min-width:6px;background:var(--acc);
+         border-radius:3px 3px 0 0;height:${Math.round(d.n / maximo * 100)}%"></div>`).join('')
+    : '<p class="vacio">Sin actividad todavía.</p>';
+
+  $('tabla_top').innerHTML = e.top_usuarios.length ? e.top_usuarios.map(u => `<tr>
+      <td>${esc(u.quien)}${u.es_invitado ? ' <span class="chip gris">invitado</span>' : ''}</td>
+      <td style="text-align:right"><b>${u.n}</b></td></tr>`).join('')
+    : '<tr><td class="vacio">Nadie ha generado todavía.</td></tr>';
+
+  const titulos = { fuente_inicial: 'Fuente de la letra', fuente_texto: 'Fuente del texto',
+                    patron: 'Patrón', adorno: 'Adorno' };
+  $('mas_usado').innerHTML = Object.entries(e.mas_usado).map(([k, lista]) => `
+    <div class="cifra"><div class="t">${titulos[k] || k}</div>
+      ${lista.length ? lista.map(([v, n]) => `<div style="font-size:12px;margin-top:3px">
+         ${esc(v)} <b>${n}</b></div>`).join('') : '<div style="font-size:12px">—</div>'}
+    </div>`).join('');
+}
 
 // ---------- generaciones de todos + bloqueo por IP
 async function cargarGeneraciones() {
@@ -336,6 +461,10 @@ function pintarBiblioteca(tipo, nombres) {
     <div class="tarjeta">
       <img src="/api/svg/${tipo}/${encodeURIComponent(n)}" alt="${esc(n)}">
       <div class="nom">${esc(n)}</div>
+      <div class="b">
+        <button class="chico" data-svg="renombrar" data-tipo="${tipo}" data-nom="${esc(n)}">Renombrar</button>
+        <button class="chico peligro" data-svg="borrar" data-tipo="${tipo}" data-nom="${esc(n)}">Borrar</button>
+      </div>
     </div>`).join('');
   rejilla.innerHTML = tarjetas + `
     <div class="tarjeta nueva" data-subir="${tipo}">
@@ -350,9 +479,30 @@ async function cargarBiblioteca() {
   pintarBiblioteca('adorno', cfg.adornos);
 }
 
-document.querySelectorAll('.rejilla').forEach(r => r.onclick = e => {
+document.querySelectorAll('.rejilla').forEach(r => r.onclick = async e => {
   const nueva = e.target.closest('[data-subir]');
-  if (nueva) $(nueva.dataset.subir === 'patron' ? 'archivo_patron' : 'archivo_adorno').click();
+  if (nueva) return $(nueva.dataset.subir === 'patron' ? 'archivo_patron' : 'archivo_adorno').click();
+
+  const b = e.target.closest('button[data-svg]');
+  if (!b) return;
+  const { svg: accion, tipo, nom } = b.dataset;
+  const url = `/api/admin/svg/${tipo}/${encodeURIComponent(nom)}`;
+  try {
+    if (accion === 'borrar') {
+      if (!confirm(`¿Borrar "${nom}"?\n\nLos diseños antiguos que lo usaban ya no se podrán ` +
+                   `volver a descargar. Esto no se puede deshacer.`)) return;
+      await pedir(url, { method: 'DELETE' });
+      aviso('msg_svg', `"${nom}" borrado.`, true);
+    } else {
+      const nuevo = prompt('Nuevo nombre (sin la extensión):', nom.replace(/\.svg$/i, ''));
+      if (!nuevo) return;
+      if (!confirm(`¿Renombrar "${nom}"?\n\nLos diseños antiguos que lo usaban ya no se podrán ` +
+                   `volver a descargar.`)) return;
+      const d = await enviar(url, { nombre: nuevo });
+      aviso('msg_svg', `Ahora se llama "${d.nombre}".`, true);
+    }
+    await cargarBiblioteca();
+  } catch (err) { aviso('msg_svg', err.message); }
 });
 
 function subidor(campo, url, etiqueta) {

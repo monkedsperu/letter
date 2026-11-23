@@ -8,6 +8,7 @@ La configuración (admin, contraseña, clave de sesión) sale del archivo .env.
 La vista previa es gratis. "Generar archivos" descuenta 1 de la licencia y deja listos el
 3MF y el STL, que luego se bajan desde "Mis generaciones" sin volver a cobrar.
 """
+import csv
 import json
 import os
 import re
@@ -16,18 +17,21 @@ import time
 from dataclasses import asdict
 from datetime import timedelta
 from functools import wraps
-from io import BytesIO
+from io import BytesIO, StringIO
 
-from flask import Flask, jsonify, redirect, request, send_file, session
+from flask import Flask, Response, jsonify, redirect, request, send_file, session
 
 import datos
 from generador_stl import (AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, Parametros,
-                           adornos_disponibles, construir, exportar_3mf, exportar_stl,
-                           fuentes_instaladas, miniatura_png, parametros_desde_dict,
-                           patrones_disponibles, svg_a_poligono)
+                           adornos_disponibles, construir_con_analisis, exportar_3mf,
+                           exportar_stl, fuentes_instaladas, miniatura_png,
+                           parametros_desde_dict, patrones_disponibles, svg_a_poligono)
 
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
+LIMITE_INVITADO = 40      # vistas previas por minuto e IP (los invitados no pagan nada)
+LIMITE_CUENTA = 150
+LIMPIAR_CADA = 3600       # cada cuánto se revisa si hay invitados viejos (segundos)
 
 
 # ------------------------------------------------------------------ configuración (.env)
@@ -66,6 +70,9 @@ if CLAVE_POR_DEFECTO in _admin_clave:
 datos.iniciar()
 datos.asegurar_admin(os.environ.get("ADMIN_USUARIO", "admin"), _admin_clave)
 
+_peticiones = {}          # ponytail: contador por IP en memoria, por proceso
+_ultima_limpieza = 0.0
+
 _lock_dibujo = threading.Lock()  # ponytail: matplotlib no es seguro entre hilos; 1 miniatura a la vez
 _fallos_login = {}               # ponytail: freno anti-fuerza-bruta en memoria, por proceso
 
@@ -77,6 +84,32 @@ def ip_cliente():
     return (reenviada.split(",")[0].strip() if reenviada else request.remote_addr) or "?"
 
 
+def permitido(clave: str, limite: int, ventana: int = 60) -> bool:
+    """Freno sencillo por IP: como mucho `limite` llamadas en `ventana` segundos."""
+    ahora = time.time()
+    marcas = [t for t in _peticiones.get(clave, []) if ahora - t < ventana]
+    if len(marcas) >= limite:
+        _peticiones[clave] = marcas
+        return False
+    marcas.append(ahora)
+    _peticiones[clave] = marcas
+    if len(_peticiones) > 5000:   # no dejar que el diccionario crezca sin fin
+        for k in [k for k, v in _peticiones.items() if not v or ahora - v[-1] > ventana]:
+            _peticiones.pop(k, None)
+    return True
+
+
+def limpiar_invitados_de_vez_en_cuando():
+    global _ultima_limpieza
+    if time.time() - _ultima_limpieza < LIMPIAR_CADA:
+        return
+    _ultima_limpieza = time.time()
+    dias = int(os.environ.get("INVITADOS_DIAS", "2") or 0)
+    borrados = datos.borrar_invitados_viejos(dias)
+    if borrados:
+        print(f"Limpieza: {borrados} invitado(s) sin actividad en {dias} días.")
+
+
 @app.before_request
 def cortar_bloqueados():
     if request.endpoint == "estilo":
@@ -86,6 +119,7 @@ def cortar_bloqueados():
         if request.path.startswith("/api/"):
             return jsonify(error="Acceso bloqueado."), 403
         return "<h1>Acceso bloqueado</h1><p>Habla con el administrador.</p>", 403
+    limpiar_invitados_de_vez_en_cuando()
     return None
 
 
@@ -246,9 +280,10 @@ def api_config():
 
 
 def _construir_desde(cuerpo):
-    """dict -> (Parametros, niveles). Los errores de parámetros suben como ValueError."""
+    """dict -> (Parametros, niveles, analisis). Los errores suben como ValueError."""
     p = parametros_desde_dict(cuerpo or {})
-    return p, construir(p)
+    niveles, analisis = construir_con_analisis(p)
+    return p, niveles, analisis
 
 
 def texto_de_invitado(texto: str) -> str:
@@ -267,8 +302,8 @@ def _nombre_archivo(p: Parametros):
 def _responder_modelo(niveles, p: Parametros, formato: str):
     if formato == "stl":
         datos_bin, tipo = exportar_stl(niveles), "model/stl"
-    else:
-        datos_bin, tipo = exportar_3mf(niveles), "model/3mf"
+    else:   # al descargar se funde una pieza por color: un objeto por filamento
+        datos_bin, tipo = exportar_3mf(niveles, fundir=True), "model/3mf"
     return send_file(BytesIO(datos_bin), mimetype=tipo, as_attachment=True,
                      download_name=f"{_nombre_archivo(p)}.{formato}")
 
@@ -276,12 +311,18 @@ def _responder_modelo(niveles, p: Parametros, formato: str):
 @app.post("/api/preview")
 @pide_login
 def api_preview():
-    """Vista previa 3D: no descuenta licencia ni se guarda."""
+    """Vista previa 3D: no descuenta licencia ni se guarda. El análisis (volúmenes y avisos)
+    viaja en una cabecera; el coste y el precio los calcula el navegador y no se guardan."""
+    limite = LIMITE_INVITADO if request.usuario["es_invitado"] else LIMITE_CUENTA
+    if not permitido(ip_cliente(), limite):
+        return jsonify(error="Demasiadas vistas previas seguidas. Espera un momento."), 429
     try:
-        p, niveles = _construir_desde(cuerpo_json())
+        p, niveles, analisis = _construir_desde(cuerpo_json())
     except ValueError as e:
         return jsonify(error=str(e)), 400
-    return send_file(BytesIO(exportar_3mf(niveles)), mimetype="model/3mf")
+    r = send_file(BytesIO(exportar_3mf(niveles)), mimetype="model/3mf")
+    r.headers["X-Modelo"] = json.dumps(analisis, ensure_ascii=True)   # ASCII: va en una cabecera
+    return r
 
 
 @app.post("/api/generar")
@@ -300,7 +341,7 @@ def api_generar():
     elif not datos.licencia_vigente(uid):    # aviso rápido antes de calcular
         return jsonify(error="No tienes una licencia vigente con generaciones disponibles."), 402
     try:
-        p, niveles = _construir_desde(cuerpo)
+        p, niveles, analisis = _construir_desde(cuerpo)
     except ValueError as e:
         return jsonify(error=str(e)), 400
 
@@ -312,7 +353,7 @@ def api_generar():
     except datos.SinLicencia as e:
         return jsonify(error=str(e)), 402
     return jsonify(id=gen_id, nombre=_nombre_archivo(p), texto=p.texto,
-                   resumen=datos.resumen_usuario(uid))
+                   analisis=analisis, resumen=datos.resumen_usuario(uid))
 
 
 @app.get("/api/generaciones")
@@ -352,10 +393,69 @@ def api_gen_descargar(gen_id, formato):
     if not g:
         return jsonify(error="No encontrada"), 404
     try:
-        p, niveles = _construir_desde(json.loads(g["parametros"]))
+        p, niveles, _ = _construir_desde(json.loads(g["parametros"]))
     except ValueError as e:
         return jsonify(error=f"No se pudo rehacer: {e}"), 400
     return _responder_modelo(niveles, p, formato)
+
+
+@app.post("/api/canjear")
+@pide_login
+def api_canjear():
+    """El usuario canjea un código y se le crea la licencia, sin pasar por el admin."""
+    if request.usuario["es_invitado"]:
+        return jsonify(error="Necesitas una cuenta para canjear un código."), 403
+    try:
+        datos.canjear_codigo(cuerpo_json().get("codigo", ""), request.usuario["id"])
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    return jsonify(resumen=datos.resumen_usuario(request.usuario["id"]))
+
+
+# ---------- plantillas (las crea el admin, las usa todo el mundo)
+@app.get("/api/plantillas")
+@pide_login
+def api_plantillas():
+    return jsonify(plantillas=datos.listar_plantillas())
+
+
+@app.get("/api/plantilla/<int:pid>")
+@pide_login
+def api_plantilla(pid):
+    pl = datos.plantilla(pid)
+    if not pl:
+        return jsonify(error="No encontrada"), 404
+    return jsonify(parametros=json.loads(pl["parametros"]))
+
+
+@app.get("/api/plantilla/<int:pid>/miniatura")
+@pide_login
+def api_plantilla_miniatura(pid):
+    pl = datos.plantilla(pid)
+    if not pl or not pl["miniatura"]:
+        return "No encontrada", 404
+    return send_file(BytesIO(pl["miniatura"]), mimetype="image/png")
+
+
+@app.post("/api/admin/plantillas")
+@pide_admin
+def api_admin_guardar_plantilla():
+    try:
+        d = cuerpo_json()
+        p, niveles, _ = _construir_desde(d.get("parametros") or {})
+        with _lock_dibujo:
+            mini = miniatura_png(niveles)
+        datos.guardar_plantilla(d.get("nombre", ""), asdict(p), mini)
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    return jsonify(plantillas=datos.listar_plantillas())
+
+
+@app.delete("/api/admin/plantillas/<int:pid>")
+@pide_admin
+def api_admin_borrar_plantilla(pid):
+    datos.borrar_plantilla(pid)
+    return jsonify(plantillas=datos.listar_plantillas())
 
 
 @app.get("/api/licencias")
@@ -488,12 +588,66 @@ def api_admin_bloquear_ip():
     return jsonify(bloqueadas=datos.ips_bloqueadas())
 
 
+@app.get("/api/admin/codigos")
+@pide_admin
+def api_admin_codigos():
+    return jsonify(codigos=datos.listar_codigos())
+
+
+@app.post("/api/admin/codigos")
+@pide_admin
+def api_admin_crear_codigos():
+    try:
+        d = cuerpo_json()
+        nuevos = datos.crear_codigos(d.get("cuantos", 1), d.get("dias"),
+                                     d.get("max_generaciones"), d.get("nota", ""))
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    return jsonify(nuevos=nuevos, codigos=datos.listar_codigos())
+
+
+@app.delete("/api/admin/codigos/<codigo>")
+@pide_admin
+def api_admin_borrar_codigo(codigo):
+    datos.borrar_codigo(codigo)
+    return jsonify(codigos=datos.listar_codigos())
+
+
+@app.get("/api/admin/estadisticas")
+@pide_admin
+def api_admin_estadisticas():
+    return jsonify(datos.estadisticas())
+
+
+@app.get("/api/admin/csv/<que>")
+@pide_admin
+def api_admin_csv(que):
+    """Descarga en CSV para llevar las cuentas fuera de la aplicación."""
+    if que == "generaciones":
+        filas = datos.generaciones_todas(limite=100000)
+        columnas = ["id", "creada", "nombre", "usuario", "alias", "es_invitado", "ip"]
+    elif que == "usuarios":
+        filas = datos.listar_usuarios()
+        for f in filas:
+            f.update({"restantes": datos.resumen_usuario(f["id"])["restantes"]})
+        columnas = ["id", "usuario", "alias", "es_admin", "es_invitado", "activo",
+                    "creado", "generaciones", "restantes", "ultima_ip"]
+    else:
+        return jsonify(error="Solo: generaciones o usuarios"), 404
+    salida = StringIO()
+    escritor = csv.DictWriter(salida, fieldnames=columnas, extrasaction="ignore")
+    escritor.writeheader()
+    escritor.writerows(filas)
+    return Response(salida.getvalue(), mimetype="text/csv; charset=utf-8",
+                    headers={"Content-Disposition": f'attachment; filename="{que}.csv"'})
+
+
 # ------------------------------------------------------------------ subir SVG (solo admin)
 def _guardar_svg(carpeta, nombre, contenido):
     if len(contenido) > MAX_SVG:
         raise ValueError("El SVG es demasiado grande (máx. 2 MB).")
     base = os.path.splitext(os.path.basename(str(nombre or "archivo")))[0]
-    limpio = (re.sub(r"[^\w\-]", "_", base)[:60] or "archivo") + ".svg"
+    limpio = (re.sub(r"[^\w\-]+", "_", base).strip("_")[:60] or "archivo") + ".svg"
     os.makedirs(carpeta, exist_ok=True)
     ruta = os.path.join(carpeta, limpio)
     tmp = ruta + ".tmp"
@@ -506,6 +660,55 @@ def _guardar_svg(carpeta, nombre, contenido):
         raise ValueError(f"SVG no válido: {e}".replace(".svg.tmp", ".svg"))
     os.replace(tmp, ruta)
     return limpio
+
+
+def _carpeta_svg(tipo):
+    return {"patron": CARPETA_PATRONES, "adorno": CARPETA_ADORNOS}.get(tipo)
+
+
+def _ruta_svg(tipo, nombre):
+    """Ruta real de un SVG, solo si está dentro de su carpeta (nada de ../)."""
+    carpeta = _carpeta_svg(tipo)
+    if not carpeta:
+        return None
+    ruta = os.path.normpath(os.path.join(carpeta, os.path.basename(nombre or "")))
+    return ruta if ruta.startswith(carpeta + os.sep) and os.path.isfile(ruta) else None
+
+
+def _listas_svg():
+    return {"patrones": patrones_disponibles(), "adornos": adornos_disponibles()}
+
+
+@app.delete("/api/admin/svg/<tipo>/<nombre>")
+@pide_admin
+def api_admin_borrar_svg(tipo, nombre):
+    ruta = _ruta_svg(tipo, nombre)
+    if not ruta:
+        return jsonify(error="No encontrado"), 404
+    os.remove(ruta)
+    return jsonify(**_listas_svg())
+
+
+@app.post("/api/admin/svg/<tipo>/<nombre>")
+@pide_admin
+def api_admin_renombrar_svg(tipo, nombre):
+    """Renombra un SVG. Las generaciones antiguas que lo usaban dejarán de rehacerse."""
+    ruta = _ruta_svg(tipo, nombre)
+    if not ruta:
+        return jsonify(error="No encontrado"), 404
+    try:
+        nuevo = cuerpo_json().get("nombre", "")
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    base = os.path.splitext(os.path.basename(str(nuevo)))[0]
+    limpio = (re.sub(r"[^\w\-]+", "_", base).strip("_")[:60] or "") + ".svg"
+    if limpio == ".svg":
+        return jsonify(error="Ponle un nombre válido."), 400
+    destino = os.path.join(_carpeta_svg(tipo), limpio)
+    if os.path.exists(destino) and os.path.abspath(destino) != os.path.abspath(ruta):
+        return jsonify(error=f"Ya existe un archivo llamado '{limpio}'."), 400
+    os.replace(ruta, destino)
+    return jsonify(nombre=limpio, **_listas_svg())
 
 
 @app.post("/api/patron")

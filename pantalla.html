@@ -17,7 +17,8 @@
   fieldset { border:1px solid var(--bd); border-radius:10px; background:var(--panel); margin:0 0 12px; padding:10px 12px 12px; }
   legend { font-size:13px; font-weight:600; padding:0 6px; color:var(--acc); }
   label { display:block; font-size:12px; color:var(--mut); margin-top:8px; }
-  input, select { width:100%; padding:6px 8px; margin-top:3px; border:1px solid var(--bd); border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
+  textarea { resize:vertical; min-height:48px; font-family:inherit; line-height:1.3; }
+  input, select, textarea { width:100%; padding:6px 8px; margin-top:3px; border:1px solid var(--bd); border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
   input[type=color] { padding:2px; height:32px; }
   .fila { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   button { width:100%; padding:10px; border:0; border-radius:8px; font-size:15px; cursor:pointer; background:var(--acc); color:#fff; font-weight:600; }
@@ -35,6 +36,21 @@
                border-radius:7px; padding:8px 10px; }
   .aviso-inv b { font-size:14px; line-height:1; }
   .nota { font-size:11px; color:var(--mut); line-height:1.45; margin:8px 0 0; }
+  .svgmini { width:100%; height:46px; object-fit:contain; background:#fff; border:1px solid var(--bd);
+              border-radius:6px; padding:2px; margin-top:3px; }
+  details.calc { border:1px solid var(--bd); border-radius:9px; background:var(--campo); padding:8px 10px; margin-top:10px; }
+  details.calc summary { cursor:pointer; font-size:12.5px; font-weight:600; color:var(--acc2); }
+  details.calc .ajustes { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
+  table.costos { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  table.costos td { padding:3px 0; border-bottom:1px solid var(--bd); }
+  table.costos td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+  table.costos tr.total td { font-weight:700; font-size:13.5px; color:var(--acc2); border-bottom:0; padding-top:6px; }
+  .puntoColor { display:inline-block; width:9px; height:9px; border-radius:50%; border:1px solid var(--bd); margin-right:5px; }
+  #filamentos { display:flex; align-items:center; gap:4px; margin-top:10px; font-size:11.5px; color:var(--mut); }
+  #filamentos .puntoColor { width:13px; height:13px; margin:0; }
+  #avisos { margin-top:8px; }
+  #avisos div { display:flex; gap:7px; font-size:11.5px; line-height:1.45; color:#8a6116;
+                background:#fdf3dc; border:1px solid #e8d49a; border-radius:7px; padding:7px 9px; margin-top:6px; }
   .mover { font-weight:600; font-size:10px; color:var(--acc2); background:var(--suave);
            border:1px solid var(--bd); border-radius:20px; padding:1px 7px; margin-left:4px; }
   #generar-archivos { margin-top:8px; background:#2e7d4f; }
@@ -110,10 +126,19 @@
     <span id="yo_cupo" class="cupo"></span>
   </div>
 
+  <fieldset id="caja-plantillas" hidden>
+    <legend>Plantillas</legend>
+    <div class="fila">
+      <div><label>Empezar desde<select id="plantilla"></select></label></div>
+      <div style="display:flex;align-items:flex-end"><button id="usar-plantilla" class="sec">Cargar</button></div>
+    </div>
+    <button id="guardar-plantilla" class="sec solo-admin" hidden>Guardar diseño actual como plantilla</button>
+  </fieldset>
+
   <fieldset>
     <legend>Letra inicial</legend>
     <div class="fila">
-      <div><label>Letras (1 o 2)<input id="inicial" maxlength="2" value="M"></label></div>
+      <div><label>Letras (1 a 6)<input id="inicial" maxlength="6" value="M"></label></div>
       <div><label>Fuente<select id="fuente_inicial"></select></label></div>
     </div>
     <div class="fila">
@@ -124,7 +149,8 @@
 
   <fieldset>
     <legend>Texto</legend>
-    <label>Texto<input id="texto" placeholder="ej. aria"></label>
+    <label>Texto <span class="mover">✥ se arrastra</span>
+      <textarea id="texto" rows="2" placeholder="Pulsa Enter para una segunda línea"></textarea></label>
     <div class="fila">
       <div><label>Fuente<select id="fuente_texto"></select></label></div>
       <div><label>Tamaño (mm)<input id="tam_texto" type="number" step="1" min="1"></label></div>
@@ -135,14 +161,21 @@
     </div>
     <div class="fila">
       <div><label>Giro (grados)<input id="giro_texto" type="number" step="1"></label></div>
+      <div><label>Curva / arco (°)<input id="curva_texto" type="number" step="5"></label></div>
+    </div>
+    <div class="fila">
       <div><label>Posición
         <select id="posicion">
           <option value="sobre">Sobre la letra</option>
           <option value="arriba">Arriba de la letra</option>
           <option value="derecha">A la derecha</option>
         </select></label></div>
+      <div><label>Separación (mm)<input id="separacion" type="number" step="1" min="0"></label></div>
     </div>
-    <label>Separación (mm, arriba / derecha)<input id="separacion" type="number" step="1" min="0"></label>
+    <div class="fila">
+      <div><label>Ajuste X (mm)<input id="texto_x" type="number" step="0.5"></label></div>
+      <div><label>Ajuste Y (mm)<input id="texto_y" type="number" step="0.5"></label></div>
+    </div>
     <label class="check"><input id="cortar_letra" type="checkbox"> El borde 1 del texto corta la letra</label>
   </fieldset>
 
@@ -166,12 +199,18 @@
   </fieldset>
 
   <fieldset>
-    <legend>Adorno · cuernos <span class="mover">✥ se arrastra</span></legend>
-    <label class="check"><input id="usar_adorno" type="checkbox"> Poner adorno sobre la letra</label>
+    <legend>Adorno <span class="mover">✥ se arrastra</span></legend>
+    <label class="check"><input id="usar_adorno" type="checkbox"> Poner un adorno</label>
     <div id="caja-adorno">
     <div class="fila">
-      <div><label>SVG<select id="adorno"></select></label></div>
-      <div><label>Color<input id="color_adorno" type="color"></label></div>
+      <div><label>SVG<select id="adorno"></select><img id="vista_adorno" class="svgmini" alt=""></label></div>
+      <div><label>Color extra (el 4º)<input id="color_adorno" type="color"></label></div>
+    </div>
+    <label>De qué color va cada forma del SVG</label>
+    <div class="fila3">
+      <div id="fila_c1"><label>Forma 1<select id="adorno_c1"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
+      <div id="fila_c2"><label>Forma 2<select id="adorno_c2"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
+      <div id="fila_c3"><label>Forma 3<select id="adorno_c3"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
     </div>
     <div class="fila">
       <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
@@ -181,7 +220,12 @@
       <div><label>X (mm)<input id="adorno_x" type="number" step="0.5"></label></div>
       <div><label>Y (mm)<input id="adorno_y" type="number" step="0.5"></label></div>
     </div>
-    <label>Segundo adorno (forma reflejada, ej. cuerno derecho)
+    <label>Posición respecto a la letra
+      <select id="adorno_detras">
+        <option value="false">Delante (tapa la letra)</option>
+        <option value="true">Detrás (la letra lo tapa)</option>
+      </select></label>
+    <label>Segundo adorno (la misma forma, reflejada)
       <select id="segundo_adorno">
         <option value="espejo">Espejo automático</option>
         <option value="libre">Posición libre (ej. letra L)</option>
@@ -192,8 +236,11 @@
       <div><label>Y2 (mm)<input id="adorno2_y" type="number" step="0.5"></label></div>
       <div><label>Giro 2 (°)<input id="giro_adorno2" type="number" step="5"></label></div>
     </div>
-    <label class="check"><input id="cortar_adorno" type="checkbox"> El borde del adorno corta la letra</label>
-    <label>Va a la altura del nivel 2 y con el borde del nivel 1. Arrástralo en la vista 3D.</label>
+    <label class="check"><input id="cortar_adorno" type="checkbox"> Separarlo de la letra con un borde</label>
+    <label>Va a la altura del nivel 2 y con el borde del nivel 1. Arrástralo en la vista 3D.
+           Del SVG solo se usan las formas: el negro se descarta (suele ser el contorno), los
+           tonos casi iguales se juntan y quedan 3 formas como mucho. El color lo pones tú con
+           los selectores de arriba, para que el llavero nunca pase de 4 filamentos.</label>
     </div>
   </fieldset>
 
@@ -215,10 +262,26 @@
   </fieldset>
 
   <fieldset>
+    <legend>Imán y acabado</legend>
+    <label class="check"><input id="iman" type="checkbox"> Hueco para imán por detrás</label>
+    <div id="caja-iman">
+      <div class="fila">
+        <div><label>Diámetro (mm)<input id="iman_diametro" type="number" step="0.5" min="2"></label></div>
+        <div><label>Profundidad (mm)<input id="iman_hondo" type="number" step="0.5" min="0.5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>X (mm)<input id="iman_x" type="number" step="0.5"></label></div>
+        <div><label>Y (mm)<input id="iman_y" type="number" step="0.5"></label></div>
+      </div>
+    </div>
+    <label class="check"><input id="usar_chaflan" type="checkbox"> Bordes biselados (acabado más fino)</label>
+  </fieldset>
+
+  <fieldset>
     <legend>Patrón de la letra (nivel 3)</legend>
     <label class="check"><input id="usar_patron" type="checkbox"> Repartir un patrón por la letra</label>
     <div id="caja-patron">
-    <label>Patrón SVG<select id="patron"></select></label>
+    <label>Patrón SVG<select id="patron"></select><img id="vista_patron" class="svgmini" alt=""></label>
     <div class="fila">
       <div><label>Tamaño motivo (mm)<input id="tam_patron" type="number" step="0.5" min="1"></label></div>
       <div><label>Separación (mm)<input id="separacion_patron" type="number" step="0.5" min="0"></label></div>
@@ -254,6 +317,24 @@
        bajarlos cuando quieras sin gastar otra generación.</p>
   </div>
 
+  <div id="filamentos"></div>
+  <div id="avisos"></div>
+
+  <details class="calc" id="calc">
+    <summary>Calcular costo y precio de venta</summary>
+    <p class="nota">Son solo cuentas para ti: no se guardan en el servidor. Los ajustes quedan
+       únicamente en este navegador.</p>
+    <div class="ajustes">
+      <label>Filamento (precio/kg)<input id="c_kg" type="number" step="0.5" min="0" value="25"></label>
+      <label>Máquina (precio/hora)<input id="c_hora" type="number" step="0.1" min="0" value="1.5"></label>
+      <label>Velocidad (cm³/h)<input id="c_vel" type="number" step="0.5" min="0.1" value="12"></label>
+      <label>Ganancia (%)<input id="c_margen" type="number" step="5" min="0" value="150"></label>
+      <label>Densidad (g/cm³)<input id="c_dens" type="number" step="0.01" min="0.1" value="1.24"></label>
+      <label>Moneda<input id="c_moneda" maxlength="3" value="$"></label>
+    </div>
+    <table class="costos"><tbody id="tabla_costos"></tbody></table>
+  </details>
+
   <p class="nota">La vista previa es gratis y puedes cambiarla todas las veces que quieras.
      Solo «Generar archivos» descuenta 1 de tu licencia.</p>
 </aside>
@@ -288,10 +369,14 @@ const CAMPOS = ['inicial','fuente_inicial','tam_inicial','borde',
                 'patron','tam_patron','separacion_patron','margen_patron','semilla','girar_patron',
                 'adorno','tam_adorno','adorno_x','adorno_y','giro_adorno','segundo_adorno','adorno2_x','adorno2_y','giro_adorno2',
                 'cortar_adorno','color_adorno',
-                'aro','aro_diametro','aro_agujero','aro_x','aro_y'];
+                'aro','aro_diametro','aro_agujero','aro_x','aro_y',
+                'curva_texto','texto_x','texto_y',
+                'iman','iman_diametro','iman_hondo','iman_x','iman_y','adorno_detras',
+                'adorno_c1','adorno_c2','adorno_c3'];
+const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
-let generacion = null, resumen = null, invitado = false, pedido = 0, temporizador = null;
+let generacion = null, resumen = null, invitado = false, analisis = null, pedido = 0, temporizador = null;
 const pronto = () => { clearTimeout(temporizador); temporizador = setTimeout(generar, 350); };
 
 // ---------- visor 3D
@@ -320,7 +405,10 @@ addEventListener('resize', ajustar); ajustar();
 (function bucle() { requestAnimationFrame(bucle); controles.update(); render.render(escena, camara); })();
 
 // ---------- iconos ✥ sobre las piezas que se pueden arrastrar
-const MOVIBLES = ['Adorno', 'Adorno derecho', 'Aro'];
+// Un adorno puede venir partido en varias piezas (una por color), así que se agrupan.
+const esMovible = n => n === 'Aro' || n === 'Texto' || n.startsWith('Adorno');
+const grupoDe = n => (n === 'Aro' || n === 'Texto') ? n
+                   : n.startsWith('Adorno derecho') ? 'der' : 'izq';
 const iconos = new THREE.Group();
 escena.add(iconos);
 
@@ -341,15 +429,20 @@ function ponerIconos() {
   if (!malla) return;
   const caja = new THREE.Box3().setFromObject(malla);
   const lado = Math.max(caja.max.x - caja.min.x, caja.max.y - caja.min.y) * 0.04;
+  const cajas = {};                       // un solo icono por grupo, no uno por color
   for (const o of piezasMovibles()) {
-    const b = new THREE.Box3().setFromObject(o), c = new THREE.Vector3();
-    b.getCenter(c);
+    const g = grupoDe(o.name);
+    const b = new THREE.Box3().setFromObject(o);
+    cajas[g] = cajas[g] ? cajas[g].union(b) : b;
+  }
+  for (const [g, b] of Object.entries(cajas)) {
+    const c = new THREE.Vector3(); b.getCenter(c);
     const s = new THREE.Sprite(new THREE.SpriteMaterial({
       map: TEXTURA_MOVER, transparent: true, depthTest: false }));
     s.position.set(c.x, c.y, b.max.z + lado);
     s.scale.setScalar(lado);
     s.renderOrder = 10;
-    s.userData.pieza = o.name;
+    s.userData.grupo = g;
     iconos.add(s);
   }
 }
@@ -436,7 +529,7 @@ function puntoEnPlano(z) {
 }
 function piezasMovibles() {
   const r = [];
-  if (malla) malla.traverse(o => { if (o.isMesh && MOVIBLES.includes(o.name)) r.push(o); });
+  if (malla) malla.traverse(o => { if (o.isMesh && esMovible(o.name)) r.push(o); });
   return r;
 }
 
@@ -447,33 +540,37 @@ render.domElement.addEventListener('pointerdown', e => {
   const piezas = piezasMovibles();
   const toque = rayo.intersectObjects([...piezas, ...iconos.children])[0];
   if (!toque) return;
-  const nombre = toque.object.userData.pieza || toque.object.name;   // icono o la pieza misma
-  const agarrada = piezas.find(o => o.name === nombre);
-  if (!agarrada) return;
+  const grupo = toque.object.userData.grupo || grupoDe(toque.object.name);
+  const delGrupo = piezas.filter(o => grupoDe(o.name) === grupo);
+  if (!delGrupo.length) return;
 
   controles.enabled = false;
   render.domElement.setPointerCapture(e.pointerId);
 
-  // qué campos edita y qué piezas se mueven con ella
-  let cx, cy, compañera = null;
-  if (nombre === 'Aro') {
+  // qué campos edita y qué grupo se mueve con él
+  let cx, cy, compañero = null;
+  if (grupo === 'Aro') {
     [cx, cy] = ['aro_x', 'aro_y'];
+  } else if (grupo === 'Texto') {
+    [cx, cy] = ['texto_x', 'texto_y'];
   } else {
-    const derecho = nombre === 'Adorno derecho';
+    const derecho = grupo === 'der';
     // libre: cada adorno tiene sus campos. espejo: ambos mueven el original (X invertida)
     [cx, cy] = libre() && derecho ? ['adorno2_x', 'adorno2_y'] : ['adorno_x', 'adorno_y'];
-    if (!libre()) compañera = derecho ? 'Adorno' : 'Adorno derecho';
+    if (!libre()) compañero = derecho ? 'izq' : 'der';
   }
-  const signo = (nombre === 'Adorno derecho' && !libre()) ? -1 : 1;
+  const signo = (grupo === 'der' && !libre()) ? -1 : 1;
 
-  // cada parte (malla e icono) se mueve desde su posición actual; la compañera, reflejada
+  // cada parte (mallas e icono) se mueve desde su posición actual; el compañero, reflejado
   const partes = [];
   for (const o of [...piezas, ...iconos.children]) {
-    const quien = o.userData.pieza || o.name;
-    if (quien === nombre) partes.push({ obj: o, base: o.position.clone(), s: 1 });
-    else if (quien === compañera) partes.push({ obj: o, base: o.position.clone(), s: -1 });
+    const g = o.userData.grupo || grupoDe(o.name);
+    if (g === grupo) partes.push({ obj: o, base: o.position.clone(), s: 1 });
+    else if (g === compañero) partes.push({ obj: o, base: o.position.clone(), s: -1 });
   }
-  const caja = new THREE.Box3().setFromObject(agarrada), c = new THREE.Vector3();
+  const caja = new THREE.Box3();
+  for (const o of delGrupo) caja.union(new THREE.Box3().setFromObject(o));
+  const c = new THREE.Vector3();
   caja.getCenter(c);
   const ini = puntoEnPlano(c.z);
   if (!ini) return;
@@ -502,6 +599,7 @@ function sincronizarCajas() {
   $('caja-adorno').hidden = !$('usar_adorno').checked;
   $('caja-patron').hidden = !$('usar_patron').checked;
   $('caja-aro').hidden = !$('aro').checked;
+  $('caja-iman').hidden = !$('iman').checked;
 }
 
 function leer() {
@@ -509,7 +607,56 @@ function leer() {
   for (const k of CAMPOS) o[k] = valor($(k));
   if (!$('usar_adorno').checked) o.adorno = '';   // las casillas mandan sobre el desplegable
   if (!$('usar_patron').checked) o.patron = '';
+  o.chaflan = $('usar_chaflan').checked ? 0.6 : 0;   // un solo interruptor, sin número que elegir
   return o;
+}
+
+// ---------- costos: todo en el navegador, nada se guarda en el servidor
+function num(id, porDefecto) { const v = parseFloat($(id).value); return isFinite(v) ? v : porDefecto; }
+
+function pintarCostos(analisis) {
+  const cuerpo = $('tabla_costos');
+  if (!analisis || !$('calc').open) { cuerpo.innerHTML = ''; return; }
+  const dens = num('c_dens', 1.24), kg = num('c_kg', 25), hora = num('c_hora', 1.5);
+  const vel = Math.max(num('c_vel', 12), 0.1), margen = num('c_margen', 150);
+  const mon = $('c_moneda').value || '$';
+  const dinero = v => mon + v.toFixed(2);
+
+  const porColor = {};
+  for (const p of analisis.piezas) porColor[p.color] = (porColor[p.color] || 0) + p.cm3;
+  const gramos = analisis.cm3 * dens;
+  const horas = analisis.cm3 / vel + 0.1;          // +6 min de arranque y purga
+  const material = gramos / 1000 * kg;
+  const maquina = horas * hora;
+  const costo = material + maquina;
+
+  const hm = h => `${Math.floor(h)} h ${Math.round((h % 1) * 60)} min`;
+  const filas = Object.entries(porColor).sort((a, b) => b[1] - a[1]).map(([c, v]) =>
+    `<tr><td><span class="puntoColor" style="background:${c}"></span>${(v * dens).toFixed(1)} g</td>
+         <td>${v.toFixed(1)} cm³</td></tr>`).join('');
+  cuerpo.innerHTML = filas + `
+    <tr><td>Material (${gramos.toFixed(1)} g)</td><td>${dinero(material)}</td></tr>
+    <tr><td>Tiempo aprox. (${hm(horas)})</td><td>${dinero(maquina)}</td></tr>
+    <tr><td>Costo</td><td>${dinero(costo)}</td></tr>
+    <tr class="total"><td>Precio con ${margen.toFixed(0)}%</td><td>${dinero(costo * (1 + margen / 100))}</td></tr>`;
+}
+
+function pintarAvisos(analisis) {
+  $('avisos').innerHTML = (analisis && analisis.avisos || [])
+    .map(a => `<div><b>⚠</b><span>${esc(a)}</span></div>`).join('');
+}
+
+// solo se enseñan tantos selectores como formas tenga de verdad el SVG elegido
+function pintarFormasAdorno(analisis) {
+  const n = (analisis && analisis.grupos_adorno) || 0;
+  for (let i = 1; i <= 3; i++) $('fila_c' + i).hidden = i > n;
+}
+
+function pintarFilamentos(analisis) {
+  const c = analisis && analisis.colores;
+  $('filamentos').innerHTML = !c ? '' :
+    `<span>${c.length} filamento${c.length === 1 ? '' : 's'}:</span>` +
+    c.map(x => `<span class="puntoColor" style="background:${x}" title="${x}"></span>`).join('');
 }
 
 async function generar() {
@@ -525,6 +672,11 @@ async function generar() {
     const buf = await r.arrayBuffer();
     if (yo !== pedido) return;
     mostrar(buf);
+    try { analisis = JSON.parse(r.headers.get('X-Modelo') || 'null'); } catch { analisis = null; }
+    pintarAvisos(analisis);
+    pintarFormasAdorno(analisis);
+    pintarFilamentos(analisis);
+    pintarCostos(analisis);
     $('generar-archivos').disabled = false;
     msg.textContent = 'Vista previa lista ✔';
   } catch (e) {
@@ -626,7 +778,9 @@ function aplicarParametros(p) {
   if (!$('adorno').value) $('adorno').selectedIndex = 0;   // deja uno elegido por si la activan
   if (!$('patron').value) $('patron').selectedIndex = 0;
   $('pos-adorno2').hidden = !libre();
+  $('usar_chaflan').checked = (+p.chaflan || 0) > 0;
   sincronizarCajas();
+  pintarMiniSvg();
 }
 
 async function cargarGeneracion(id) {
@@ -640,6 +794,61 @@ async function cargarGeneracion(id) {
 document.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') generar(); }));
 document.querySelectorAll('input[type=color], input[type=checkbox]').forEach(i => i.addEventListener('change', generar));
 ['fuente_inicial', 'fuente_texto'].forEach(k => $(k).addEventListener('change', generar));
+['curva_texto', 'texto_x', 'texto_y', 'iman_diametro', 'iman_hondo', 'iman_x', 'iman_y',
+ 'texto', 'inicial']
+  .forEach(k => $(k).addEventListener('input', pronto));
+['adorno_detras', 'adorno_c1', 'adorno_c2', 'adorno_c3']
+  .forEach(k => $(k).addEventListener('change', generar));
+
+// la calculadora no toca el modelo: solo recalcula y recuerda los ajustes en este navegador
+AJUSTES_CALC.forEach(k => $(k).addEventListener('input', () => {
+  try { localStorage.setItem('calc_' + k, $(k).value); } catch {}
+  pintarCostos(analisis);
+}));
+$('calc').addEventListener('toggle', () => pintarCostos(analisis));
+for (const k of AJUSTES_CALC) {
+  try { const v = localStorage.getItem('calc_' + k); if (v !== null) $(k).value = v; } catch {}
+}
+
+// miniatura del patrón y del adorno elegidos
+function pintarMiniSvg() {
+  $('vista_patron').src = $('patron').value ? '/api/svg/patron/' + encodeURIComponent($('patron').value) : '';
+  $('vista_adorno').src = $('adorno').value ? '/api/svg/adorno/' + encodeURIComponent($('adorno').value) : '';
+}
+['patron', 'adorno'].forEach(k => $(k).addEventListener('change', pintarMiniSvg));
+
+// ---------- plantillas
+async function cargarPlantillas() {
+  const r = await fetch('/api/plantillas');
+  if (!r.ok) return;
+  const ps = (await r.json()).plantillas;
+  $('plantilla').innerHTML = ps.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
+  $('caja-plantillas').hidden = !ps.length && !(resumen && $('guardar-plantilla').hidden === false);
+  if (!ps.length) $('plantilla').innerHTML = '<option value="">(todavía no hay)</option>';
+}
+$('usar-plantilla').onclick = async () => {
+  const id = $('plantilla').value;
+  if (!id) return;
+  const r = await fetch('/api/plantilla/' + id);
+  if (!r.ok) return;
+  aplicarParametros((await r.json()).parametros);
+  generacion = null;
+  generar();
+};
+$('guardar-plantilla').onclick = async () => {
+  const nombre = prompt('Nombre de la plantilla:');
+  if (!nombre) return;
+  const msg = $('msg');
+  try {
+    const r = await fetch('/api/admin/plantillas', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, parametros: leer() }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo guardar');
+    msg.className = ''; msg.textContent = 'Plantilla guardada.';
+    await cargarPlantillas();
+  } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+};
 
 // ---------- valores por defecto desde el servidor
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -655,6 +864,8 @@ $('adorno').innerHTML = cfg.adornos
   .map(n => `<option${n === cfg.defaults.adorno ? ' selected' : ''}>${n}</option>`).join('');
 aplicarParametros(cfg.defaults);
 await cargarYo();
+$('caja-plantillas').hidden = false;
+await cargarPlantillas();
 // si se llega desde "Mis generaciones" con ?cargar=<id>, se abre ese diseño en el editor
 const pedirCargar = new URLSearchParams(location.search).get('cargar');
 if (pedirCargar) await cargarGeneracion(pedirCargar);

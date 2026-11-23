@@ -6,6 +6,7 @@ solo los parámetros y una miniatura PNG pequeña. Los archivos se rehacen al vu
 """
 import json
 import os
+import secrets
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -48,6 +49,22 @@ CREATE TABLE IF NOT EXISTS generaciones (
     parametros  TEXT NOT NULL,         -- JSON; con esto se rehace el archivo
     miniatura   BLOB,                  -- PNG pequeño
     ip          TEXT
+);
+CREATE TABLE IF NOT EXISTS codigos (
+    codigo           TEXT PRIMARY KEY,
+    dias             INTEGER,
+    max_generaciones INTEGER,
+    nota             TEXT NOT NULL DEFAULT '',
+    creado           TEXT NOT NULL,
+    usado_por        INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    usado_en         TEXT
+);
+CREATE TABLE IF NOT EXISTS plantillas (
+    id         INTEGER PRIMARY KEY,
+    nombre     TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    parametros TEXT NOT NULL,
+    miniatura  BLOB,
+    creada     TEXT NOT NULL
 );
 CREATE TABLE IF NOT EXISTS ips_bloqueadas (
     ip     TEXT PRIMARY KEY,
@@ -294,6 +311,157 @@ def licencia_vigente(usuario_id: int):
     with conexion() as con:
         f = con.execute(_SQL_LICENCIA_VIGENTE, (usuario_id, ahora())).fetchone()
     return dict(f) if f else None
+
+
+# ------------------------------------------------------------------ códigos canjeables
+ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # sin letras/números que se confunden
+
+
+def crear_codigos(cuantos: int, dias=None, max_generaciones=None, nota: str = ""):
+    """Genera códigos que el usuario canjea solo, sin que el admin cree la licencia a mano."""
+    cuantos = max(1, min(int(cuantos or 1), 100))
+    dias = int(dias) if str(dias or "").strip() not in ("", "0", "None") else None
+    max_generaciones = int(max_generaciones) if str(max_generaciones or "").strip() not in ("", "0", "None") else None
+    if dias is not None and dias <= 0:
+        raise ValueError("Los días deben ser mayores que 0 (vacío = sin límite de tiempo).")
+    if max_generaciones is not None and max_generaciones <= 0:
+        raise ValueError("La cantidad debe ser mayor que 0 (vacío = sin límite de cantidad).")
+    nuevos = []
+    with conexion() as con:
+        for _ in range(cuantos):
+            for _intento in range(20):
+                codigo = "-".join("".join(secrets.choice(ALFABETO) for _ in range(4)) for _ in range(3))
+                try:
+                    con.execute("""INSERT INTO codigos (codigo, dias, max_generaciones, nota, creado)
+                                   VALUES (?,?,?,?,?)""",
+                                (codigo, dias, max_generaciones, (nota or "").strip(), ahora()))
+                    nuevos.append(codigo)
+                    break
+                except sqlite3.IntegrityError:
+                    continue
+        con.commit()
+    return nuevos
+
+
+def listar_codigos(limite: int = 200):
+    with conexion() as con:
+        return [dict(f) for f in con.execute("""
+            SELECT c.*, u.usuario, u.alias FROM codigos c
+            LEFT JOIN usuarios u ON u.id = c.usado_por
+            ORDER BY (c.usado_en IS NOT NULL), c.creado DESC LIMIT ?""", (limite,))]
+
+
+def borrar_codigo(codigo: str):
+    with conexion() as con:
+        con.execute("DELETE FROM codigos WHERE codigo = ? AND usado_en IS NULL", (codigo,))
+        con.commit()
+
+
+def canjear_codigo(codigo: str, usuario_id: int) -> int:
+    """Convierte un código sin usar en una licencia para ese usuario. Devuelve la licencia."""
+    codigo = (codigo or "").strip().upper()
+    if not codigo:
+        raise ValueError("Escribe un código.")
+    with conexion() as con:
+        con.execute("BEGIN IMMEDIATE")
+        try:
+            c = con.execute("SELECT * FROM codigos WHERE codigo = ?", (codigo,)).fetchone()
+            if not c:
+                raise ValueError("Ese código no existe.")
+            if c["usado_en"]:
+                raise ValueError("Ese código ya fue canjeado.")
+            cur = con.execute("""INSERT INTO licencias
+                     (usuario_id, nota, creada, expira, max_generaciones) VALUES (?,?,?,?,?)""",
+                              (usuario_id, f"código {codigo}", ahora(),
+                               en_dias(c["dias"]) if c["dias"] else None, c["max_generaciones"]))
+            con.execute("UPDATE codigos SET usado_por = ?, usado_en = ? WHERE codigo = ?",
+                        (usuario_id, ahora(), codigo))
+            con.commit()
+            return cur.lastrowid
+        except Exception:
+            con.rollback()
+            raise
+
+
+# ------------------------------------------------------------------ plantillas
+def guardar_plantilla(nombre: str, parametros: dict, miniatura: bytes):
+    nombre = (nombre or "").strip()[:60]
+    if len(nombre) < 2:
+        raise ValueError("Ponle un nombre de al menos 2 caracteres.")
+    with conexion() as con:
+        con.execute("""INSERT INTO plantillas (nombre, parametros, miniatura, creada)
+                       VALUES (?,?,?,?)
+                       ON CONFLICT(nombre) DO UPDATE SET parametros = excluded.parametros,
+                           miniatura = excluded.miniatura, creada = excluded.creada""",
+                    (nombre, json.dumps(parametros, ensure_ascii=False), miniatura, ahora()))
+        con.commit()
+
+
+def listar_plantillas():
+    with conexion() as con:
+        return [dict(f) for f in con.execute(
+            "SELECT id, nombre, creada FROM plantillas ORDER BY nombre")]
+
+
+def plantilla(pid: int):
+    with conexion() as con:
+        f = con.execute("SELECT * FROM plantillas WHERE id = ?", (pid,)).fetchone()
+    return dict(f) if f else None
+
+
+def borrar_plantilla(pid: int):
+    with conexion() as con:
+        con.execute("DELETE FROM plantillas WHERE id = ?", (pid,))
+        con.commit()
+
+
+# ------------------------------------------------------------------ limpieza de invitados
+def borrar_invitados_viejos(dias: int) -> int:
+    """Quita los invitados sin actividad desde hace N días (con sus generaciones)."""
+    if dias <= 0:
+        return 0
+    limite = (datetime.now(timezone.utc) - timedelta(days=dias)).strftime("%Y-%m-%dT%H:%M:%S")
+    with conexion() as con:
+        cur = con.execute("""DELETE FROM usuarios WHERE es_invitado = 1 AND id IN (
+                 SELECT u.id FROM usuarios u
+                  LEFT JOIN generaciones g ON g.usuario_id = u.id
+                  WHERE u.es_invitado = 1
+                  GROUP BY u.id
+                 HAVING COALESCE(MAX(g.creada), u.creado) < ?)""", (limite,))
+        con.commit()
+        return cur.rowcount
+
+
+# ------------------------------------------------------------------ estadísticas
+def estadisticas(dias: int = 30):
+    """Resumen para el panel: totales, actividad por día y lo más usado."""
+    desde = (datetime.now(timezone.utc) - timedelta(days=dias)).strftime("%Y-%m-%dT%H:%M:%S")
+    with conexion() as con:
+        tot = con.execute("""SELECT
+                 (SELECT COUNT(*) FROM usuarios WHERE es_invitado = 0) AS usuarios,
+                 (SELECT COUNT(*) FROM usuarios WHERE es_invitado = 1) AS invitados,
+                 (SELECT COUNT(*) FROM generaciones) AS generaciones,
+                 (SELECT COUNT(*) FROM licencias WHERE activa = 1) AS licencias""").fetchone()
+        por_dia = [dict(f) for f in con.execute(
+            """SELECT substr(creada, 1, 10) AS dia, COUNT(*) AS n FROM generaciones
+                WHERE creada >= ? GROUP BY dia ORDER BY dia""", (desde,))]
+        top = [dict(f) for f in con.execute(
+            """SELECT COALESCE(u.alias, u.usuario) AS quien, u.es_invitado, COUNT(*) AS n
+                 FROM generaciones g JOIN usuarios u ON u.id = g.usuario_id
+                GROUP BY g.usuario_id ORDER BY n DESC LIMIT 8""")]
+        filas = con.execute("SELECT parametros FROM generaciones ORDER BY id DESC LIMIT 1000").fetchall()
+
+    cuentas = {"fuente_inicial": {}, "fuente_texto": {}, "patron": {}, "adorno": {}}
+    for f in filas:
+        try:
+            p = json.loads(f["parametros"])
+        except Exception:
+            continue
+        for clave in cuentas:
+            v = p.get(clave) or "(ninguno)"
+            cuentas[clave][v] = cuentas[clave].get(v, 0) + 1
+    mas_usado = {k: sorted(v.items(), key=lambda x: -x[1])[:5] for k, v in cuentas.items()}
+    return {"totales": dict(tot), "por_dia": por_dia, "top_usuarios": top, "mas_usado": mas_usado}
 
 
 # ------------------------------------------------------------------ generaciones
