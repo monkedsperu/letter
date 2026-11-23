@@ -96,6 +96,8 @@ def _migrar(con):
 
 
 def iniciar():
+    carpeta = os.path.dirname(os.path.abspath(RUTA_DB))
+    os.makedirs(carpeta, exist_ok=True)   # p. ej. MONKEDS_DB=/var/lib/monkeds/monkeds.db
     with conexion() as con:
         con.execute("PRAGMA journal_mode = WAL")  # varios procesos (gunicorn) sobre el mismo archivo
         con.executescript(ESQUEMA)
@@ -151,6 +153,13 @@ def cambiar_clave(usuario_id: int, clave: str):
     with conexion() as con:
         con.execute("UPDATE usuarios SET clave_hash = ? WHERE id = ?",
                     (generate_password_hash(clave), usuario_id))
+        con.commit()
+
+
+def borrar_usuario(usuario_id: int):
+    """Borra el usuario y, en cascada, sus licencias y sus generaciones."""
+    with conexion() as con:
+        con.execute("DELETE FROM usuarios WHERE id = ?", (usuario_id,))
         con.commit()
 
 

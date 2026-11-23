@@ -1,0 +1,216 @@
+MONKEDS LETTER — PUESTA EN MARCHA EN AWS LIGHTSAIL
+==================================================
+Montaje: nginx (puertos 80/443) -> gunicorn (127.0.0.1:8000) -> app.py
+Base de datos: SQLite en /var/lib/monkeds/monkeds.db
+
+Consumo medido: cada proceso de gunicorn usa ~115 MB al arrancar y ~165 MB en uso.
+Generar un modelo tarda unos 0,3 s.
+  - Instancia de 1 GB ($5): usa 2 procesos (-w 2). Va justa.
+  - Instancia de 2 GB ($10): usa 3 procesos (-w 3). Recomendada.
+
+
+PASO 1 — CREAR LA INSTANCIA
+---------------------------
+En la consola de Lightsail:
+  Create instance -> Linux/Unix -> OS Only -> Ubuntu 22.04 LTS
+  Plan: 2 GB RAM / 2 vCPU (recomendado) o 1 GB si quieres el más barato.
+  Ponle nombre (ej. monkeds) y crea.
+
+Luego:
+  Networking -> Create static IP -> asígnala a la instancia.
+     (sin IP estática, la IP cambia al reiniciar)
+  Networking -> IPv4 Firewall -> añade regla HTTPS (443). HTTP (80) ya viene.
+     NO abras el 8000: gunicorn solo escucha en local.
+
+
+PASO 2 — ENTRAR Y PREPARAR EL SERVIDOR
+--------------------------------------
+Entra con el botón "Connect using SSH" de Lightsail (o con tu clave .pem).
+
+  sudo apt update && sudo apt -y upgrade
+  sudo apt -y install python3-venv python3-pip nginx git
+
+Librerías del sistema que necesitan shapely/matplotlib/trimesh:
+  sudo apt -y install libgeos-dev libjpeg-dev zlib1g-dev
+
+
+PASO 3 — SUBIR EL CÓDIGO
+------------------------
+Opción A (recomendada, con git):
+  En tu PC, sube el proyecto a un repositorio privado (GitHub/GitLab).
+  OJO: el .gitignore ya excluye .env y *.db. No subas nunca el .env.
+  En el servidor:
+    sudo mkdir -p /opt/monkeds && sudo chown $USER:$USER /opt/monkeds
+    git clone TU_REPOSITORIO /opt/monkeds
+
+Opción B (sin git, copiando desde tu PC con PowerShell):
+    scp -i TU_CLAVE.pem -r C:\Users\Ryzen\Desktop\generador_stl ubuntu@TU_IP:/tmp/app
+    (y en el servidor)  sudo mv /tmp/app /opt/monkeds
+
+Carpetas que SÍ deben ir: patrones/ adornos/ fuentes/ web/ y los .py/.html/.css
+Carpetas que NO hacen falta: build/ dist/ obf/ __pycache__/
+
+
+PASO 4 — ENTORNO DE PYTHON
+--------------------------
+  cd /opt/monkeds
+  python3 -m venv .venv
+  .venv/bin/pip install --upgrade pip
+  .venv/bin/pip install -r requirements.txt
+
+Prueba rápida de que todo importa:
+  .venv/bin/python -c "import app; print('ok')"
+
+
+PASO 5 — CONFIGURAR EL .env
+---------------------------
+  cp .env.ejemplo .env
+  nano .env
+
+Déjalo así (cambia usuario y contraseña por los tuyos):
+  ADMIN_USUARIO=tu_usuario
+  ADMIN_CLAVE=una-contraseña-larga-y-propia
+  SECRET_KEY=   <- pega aquí el resultado del comando de abajo
+  COOKIES_SEGURAS=0     (lo pondrás en 1 al final, cuando ya tengas HTTPS)
+  MONKEDS_DB=/var/lib/monkeds/monkeds.db
+
+Genera la clave de sesión:
+  .venv/bin/python -c "import secrets; print(secrets.token_hex(32))"
+
+Protege el archivo y crea la carpeta de datos:
+  chmod 600 .env
+  sudo mkdir -p /var/lib/monkeds
+  sudo chown www-data:www-data /var/lib/monkeds
+
+Permisos: el servicio corre como www-data y necesita escribir en la base y en las
+carpetas donde el administrador sube SVG.
+  sudo chown -R www-data:www-data /opt/monkeds/patrones /opt/monkeds/adornos /opt/monkeds/fuentes
+  sudo chown www-data:www-data /opt/monkeds/.env
+
+
+PASO 6 — SERVICIO CON SYSTEMD
+-----------------------------
+  sudo nano /etc/systemd/system/monkeds.service
+
+Contenido (ajusta -w 2 si tu instancia es de 1 GB):
+
+  [Unit]
+  Description=Monkeds Letter
+  After=network.target
+
+  [Service]
+  User=www-data
+  Group=www-data
+  WorkingDirectory=/opt/monkeds
+  Environment=MPLCONFIGDIR=/var/lib/monkeds/mpl
+  ExecStart=/opt/monkeds/.venv/bin/gunicorn -w 3 -b 127.0.0.1:8000 --timeout 120 app:app
+  Restart=always
+
+  [Install]
+  WantedBy=multi-user.target
+
+(MPLCONFIGDIR le da a matplotlib una carpeta propia donde guardar su caché de fuentes.
+El usuario www-data no tiene carpeta personal: sin esto matplotlib funciona igual, pero
+usa una carpeta temporal y rehace la caché en cada arranque, así que la primera petición
+después de cada reinicio es más lenta.)
+
+  sudo mkdir -p /var/lib/monkeds/mpl && sudo chown www-data:www-data /var/lib/monkeds/mpl
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now monkeds
+  sudo systemctl status monkeds        (debe decir: active (running))
+  curl -I http://127.0.0.1:8000/       (debe responder 302 hacia /login)
+
+Si algo falla:  sudo journalctl -u monkeds -n 50 --no-pager
+
+
+PASO 7 — NGINX POR DELANTE
+--------------------------
+  sudo nano /etc/nginx/sites-available/monkeds
+
+Contenido (pon tu dominio, o la IP estática si aún no tienes dominio):
+
+  server {
+      listen 80;
+      server_name tu-dominio.com;
+
+      client_max_body_size 8M;
+
+      location / {
+          proxy_pass http://127.0.0.1:8000;
+          proxy_set_header Host $host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_read_timeout 120s;
+      }
+  }
+
+La cabecera X-Forwarded-For es la que hace que funcione el bloqueo por IP de invitados.
+
+  sudo ln -s /etc/nginx/sites-available/monkeds /etc/nginx/sites-enabled/
+  sudo rm -f /etc/nginx/sites-enabled/default
+  sudo nginx -t && sudo systemctl reload nginx
+
+Ya deberías poder abrir  http://TU-IP-ESTATICA  y ver la pantalla de entrar.
+
+
+PASO 8 — DOMINIO Y HTTPS
+------------------------
+Apunta tu dominio a la IP estática (registro A) y espera a que propague.
+
+  sudo apt -y install certbot python3-certbot-nginx
+  sudo certbot --nginx -d tu-dominio.com
+
+Certbot configura el 443 y la redirección solo. Cuando ya cargue por https://
+
+  nano /opt/monkeds/.env     -> COOKIES_SEGURAS=1
+  sudo systemctl restart monkeds
+
+Esto hace que la cookie de sesión solo viaje por HTTPS.
+
+
+PASO 9 — COMPROBAR
+------------------
+  1. Entra con tu usuario admin y abre "Administración".
+  2. Crea un usuario de prueba y dale una licencia.
+  3. Con ese usuario: vista previa, "Generar archivos", baja el 3MF y el STL.
+  4. Abre el sitio en una ventana privada y entra como invitado: el texto debe salir
+     partido con "+".
+  5. En Administración -> Generaciones, comprueba que ves la IP real (no 127.0.0.1).
+     Si ves 127.0.0.1, revisa la cabecera X-Forwarded-For del paso 7.
+
+
+MANTENIMIENTO
+-------------
+Actualizar el código:
+  cd /opt/monkeds && git pull
+  .venv/bin/pip install -r requirements.txt
+  sudo systemctl restart monkeds
+
+Copias de seguridad (IMPORTANTE: la base tiene usuarios, licencias e historial):
+  - Activa snapshots automáticos de la instancia en Lightsail.
+  - Y además, copia diaria de la base:
+      sudo crontab -e
+      0 3 * * * sqlite3 /var/lib/monkeds/monkeds.db ".backup '/var/lib/monkeds/copia.db'"
+    (necesita: sudo apt -y install sqlite3)
+  - Guarda también una copia de /opt/monkeds/.env en un sitio seguro: si pierdes la
+    SECRET_KEY se cierran todas las sesiones (no se pierde nada más).
+
+Ver registros:   sudo journalctl -u monkeds -f
+Reiniciar:       sudo systemctl restart monkeds
+
+
+AVISOS
+------
+- FUENTES: la carpeta fuentes/ incluye COOPBL.TTF (Cooper Black), que es una fuente
+  comercial de Microsoft. En tu PC no hay problema, pero publicarla en un sitio web
+  abierto puede incumplir su licencia. Sustitúyela por una fuente con licencia libre o
+  compra la licencia de distribución.
+- El servidor Ubuntu trae pocas fuentes, así que la lista "Instaladas en el equipo"
+  saldrá casi vacía. Lo normal es poner las que quieras en la carpeta fuentes/.
+  Si quieres más: sudo apt -y install fonts-dejavu fonts-liberation
+- El bloqueo por IP solo es fiable con nginx delante (paso 7). Si alguien llega directo
+  al puerto 8000, podría falsear la cabecera. Por eso el firewall debe dejar el 8000
+  cerrado y gunicorn escuchar solo en 127.0.0.1.
+- Varias personas detrás de la misma salida a internet comparten IP: al bloquear una,
+  las bloqueas a todas.

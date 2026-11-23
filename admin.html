@@ -10,6 +10,8 @@
   .pestanas button { background:transparent; border-color:transparent; color:var(--mut); }
   .pestanas button.activa { background:var(--suave); border-color:var(--bd); color:var(--acc2); }
   .biblioteca { display:grid; gap:18px; }
+  button.peligro { color:#b8382f; border-color:#e3bdb9; background:#f7e2e0; }
+  button.peligro:hover { border-color:#b8382f; }
 </style>
 </head>
 <body>
@@ -242,6 +244,8 @@ async function cargarUsuarios() {
         <button class="chico" data-lic="${u.id}">Licencias</button>
         <button class="chico" data-clave="${u.id}">Cambiar clave</button>
         <button class="chico" data-activo="${u.id}" data-val="${u.activo ? 0 : 1}">${u.activo ? 'Desactivar' : 'Activar'}</button>
+        <button class="chico peligro" data-borrar="${u.id}" data-nombre="${esc(u.alias || u.usuario)}"
+                data-gen="${r.generaciones}">Eliminar</button>
       </td></tr>`;
   }).join('');
   $('nl_usuario').innerHTML = usuarios.map(u => `<option value="${u.id}">${esc(u.usuario)}</option>`).join('');
@@ -260,6 +264,16 @@ $('tabla_usuarios').onclick = async e => {
     }
     if (b.dataset.activo) {
       await enviar('/api/admin/usuarios/' + b.dataset.activo, { activo: b.dataset.val === '1' });
+      await cargarUsuarios();
+    }
+    if (b.dataset.borrar) {
+      const n = +b.dataset.gen;
+      if (!confirm(`¿Eliminar a "${b.dataset.nombre}"?\n\nSe borran también sus licencias y sus ` +
+                   `${n} generacion${n === 1 ? '' : 'es'}. Esto no se puede deshacer.`)) return;
+      await pedir('/api/admin/usuarios/' + b.dataset.borrar, { method: 'DELETE' });
+      aviso('msg_usuario', `Usuario "${b.dataset.nombre}" eliminado.`, true);
+      verLicenciasDe = null;
+      $('sec_licencias').hidden = true;
       await cargarUsuarios();
     }
   } catch (err) { aviso('msg_usuario', err.message); }

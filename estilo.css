@@ -6,6 +6,9 @@
   --ok:#2e7d4f; --okbg:#d6ecdd; --mal:#b8382f; --malbg:#f0dedc;
 }
 * { box-sizing: border-box; }
+/* Cualquier regla de autor con "display" pisa el ocultado del atributo hidden
+   (le pasaba a .chip). Esto lo deja siempre oculto, sin excepciones. */
+[hidden] { display: none !important; }
 body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt); }
 
 /* ---------- barra superior */

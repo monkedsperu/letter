@@ -408,6 +408,21 @@ def api_admin_editar_usuario(uid):
     return jsonify(ok=True)
 
 
+@app.delete("/api/admin/usuarios/<int:uid>")
+@pide_admin
+def api_admin_borrar_usuario(uid):
+    """Elimina un usuario con sus licencias y generaciones. No tiene vuelta atrás."""
+    if uid == request.usuario["id"]:
+        return jsonify(error="No puedes eliminar tu propio usuario."), 400
+    u = datos.obtener_usuario(uid)
+    if not u:
+        return jsonify(error="Ese usuario ya no existe."), 404
+    if u["usuario"] == os.environ.get("ADMIN_USUARIO", "admin"):
+        return jsonify(error="Es el administrador del .env: se volvería a crear al reiniciar."), 400
+    datos.borrar_usuario(uid)
+    return jsonify(ok=True)
+
+
 @app.get("/api/admin/licencias/<int:uid>")
 @pide_admin
 def api_admin_licencias(uid):

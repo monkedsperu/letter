@@ -48,6 +48,11 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    - Cada usuario solo ve y descarga sus propias generaciones y licencias.
    - El administrador ve las generaciones de TODOS (pestaña "Generaciones"), con el alias
      o usuario, la IP y la fecha, y puede descargarlas.
+   - "Eliminar" borra el usuario junto con sus licencias y sus generaciones, sin vuelta
+     atrás. No puedes eliminarte a ti mismo ni al administrador definido en el .env
+     (ese se volvería a crear solo en el siguiente arranque).
+   - OJO: si cambias ADMIN_USUARIO en el .env, el administrador anterior SIGUE existiendo
+     en la base con su contraseña antigua. Entra en Administración y elimínalo.
 
 7b) INVITADOS
    - Desde el login se puede entrar sin cuenta poniendo solo un alias.
@@ -76,6 +81,11 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
      mismo borde que la letra. El segundo adorno (la forma reflejada) puede ir en espejo
      automático, en posición libre (útil para letras como L) o quitarse.
    - fuentes/  : .ttf/.otf propios. En la pantalla salen agrupados aparte de los del equipo.
+
+9b) EN EL MÓVIL
+   El panel de opciones se convierte en un cajón lateral: se abre con el botón
+   "☰ Opciones" de la cabecera y se cierra con "✕ Ver el modelo", tocando fuera o con Esc.
+   Así el modelo 3D ocupa toda la pantalla. En escritorio no cambia nada.
 
 10) CAPAS DEL MODELO
    Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).
