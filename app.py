@@ -272,6 +272,23 @@ def api_yo():
                    es_invitado=bool(u["es_invitado"]), resumen=datos.resumen_usuario(u["id"]))
 
 
+@app.post("/api/clave")
+@pide_login
+def api_cambiar_clave():
+    """Cada uno cambia la suya, comprobando antes la que tenía."""
+    u = request.usuario
+    if u["es_invitado"]:
+        return jsonify(error="Los invitados no tienen contraseña."), 400
+    try:
+        d = cuerpo_json()
+        if not datos.verificar_login(u["usuario"], d.get("actual", "")):
+            return jsonify(error="La contraseña actual no es correcta."), 403
+        datos.cambiar_clave(u["id"], d.get("nueva", ""))
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+    return jsonify(ok=True)
+
+
 @app.get("/api/config")
 @pide_login
 def api_config():
@@ -412,17 +429,26 @@ def api_canjear():
     return jsonify(resumen=datos.resumen_usuario(request.usuario["id"]))
 
 
-# ---------- plantillas (las crea el admin, las usa todo el mundo)
+# ---------- plantillas: cada uno guarda las suyas (invitados incluidos).
+# Las del admin van sin dueño y las ve todo el mundo.
+def _plantilla_visible(pid):
+    """La plantilla si es de la casa o del que la pide; si no, None."""
+    pl = datos.plantilla(pid)
+    if pl and (pl["usuario_id"] is None or pl["usuario_id"] == request.usuario["id"]):
+        return pl
+    return None
+
+
 @app.get("/api/plantillas")
 @pide_login
 def api_plantillas():
-    return jsonify(plantillas=datos.listar_plantillas())
+    return jsonify(plantillas=datos.listar_plantillas(request.usuario["id"]))
 
 
 @app.get("/api/plantilla/<int:pid>")
 @pide_login
 def api_plantilla(pid):
-    pl = datos.plantilla(pid)
+    pl = _plantilla_visible(pid)
     if not pl:
         return jsonify(error="No encontrada"), 404
     return jsonify(parametros=json.loads(pl["parametros"]))
@@ -431,31 +457,38 @@ def api_plantilla(pid):
 @app.get("/api/plantilla/<int:pid>/miniatura")
 @pide_login
 def api_plantilla_miniatura(pid):
-    pl = datos.plantilla(pid)
+    pl = _plantilla_visible(pid)
     if not pl or not pl["miniatura"]:
         return "No encontrada", 404
     return send_file(BytesIO(pl["miniatura"]), mimetype="image/png")
 
 
-@app.post("/api/admin/plantillas")
-@pide_admin
-def api_admin_guardar_plantilla():
+@app.post("/api/plantillas")
+@pide_login
+def api_guardar_plantilla():
     try:
         d = cuerpo_json()
         p, niveles, _ = _construir_desde(d.get("parametros") or {})
         with _lock_dibujo:
             mini = miniatura_png(niveles)
-        datos.guardar_plantilla(d.get("nombre", ""), asdict(p), mini)
+        # el admin guarda para todos; el resto (y los invitados) solo para sí mismos
+        dueno = None if request.usuario["es_admin"] else request.usuario["id"]
+        datos.guardar_plantilla(d.get("nombre", ""), asdict(p), mini, dueno)
     except ValueError as e:
         return jsonify(error=str(e)), 400
-    return jsonify(plantillas=datos.listar_plantillas())
+    return jsonify(plantillas=datos.listar_plantillas(request.usuario["id"]))
 
 
-@app.delete("/api/admin/plantillas/<int:pid>")
-@pide_admin
-def api_admin_borrar_plantilla(pid):
+@app.delete("/api/plantillas/<int:pid>")
+@pide_login
+def api_borrar_plantilla(pid):
+    pl = datos.plantilla(pid)
+    if not pl:
+        return jsonify(error="No encontrada"), 404
+    if pl["usuario_id"] != request.usuario["id"] and not request.usuario["es_admin"]:
+        return jsonify(error="Esa plantilla no es tuya."), 403
     datos.borrar_plantilla(pid)
-    return jsonify(plantillas=datos.listar_plantillas())
+    return jsonify(plantillas=datos.listar_plantillas(request.usuario["id"]))
 
 
 @app.get("/api/licencias")

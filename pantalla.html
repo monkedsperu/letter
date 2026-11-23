@@ -124,15 +124,19 @@
     <b id="yo_usuario">…</b>
     <span id="yo_invitado" class="chip gris" hidden>invitado</span>
     <span id="yo_cupo" class="cupo"></span>
+    <button id="cambiar-clave" class="chico" hidden>Cambiar contraseña</button>
   </div>
 
   <fieldset id="caja-plantillas" hidden>
     <legend>Plantillas</legend>
     <div class="fila">
       <div><label>Empezar desde<select id="plantilla"></select></label></div>
-      <div style="display:flex;align-items:flex-end"><button id="usar-plantilla" class="sec">Cargar</button></div>
+      <div style="display:flex;align-items:flex-end;gap:6px">
+        <button id="usar-plantilla" class="sec">Cargar</button>
+        <button id="borrar-plantilla" class="sec" hidden>Borrar</button>
+      </div>
     </div>
-    <button id="guardar-plantilla" class="sec solo-admin" hidden>Guardar diseño actual como plantilla</button>
+    <button id="guardar-plantilla" class="sec">Guardar diseño actual como plantilla</button>
   </fieldset>
 
   <fieldset>
@@ -767,9 +771,27 @@ async function cargarYo() {
   $('yo_invitado').hidden = !d.es_invitado;
   document.querySelectorAll('.solo-admin').forEach(el => { el.hidden = !d.es_admin; });
   invitado = !!d.es_invitado;
+  $('cambiar-clave').hidden = invitado;   // los invitados no tienen contraseña
   resumen = d.resumen;
   pintarCupo();
 }
+
+$('cambiar-clave').onclick = async () => {
+  const actual = prompt('Tu contraseña actual:');
+  if (!actual) return;
+  const nueva = prompt('Nueva contraseña (mínimo 6 caracteres):');
+  if (!nueva) return;
+  if (nueva !== prompt('Repítela para confirmar:')) return alert('No coinciden.');
+  const msg = $('msg');
+  try {
+    const r = await fetch('/api/clave', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actual, nueva }) });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo cambiar');
+    msg.className = ''; msg.textContent = 'Contraseña cambiada.';
+  } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+};
 
 function aplicarParametros(p) {
   for (const k of CAMPOS) if (k in p) $(k)[$(k).type === 'checkbox' ? 'checked' : 'value'] = p[k];
@@ -818,13 +840,22 @@ function pintarMiniSvg() {
 ['patron', 'adorno'].forEach(k => $(k).addEventListener('change', pintarMiniSvg));
 
 // ---------- plantillas
+function pintarPlantillas(ps) {
+  const grupo = (etq, l) => l.length ? `<optgroup label="${etq}">` + l.map(
+    p => `<option value="${p.id}" data-mia="${p.mia}">${esc(p.nombre)}</option>`).join('') + '</optgroup>' : '';
+  $('plantilla').innerHTML = grupo('Mías', ps.filter(p => p.mia)) + grupo('De la casa', ps.filter(p => !p.mia))
+                             || '<option value="">(todavía no hay)</option>';
+  marcarBorrable();
+}
+function marcarBorrable() {     // solo se pueden borrar las propias
+  const o = $('plantilla').selectedOptions[0];
+  $('borrar-plantilla').hidden = !(o && o.dataset.mia === '1');
+}
+$('plantilla').onchange = marcarBorrable;
 async function cargarPlantillas() {
   const r = await fetch('/api/plantillas');
   if (!r.ok) return;
-  const ps = (await r.json()).plantillas;
-  $('plantilla').innerHTML = ps.map(p => `<option value="${p.id}">${esc(p.nombre)}</option>`).join('');
-  $('caja-plantillas').hidden = !ps.length && !(resumen && $('guardar-plantilla').hidden === false);
-  if (!ps.length) $('plantilla').innerHTML = '<option value="">(todavía no hay)</option>';
+  pintarPlantillas((await r.json()).plantillas);
 }
 $('usar-plantilla').onclick = async () => {
   const id = $('plantilla').value;
@@ -840,13 +871,25 @@ $('guardar-plantilla').onclick = async () => {
   if (!nombre) return;
   const msg = $('msg');
   try {
-    const r = await fetch('/api/admin/plantillas', {
+    const r = await fetch('/api/plantillas', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nombre, parametros: leer() }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'No se pudo guardar');
     msg.className = ''; msg.textContent = 'Plantilla guardada.';
-    await cargarPlantillas();
+    pintarPlantillas(d.plantillas);
+  } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+};
+$('borrar-plantilla').onclick = async () => {
+  const o = $('plantilla').selectedOptions[0];
+  if (!o || !confirm(`¿Borrar la plantilla "${o.textContent}"?`)) return;
+  const msg = $('msg');
+  try {
+    const r = await fetch('/api/plantillas/' + o.value, { method: 'DELETE' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo borrar');
+    msg.className = ''; msg.textContent = 'Plantilla borrada.';
+    pintarPlantillas(d.plantillas);
   } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
 };
 

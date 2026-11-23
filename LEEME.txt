@@ -122,7 +122,12 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    - Texto: hasta 6 letras en la inicial. El cuadro del texto admite varias líneas
      (pulsa Enter dentro del recuadro; también vale escribir "|"), tiene curva/arco en
      grados, y se arrastra en la vista 3D como los adornos y el aro.
-   - Plantillas: el administrador guarda un diseño con nombre y todos pueden partir de él.
+   - Contraseña: con el botón "Cambiar contraseña" (arriba, junto a tu nombre) cada uno
+     cambia la suya escribiendo antes la que tenía. El administrador puede ponerle otra a
+     cualquiera desde Admin > Usuarios > "Cambiar clave", sin saber la anterior.
+   - Plantillas: cualquiera (también los invitados) guarda sus diseños con nombre y los
+     vuelve a cargar cuando quiera; solo las ve su dueño, con un tope de 30 por usuario.
+     Las que guarda el administrador son "de la casa": las ve y las usa todo el mundo.
 
 9f) LOS 4 COLORES DEL LLAVERO (un AMS tiene 4 ranuras)
    1. Nivel 1  : la base y el borde de todo, y el aro del llavero.

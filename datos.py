@@ -61,10 +61,11 @@ CREATE TABLE IF NOT EXISTS codigos (
 );
 CREATE TABLE IF NOT EXISTS plantillas (
     id         INTEGER PRIMARY KEY,
-    nombre     TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    nombre     TEXT NOT NULL COLLATE NOCASE,
     parametros TEXT NOT NULL,
     miniatura  BLOB,
-    creada     TEXT NOT NULL
+    creada     TEXT NOT NULL,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE  -- NULL = de la casa, la ve todo el mundo
 );
 CREATE TABLE IF NOT EXISTS ips_bloqueadas (
     ip     TEXT PRIMARY KEY,
@@ -110,6 +111,23 @@ def _migrar(con):
     for tabla, col, tipo in nuevas:
         if col not in columnas(tabla):
             con.execute(f"ALTER TABLE {tabla} ADD COLUMN {col} {tipo}")
+    # plantillas: antes eran globales y el nombre era único para todos; ahora cada
+    # usuario tiene las suyas, así que hay que rehacer la tabla (SQLite no quita un UNIQUE).
+    if "usuario_id" not in columnas("plantillas"):
+        con.executescript("""
+            ALTER TABLE plantillas RENAME TO plantillas_viejas;
+            CREATE TABLE plantillas (
+                id         INTEGER PRIMARY KEY,
+                nombre     TEXT NOT NULL COLLATE NOCASE,
+                parametros TEXT NOT NULL,
+                miniatura  BLOB,
+                creada     TEXT NOT NULL,
+                usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE
+            );
+            INSERT INTO plantillas (id, nombre, parametros, miniatura, creada, usuario_id)
+                SELECT id, nombre, parametros, miniatura, creada, NULL FROM plantillas_viejas;
+            DROP TABLE plantillas_viejas;
+        """)
 
 
 def iniciar():
@@ -384,23 +402,37 @@ def canjear_codigo(codigo: str, usuario_id: int) -> int:
 
 
 # ------------------------------------------------------------------ plantillas
-def guardar_plantilla(nombre: str, parametros: dict, miniatura: bytes):
+MAX_PLANTILLAS = 30   # por usuario, para que nadie llene la base
+
+
+def guardar_plantilla(nombre: str, parametros: dict, miniatura: bytes, usuario_id=None):
+    """usuario_id None = plantilla de la casa (la guarda el admin y la ve todo el mundo)."""
     nombre = (nombre or "").strip()[:60]
     if len(nombre) < 2:
         raise ValueError("Ponle un nombre de al menos 2 caracteres.")
     with conexion() as con:
-        con.execute("""INSERT INTO plantillas (nombre, parametros, miniatura, creada)
-                       VALUES (?,?,?,?)
-                       ON CONFLICT(nombre) DO UPDATE SET parametros = excluded.parametros,
-                           miniatura = excluded.miniatura, creada = excluded.creada""",
-                    (nombre, json.dumps(parametros, ensure_ascii=False), miniatura, ahora()))
+        # mismo nombre y mismo dueño = se pisa (IS compara bien con NULL)
+        cur = con.execute("DELETE FROM plantillas WHERE nombre = ? AND usuario_id IS ?",
+                          (nombre, usuario_id))
+        if not cur.rowcount and usuario_id is not None:
+            n = con.execute("SELECT COUNT(*) FROM plantillas WHERE usuario_id = ?",
+                            (usuario_id,)).fetchone()[0]
+            if n >= MAX_PLANTILLAS:
+                raise ValueError(f"Has llegado al máximo de {MAX_PLANTILLAS} plantillas. Borra alguna.")
+        con.execute("""INSERT INTO plantillas (nombre, parametros, miniatura, creada, usuario_id)
+                       VALUES (?,?,?,?,?)""",
+                    (nombre, json.dumps(parametros, ensure_ascii=False), miniatura,
+                     ahora(), usuario_id))
         con.commit()
 
 
-def listar_plantillas():
+def listar_plantillas(usuario_id=None):
+    """Las de la casa (usuario_id NULL) más las del usuario que mira."""
     with conexion() as con:
         return [dict(f) for f in con.execute(
-            "SELECT id, nombre, creada FROM plantillas ORDER BY nombre")]
+            """SELECT id, nombre, creada, usuario_id IS NOT NULL AS mia FROM plantillas
+               WHERE usuario_id IS NULL OR usuario_id = ?
+               ORDER BY mia, nombre""", (usuario_id,))]
 
 
 def plantilla(pid: int):
