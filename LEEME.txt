@@ -3,6 +3,8 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
 
 1) INSTALAR
    pip install -r requirements.txt
+   Al ACTUALIZAR una instalación vieja, vuelve a pasarlo: el organizador necesita
+   manifold3d, que antes no estaba.
 
 2) CONFIGURAR
    Copia .env.ejemplo como .env y cambia los valores:
@@ -83,6 +85,8 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
      los dos adornos y el aro. Se arrastran con el ratón (también desde el icono).
 
 9) PATRONES, ADORNOS Y FUENTES (carpetas junto a app.py)
+   Los SVG pueden ir en SUBCARPETAS: "adornos/desktop/lapiz.svg" aparece en la lista como
+   "desktop/lapiz.svg". Sirve para tener los adornos ordenados por tema.
    - patrones/ : cada figura separada del SVG es un motivo; se reparten al azar por la
      letra, enteros y sin tocar el texto. Deben ser formas rellenas
      (en Inkscape: Trayecto > Trazo a trayecto).
@@ -142,13 +146,132 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    previa siguen sueltas para poder arrastrarlas.
    Debajo de los botones se ve siempre cuántos filamentos gasta el diseño y cuáles son.
 
-10) CAPAS DEL MODELO
+10) EL OTRO DISEÑO: ORGANIZADOR DE ESCRITORIO
+   Se elige arriba del todo, en "Diseño". Es un nombre en relieve sobre un cuerpo que
+   tiene su misma silueta, con tres módulos que se encienden por separado:
+   - Soporte del móvil: ranura abierta por arriba, inclinable. De serie 84 x 14 mm,
+     que admite casi cualquier móvil con funda. "Apoyo" es la altura a la que descansa.
+   - Vaso de lápices: agujero redondo. Su borde queda plano aunque el nombre tenga
+     letras más altas, y el diámetro más dos paredes tiene que caber en el fondo.
+   - Bandeja de clips: cajón que sale por delante, pegado al nombre. Con el alto en 0 se
+     coloca sola justo debajo de las letras de ese tramo: baja cuando encima hay una g,
+     una j o una p con rabito, y si no hay sitio sube el nombre lo justo. Si prefieres
+     mandar tú, ponle un alto a mano.
+   Los tres se colocan con un PORCENTAJE que los alinea dentro del nombre: 0 los pega al
+   principio, 100 al final y 50 los centra. Así no sobra cuerpo por los lados. De serie
+   van el móvil a la izquierda (0), el vaso a la derecha (100) y la bandeja en medio (50).
+   Si dos se pisan sale un aviso y la ranura del móvil se para en la pared del vaso, para
+   que no lo parta.
+   "Canto" redondea los cantos y hace que las piezas nazcan unas de otras en curva en vez
+   de a escuadra (el vaso saliendo del cuerpo, la bandeja de la pared del nombre). Con 0
+   sale todo a escuadra y la malla pesa cinco veces menos; de 2 a 4 mm es lo normal.
+   NO se redondean ni el apoyo ni las letras: la pieza se imprime de pie y la base tiene
+   que quedar plana sobre la cama. "Pasos del canto" es lo fino que sale ese redondeo
+   (16 de serie). Los escalones se reparten por ángulo y con 16 cada uno mide 0,2 mm con el
+   canto de serie: justo una capa, o sea que subirlo más no se nota al imprimir y sí engorda
+   la malla y la espera (con 32 la vista previa tarda el doble y el 3MF pesa el doble).
+   "Base" es el cuerpo que queda por debajo de la letra más baja: con poco, la silueta se
+   ciñe al nombre.
+   La silueta sale de engordar las letras ("Margen") y fundir los valles entre ellas
+   ("Suavizado"): poco margen y poco suavizado = se reconoce cada letra; mucho = un bloque.
+   El nombre puede llevar BORDE: un contorno alrededor de las letras, con su propio color
+   y a su misma altura (3 mm de serie). El cuerpo crece solo para que nunca se salga.
+   Y puede llevar ADORNO: un SVG de la carpeta "adornos" puesto en la cara, junto al nombre.
+   Comparte relieve con las letras, lo rodea el mismo borde y entra en el mismo hueco al
+   imprimirlo aparte. Su posición va en % del ancho del nombre y, pasado de 100, se sale
+   por la derecha: el cuerpo crece para recogerlo.
+   El color funciona igual que en el llavero: del SVG solo se aprovechan las FORMAS (hasta
+   tres) y a cada una se le asigna uno de los colores de la pieza -cuerpo, nombre, borde o
+   un cuarto color extra-, así que un adorno de varios colores sale de varios colores en
+   el 3MF pero nunca hacen falta más de 4 filamentos.
+   Gasta dos colores (tres con borde). Sale una pieza maciza: pon el relleno que uses
+   en la calculadora de costo para que el gasto y el tiempo se parezcan a la realidad.
+   IMPRIMIR EL NOMBRE APARTE: con esa casilla, el nombre no sale pegado a la cara del
+   cuerpo, sino tumbado a su lado y con la cara buena hacia arriba. Así las dos piezas se
+   imprimen sin soportes y el nombre se pega después. Encaja a caja y espiga: al cuerpo se
+   le abre un HUECO con la silueta del nombre (2 mm de hondo de serie) y al nombre le crece
+   por detrás esa misma medida, así que no hay que alinearlo a ojo y lo que sobresale no
+   cambia. La HOLGURA (0,3 mm) es el aire alrededor para que entre sin forzar; súbela si tu
+   impresora saca las piezas apretadas. Con el hueco a 0 no se caja nada y se pega a ojo.
+   Ojo: un nombre de dos palabras sale en varios trozos sueltos. El borde los une, pero
+   solo cuando es ancho de verdad: dos letras se juntan cuando el borde tapa la mitad del
+   hueco que las separa, así que el ancho que hace falta depende del nombre y de la fuente
+   ("Edgar Medina" en Pacifico necesita 4 mm; "Ned Stark", 7). No hay que adivinarlo: el
+   aviso dice cuántos trozos son y con cuántos milímetros de borde saldría de una pieza.
+   Sin esa casilla, el nombre sobresale de una cara vertical: hay que tumbar la pieza sobre
+   su parte de atrás o activar los soportes.
+
+11) EL TERCER DISEÑO: CUADRO PARA LAS LLAVES
+   Una placa plana que se cuelga en la pared. Arriba el APELLIDO en relieve; debajo, en
+   una fila centrada, los NOMBRES de la casa (separados por coma, hasta 8), y bajo cada
+   nombre su GANCHO: un pincho inclinado con la punta redonda. Los ganchos salen hacia
+   fuera, así que la pieza se imprime tumbada y sin soportes.
+   La placa no se dibuja: sale de engordar todo lo que lleva encima -letras, adorno y los
+   sitios de los ganchos- y fundirlo con el suavizado en un contorno continuo, igual que
+   en el organizador. Lleva dos agujeros para colgarla, siempre a la misma altura para que
+   no quede torcida. Van siempre en las DOS ESQUINAS DE ARRIBA, nunca por el medio: se parte
+   de cada esquina del rectángulo que encierra la placa y se entra hacia el centro hasta pisar
+   placa libre, guardando su distancia a las letras y al adorno -nunca los rozan-; luego los
+   dos bajan a la altura del más bajo y ahí se vuelven a abrir todo lo que pueden. La placa
+   crece un bulto redondo alrededor de cada uno, así que siempre quedan con su reborde. Son
+   opcionales -tienen su propio interruptor- por si prefieres pegar el cuadro con cinta de
+   doble cara.
+   Sobre el apellido cabe una PALABRA PEQUEÑA («Familia», «Casa de»...) en su propio color;
+   si la dejas vacía no sale. Y con "Repartirlos alrededor del apellido" los nombres dejan la
+   fila de abajo y se encadenan siguiendo el CONTORNO del apellido, como un texto sobre un
+   camino: empiezan abajo en el centro y suben por los lados, repartidos por buena parte del
+   contorno aunque sobre sitio, y cada uno se empuja hacia fuera hasta que no roza ni el
+   apellido ni al vecino -contando el redondel que necesita su gancho-. Así la figura engorda
+   por igual en todas las direcciones en vez de alargarse por un lado. Si no caben alrededor
+   vuelven solos a la fila de abajo.
+   Pongas el reparto que pongas, cada NOMBRE Y LA PALABRA DE ARRIBA se pueden ARRASTRAR en la
+   vista 3D para dejarlos donde quieras; el gancho va con su nombre y la placa se rehace
+   alrededor. Lo arrastrado se guarda en el modelo y "Deshacer lo movido" lo devuelve a su
+   sitio. Cada nombre es una pieza suya, por eso se puede mover por separado.
+   El APELLIDO puede llevar PATRÓN: motivos repartidos dentro de las letras. Con "Ahuecar la
+   letra" (lo normal) se recortan en ella y se ve la placa por el hueco; sin marcar se montan
+   encima en relieve y con su propio color, para que se distingan de la letra. Si el motivo no
+   cabe en el trazo de la letra avisa en vez de salir vacío.
+   El ADORNO funciona como en el organizador: un SVG, hasta tres formas, y el color de cada
+   una lo eliges de la paleta del cuadro (placa, apellido, nombres o un color extra), así
+   que nunca pasa de 4 filamentos; por defecto cada forma va a un color distinto, para que un
+   dibujo de tres colores salga de tres colores. También puedes elegir "Del dibujo" y se
+   respeta el color que trae el SVG, pero entonces pueden hacer falta más de 4 filamentos y
+   el análisis lo avisa. Viene con adornos/hogar/casa.svg.
+   IMPRIMIR CADA COLOR POR SEPARADO (para quien no tiene AMS): cada pieza sale suelta y
+   apoyada en la mesa, al lado de la placa. A la placa se le vacía el hueco de cada una
+   -su silueta con la holgura que elijas- y a la pieza le crece esa misma espiga por detrás,
+   así que al pegar cae sola en su sitio y no hay que alinear a ojo. Los ganchos salen rectos
+   y de pie; la inclinación se la da su hueco, que va taladrado en ángulo. El hueco tiene que
+   caber en el grosor de la placa: si no, avisa y no genera.
+
+12) EL CUARTO DISEÑO: MARCAPÁGINAS
+   Una lámina plana y alargada, con los dos extremos redondeados, que se queda dentro del
+   libro. Manda la LETRA GRANDE: va arriba del todo, con su fuente, su alto, su color y su
+   distancia al extremo. Debajo va el NOMBRE, que baja solo lo justo si su sitio chocara con
+   la letra. Y el ICONO es opcional: orbita alrededor de la letra grande (o del hueco sobre
+   el nombre si no hay letra) y lo colocas con dos medidas o arrastrándolo en la vista 3D.
+   Todo configurable: largo, ancho, grueso, relieve, margen y suavizado de la lámina.
+   Lo que sobresale no se queda en el aire: la lámina crece alrededor de las letras y del
+   icono y lo funde todo en un contorno continuo, así que se imprime tumbada, de una pieza
+   y sin soportes. Si el grueso se pasa de 3,5 mm avisa (abulta al cerrar el libro) y si
+   baja de 1,2 mm también (se dobla con el uso).
+   El ICONO sale de la carpeta adornos, con hasta tres formas y el color de cada una a
+   elegir: el que trae el dibujo ("Del dibujo", lo normal aquí) o uno de la pieza. Vienen
+   cinco en adornos/marcapaginas: corazon, libro, hoja, gato y luna.
+   IMPRIMIR CADA COLOR POR SEPARADO: como en el cuadro de las llaves. La letra, el nombre y
+   el icono salen sueltos al lado de la lámina y apoyados en la mesa; a la lámina se le
+   vacía el hueco de cada uno -su silueta con holgura- y a la pieza le crece esa espiga por
+   detrás, así que al pegar cae sola en su sitio. Como la lámina es fina, el hueco por
+   defecto es de 1,2 mm: si no cabe en el grueso, avisa y no genera.
+
+13) CAPAS DEL MODELO (diseño de llavero)
    Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).
    Cada capa es maciza y de un solo color. El 3MF lleva los colores en "m:colorgroup",
    que Bambu Studio / Orca leen para pedirte asignar un filamento a cada uno.
    El STL es una sola malla sin colores.
 
-11) USO POR CONSOLA (sin servidor, para pruebas)
+14) USO POR CONSOLA (sin servidor, para pruebas; solo el diseño de llavero)
    python generador_stl.py --inicial M --texto "Matias" --salida salida.3mf
    Opciones: --patron, --tam-patron, --separacion-patron, --semilla, --sin-girar-patron,
              --adorno, --tam-adorno, --adorno-x, --adorno-y, --segundo-adorno libre|espejo|ninguno,
@@ -158,7 +281,11 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
 ARCHIVOS
    app.py             servidor web (usuarios, licencias, API)
    datos.py           base de datos SQLite
-   generador_stl.py   motor de geometría y exportación (también funciona por consola)
+   generador_stl.py   fachada del motor: reparte por diseño y da la línea de órdenes
+   parametros.py      todos los parámetros de los cuatro diseños, con su valor por defecto
+   comun.py           lo compartido: fuentes, SVG, patrones, adornos, geometría, exportación
+   diseno_llavero.py / diseno_organizador.py / diseno_cuadro.py / diseno_marca.py
+                      un archivo por diseño, cada uno con su construir_*
    pantalla.html      generador 3D
    generaciones.html  historial del usuario · licencias.html detalle de sus licencias
    login.html         entrar · admin.html panel de administración (pestañas: usuarios y

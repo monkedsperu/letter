@@ -9,58 +9,136 @@
   body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--txt);
          height:100vh; display:flex; flex-direction:column; }
   .cuerpo { flex:1; display:flex; min-height:0; }
-  aside { width:340px; min-width:300px; background:var(--panel); border-right:1px solid var(--bd); padding:16px; overflow-y:auto; }
+  aside { width:340px; min-width:300px; background:var(--panel); border-right:1px solid var(--bd);
+          padding:14px 16px; overflow-y:auto; }
   main { flex:1; position:relative; padding:0; margin:0; max-width:none; display:block; }
-  h1 { font-size:20px; margin:0 0 14px; color:var(--acc2); letter-spacing:.3px; }
-  .check { display:flex; gap:8px; align-items:center; color:var(--txt); }
-  .check input { width:auto; margin:0; }
-  fieldset { border:1px solid var(--bd); border-radius:10px; background:var(--panel); margin:0 0 12px; padding:10px 12px 12px; }
-  legend { font-size:13px; font-weight:600; padding:0 6px; color:var(--acc); }
-  label { display:block; font-size:12px; color:var(--mut); margin-top:8px; }
-  textarea { resize:vertical; min-height:48px; font-family:inherit; line-height:1.3; }
-  input, select, textarea { width:100%; padding:6px 8px; margin-top:3px; border:1px solid var(--bd); border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
-  input[type=color] { padding:2px; height:32px; }
+  #visor { position:absolute; inset:0; }
+
+  /* ---------- menú de usuario (cabecera) */
+  .usuario { position:relative; }
+  #btn-usuario { width:auto; margin:0; padding:5px 10px; font-size:13px; font-weight:600;
+                 display:flex; align-items:center; gap:6px; background:var(--suave);
+                 color:var(--acc2); border:1px solid var(--bd); }
+  #btn-usuario:hover { background:var(--campo); }
+  #btn-usuario .fle { font-size:9px; opacity:.7; }
+  #menu-usuario { position:absolute; right:0; top:calc(100% + 6px); min-width:215px; z-index:40;
+                  background:var(--panel); border:1px solid var(--bd); border-radius:10px; padding:6px;
+                  box-shadow:0 12px 26px rgba(16,22,30,.25); }
+  #menu-usuario .cab { padding:5px 8px 8px; margin-bottom:5px; border-bottom:1px solid var(--bd);
+                       font-size:12px; color:var(--mut); }
+  #menu-usuario a, #menu-usuario button { display:block; width:100%; margin:0; text-align:left;
+      background:none; border:0; border-radius:7px; padding:7px 8px; font-size:13px; font-weight:500;
+      color:var(--txt); text-decoration:none; cursor:pointer; }
+  #menu-usuario a:hover, #menu-usuario button:hover { background:var(--campo); color:var(--acc2); }
+
+  /* ---------- globo de ayuda (icono ?) */
+  .q, .mover { display:inline-flex; align-items:center; justify-content:center; flex:none;
+               width:15px; height:15px; margin-left:5px; border-radius:50%; cursor:help;
+               background:var(--suave); color:var(--acc2); border:1px solid var(--bd);
+               font-size:10px; font-weight:700; vertical-align:middle; }
+  .q:hover, .q:focus, .mover:hover, .mover:focus { background:var(--acc); color:#fff; outline:none; }
+  .mover { font-size:11px; }
+  #tip { position:fixed; z-index:60; max-width:250px; background:#232b36; color:#f1f4f9;
+         font-size:12px; font-weight:400; line-height:1.45; padding:8px 10px; border-radius:8px;
+         box-shadow:0 10px 22px rgba(16,22,30,.32); pointer-events:none; }
+
+  /* ---------- secciones plegables */
+  details.g { border:1px solid var(--bd); border-radius:10px; background:var(--panel); margin:0 0 8px; }
+  details.g > summary { display:flex; align-items:center; gap:7px; padding:9px 11px; cursor:pointer;
+       font-size:13px; font-weight:600; color:var(--acc2); list-style:none; }
+  details.g > summary::-webkit-details-marker { display:none; }
+  details.g > summary::before { content:'\25b8'; font-size:11px; color:var(--mut); width:9px; }
+  details.g[open] > summary::before { content:'\25be'; }
+  details.g > summary .t { flex:1; display:flex; align-items:center; }
+  details.g[open] > summary { border-bottom:1px solid var(--bd); }
+  details.g .cont { padding:2px 11px 11px; }
+
+  /* interruptor dentro de la cabecera de la sección */
+  .sw { position:relative; width:30px; height:17px; flex:none; }
+  .sw input { position:absolute; inset:0; width:100%; height:100%; margin:0; padding:0;
+              opacity:0; cursor:pointer; z-index:2; }
+  .sw i { position:absolute; inset:0; border-radius:20px; background:var(--campo);
+          border:1px solid var(--bd); transition:background .15s; }
+  .sw i::after { content:''; position:absolute; top:2px; left:2px; width:11px; height:11px;
+                 border-radius:50%; background:var(--mut); transition:left .15s, background .15s; }
+  .sw input:checked + i { background:var(--acc); border-color:var(--acc); }
+  .sw input:checked + i::after { left:15px; background:#fff; }
+
+  /* ---------- campos */
+  label { display:block; font-size:11.5px; color:var(--mut); margin-top:8px; }
+  textarea { resize:vertical; min-height:44px; font-family:inherit; line-height:1.3; }
+  input, select, textarea { width:100%; padding:6px 8px; margin-top:3px; border:1px solid var(--bd);
+      border-radius:6px; background:var(--campo); color:var(--txt); font-size:14px; }
+  input[type=color] { padding:2px; height:30px; }
   .fila { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  button { width:100%; padding:10px; border:0; border-radius:8px; font-size:15px; cursor:pointer; background:var(--acc); color:#fff; font-weight:600; }
+  .fila3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .check { display:flex; gap:7px; align-items:center; margin-top:10px; font-size:12px; color:var(--txt); }
+  .check input { width:auto; margin:0; flex:none; }
+  button { width:100%; padding:9px; border:0; border-radius:8px; font-size:14px; cursor:pointer;
+           background:var(--acc); color:#fff; font-weight:600; }
   button:hover { background:var(--acc2); }
   button.sec { background:var(--suave); color:var(--acc2); border:1px solid var(--bd); margin-top:8px; }
+  button.sec:hover { background:var(--campo); }
   button:disabled { opacity:.5; cursor:wait; }
-  #msg { font-size:13px; margin-top:10px; min-height:18px; }
-  #msg.err { color:#d9534f; }
-  #visor { position:absolute; inset:0; }
-  #barra { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:13px;
-           background:var(--campo); border:1px solid var(--bd); border-radius:8px; padding:7px 10px; margin-bottom:12px; }
-  .cupo { color:var(--mut); }
-  .aviso-inv { display:flex; gap:7px; align-items:flex-start; margin:10px 0 0; font-size:11.5px;
-               line-height:1.45; color:#8a6116; background:#fdf3dc; border:1px solid #e8d49a;
-               border-radius:7px; padding:8px 10px; }
-  .aviso-inv b { font-size:14px; line-height:1; }
+  button.ico { width:auto; flex:none; margin:0; padding:6px 9px; font-size:14px; line-height:1;
+               background:var(--suave); color:var(--acc2); border:1px solid var(--bd); }
+  button.ico:hover { background:var(--campo); }
   .nota { font-size:11px; color:var(--mut); line-height:1.45; margin:8px 0 0; }
-  .svgmini { width:100%; height:46px; object-fit:contain; background:#fff; border:1px solid var(--bd);
-              border-radius:6px; padding:2px; margin-top:3px; }
-  details.calc { border:1px solid var(--bd); border-radius:9px; background:var(--campo); padding:8px 10px; margin-top:10px; }
-  details.calc summary { cursor:pointer; font-size:12.5px; font-weight:600; color:var(--acc2); }
-  details.calc .ajustes { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:8px; }
-  table.costos { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
-  table.costos td { padding:3px 0; border-bottom:1px solid var(--bd); }
-  table.costos td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
-  table.costos tr.total td { font-weight:700; font-size:13.5px; color:var(--acc2); border-bottom:0; padding-top:6px; }
-  .puntoColor { display:inline-block; width:9px; height:9px; border-radius:50%; border:1px solid var(--bd); margin-right:5px; }
-  #filamentos { display:flex; align-items:center; gap:4px; margin-top:10px; font-size:11.5px; color:var(--mut); }
-  #filamentos .puntoColor { width:13px; height:13px; margin:0; }
-  #avisos { margin-top:8px; }
-  #avisos div { display:flex; gap:7px; font-size:11.5px; line-height:1.45; color:#8a6116;
-                background:#fdf3dc; border:1px solid #e8d49a; border-radius:7px; padding:7px 9px; margin-top:6px; }
-  .mover { font-weight:600; font-size:10px; color:var(--acc2); background:var(--suave);
-           border:1px solid var(--bd); border-radius:20px; padding:1px 7px; margin-left:4px; }
-  #generar-archivos { margin-top:8px; background:#2e7d4f; }
+
+  /* tipo de diseño y plantillas */
+  .tipo { margin:0 0 9px; font-size:11.5px; }
+  .tipo select { font-weight:600; }
+  .plantillas { display:flex; gap:5px; align-items:center; margin:0 0 12px; }
+  .plantillas select { margin-top:0; font-size:13px; }
+
+  /* capas: una fila por nivel */
+  .capas { display:grid; grid-template-columns:1fr 64px 42px; gap:6px 8px; align-items:center; margin-top:8px; }
+  .capas .enc { font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--mut); text-align:center; }
+  .capas .enc.izq { text-align:left; }
+  .capas .n { display:flex; align-items:center; font-size:11.5px; color:var(--txt); }
+  .capas input { margin-top:0; text-align:center; }
+
+  .svgmini { width:100%; height:44px; object-fit:contain; background:#fff; border:1px solid var(--bd);
+             border-radius:6px; padding:2px; margin-top:3px; }
+  .acciones { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+  .acciones button { margin-top:0; font-size:13px; padding:8px; }
+
+  /* ---------- acciones fijas al pie del panel */
+  #acciones-pie { position:sticky; bottom:0; z-index:4; margin:12px -16px -14px; padding:10px 16px 12px;
+                  background:var(--panel); border-top:1px solid var(--bd); }
+  #acciones-pie .dos { display:grid; grid-template-columns:1fr 1.3fr; gap:7px; }
+  #acciones-pie button { margin:0; padding:9px 6px; font-size:13.5px; }
+  #generar-archivos { background:#2e7d4f; }
   #generar-archivos:hover:not(:disabled) { background:#276a43; }
+  #msg { font-size:12.5px; margin-top:7px; min-height:16px; }
+  #msg.err { color:#d9534f; }
+  #acciones-pie .nota { display:flex; align-items:center; margin-top:6px; }
+
+  /* ---------- resultado, avisos y costos */
   #resultado { border:1px solid #bcd8c6; background:#e7f3ec; border-radius:9px; padding:10px 12px; margin-top:10px; }
   #resultado .listo { margin:0 0 8px; font-size:13px; font-weight:600; color:#2e7d4f; }
   a.descarga { flex:1; text-align:center; text-decoration:none; font-size:13px; font-weight:600;
                padding:8px 0; border-radius:7px; background:var(--acc); color:#fff; }
   a.descarga:hover { background:var(--acc2); }
-  /* diálogo de confirmación */
+  .aviso-inv { display:flex; gap:7px; align-items:flex-start; margin:10px 0 0; font-size:11.5px;
+               line-height:1.45; color:#8a6116; background:#fdf3dc; border:1px solid #e8d49a;
+               border-radius:7px; padding:8px 10px; }
+  .aviso-inv b { font-size:14px; line-height:1; }
+  #avisos { margin-top:8px; }
+  #avisos div { display:flex; gap:7px; font-size:11.5px; line-height:1.45; color:#8a6116;
+                background:#fdf3dc; border:1px solid #e8d49a; border-radius:7px; padding:7px 9px; margin-top:6px; }
+  #filamentos { display:flex; align-items:center; gap:4px; margin-top:10px; font-size:11.5px; color:var(--mut); }
+  #tamano { margin-top:10px; font-size:11.5px; color:var(--mut); }
+  #tamano b { font-size:14px; color:var(--acc2); font-variant-numeric:tabular-nums; }
+  #filamentos .puntoColor { width:13px; height:13px; margin:0; }
+  .puntoColor { display:inline-block; width:9px; height:9px; border-radius:50%; border:1px solid var(--bd); margin-right:5px; }
+  #calc .ajustes { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:4px; }
+  table.costos { width:100%; border-collapse:collapse; font-size:12px; margin-top:10px; }
+  table.costos td { padding:3px 0; border-bottom:1px solid var(--bd); }
+  table.costos td:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+  table.costos tr.total td { font-weight:700; font-size:13.5px; color:var(--acc2); border-bottom:0; padding-top:6px; }
+
+  /* ---------- diálogo de confirmación */
   #modal { position:fixed; inset:0; background:rgba(25,32,42,.55); display:flex;
            align-items:center; justify-content:center; z-index:50; padding:16px; }
   #modal .caja { background:var(--panel); border:1px solid var(--bd); border-radius:12px;
@@ -69,19 +147,19 @@
   #modal p { margin:0 0 6px; font-size:13px; line-height:1.5; }
   #modal .destacado { font-weight:600; }
   #modal .acciones { margin-top:16px; }
-  .fila3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
-  .acciones { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
-  .acciones button { margin-top:0; font-size:13px; padding:8px; }
+
+  /* ---------- visor */
   #centrar { position:absolute; right:12px; bottom:10px; width:auto; padding:5px 10px; font-size:12px; }
-  #info { position:absolute; left:12px; bottom:10px; font-size:12px; color:var(--mut); background:var(--panel); padding:4px 8px; border-radius:6px; border:1px solid var(--bd); }
+  #info { position:absolute; left:12px; bottom:10px; display:flex; align-items:center; font-size:12px;
+          color:var(--mut); background:var(--panel); padding:4px 8px; border-radius:6px; border:1px solid var(--bd); }
   /* botón y fondo del panel: solo se usan en pantallas estrechas */
   #btn-panel, #fondo-panel, #cerrar-panel { display:none; }
   @media (max-width: 820px) {
     header { padding:8px 12px; }
     header .marca { font-size:15px; }
-    /* el menú ocupa su propia fila completa, si no se sale por la derecha */
     header nav { width:100%; margin-left:0; }
     header nav a { padding:5px 8px; font-size:12px; }
+    header nav .usuario { margin-left:auto; }
     /* el panel pasa a ser un cajón que se desliza por encima del visor */
     aside { position:fixed; top:0; bottom:0; left:0; z-index:30; width:min(88vw, 350px);
             transform:translateX(-101%); transition:transform .22s ease;
@@ -92,10 +170,12 @@
     #btn-panel { display:inline-block; width:auto; margin:0; padding:6px 12px; font-size:13px; }
     #cerrar-panel { display:block; width:100%; margin-bottom:10px; background:var(--campo);
                     color:var(--acc2); border:1px solid var(--bd); }
-    /* una sola línea: la medida va primero, lo demás se recorta */
-    #info { font-size:11px; max-width:calc(100% - 118px); white-space:nowrap;
-            overflow:hidden; text-overflow:ellipsis; }
+    #info { font-size:11px; max-width:calc(100% - 118px); }
   }
+  .g.destacada > summary { background: #eef4ff; border-left: 3px solid #3069b8; }
+  .g.destacada > summary .t { color: #1d4a8a; }
+  .pista { margin: 6px 0; font-size: 12px; color: #667; line-height: 1.45; }
+  .comollave { padding: 2px 8px; font-size: 12px; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -110,9 +190,20 @@
   <nav>
     <a href="/" class="activo">Generador</a>
     <a href="/generaciones">Mis generaciones</a>
-    <a href="/licencias">Mis licencias</a>
-    <a id="nav_admin" href="/admin" hidden>Administración</a>
-    <a href="/salir">Salir</a>
+    <div class="usuario">
+      <button id="btn-usuario" aria-expanded="false" aria-haspopup="true">
+        <span id="yo_usuario">…</span>
+        <span id="yo_invitado" class="chip gris" hidden>invitado</span>
+        <span class="fle" aria-hidden="true">▾</span>
+      </button>
+      <div id="menu-usuario" hidden>
+        <div class="cab"><span id="yo_cupo" class="cupo"></span></div>
+        <a href="/licencias">Mis licencias</a>
+        <button id="cambiar-clave" hidden>Cambiar contraseña</button>
+        <a id="nav_admin" href="/admin" hidden>Administración</a>
+        <a href="/salir">Salir</a>
+      </div>
+    </div>
   </nav>
 </header>
 
@@ -120,138 +211,171 @@
 <div id="fondo-panel"></div>
 <aside>
   <button id="cerrar-panel">✕ Ver el modelo</button>
-  <div id="barra">
-    <b id="yo_usuario">…</b>
-    <span id="yo_invitado" class="chip gris" hidden>invitado</span>
-    <span id="yo_cupo" class="cupo"></span>
-    <button id="cambiar-clave" class="chico" hidden>Cambiar contraseña</button>
+
+  <label class="tipo">Diseño
+    <select id="tipo">
+      <option value="nombre">Llavero / cartel con inicial</option>
+      <option value="organizador">Organizador de escritorio</option>
+      <option value="cuadro">Cuadro para las llaves</option>
+      <option value="marca">Marcapáginas</option>
+    </select>
+  </label>
+
+  <div class="plantillas" id="caja-plantillas" hidden>
+    <select id="plantilla" aria-label="Plantillas"></select>
+    <button id="usar-plantilla" class="ico" aria-label="Cargar plantilla"
+            data-tip="Carga la plantilla elegida en el editor.">↧</button>
+    <button id="guardar-plantilla" class="ico" aria-label="Guardar plantilla"
+            data-tip="Guarda el diseño actual como plantilla tuya.">＋</button>
+    <button id="borrar-plantilla" class="ico" aria-label="Borrar plantilla" hidden
+            data-tip="Borra la plantilla elegida. Solo puedes borrar las tuyas.">✕</button>
   </div>
 
-  <fieldset id="caja-plantillas" hidden>
-    <legend>Plantillas</legend>
-    <div class="fila">
-      <div><label>Empezar desde<select id="plantilla"></select></label></div>
-      <div style="display:flex;align-items:flex-end;gap:6px">
-        <button id="usar-plantilla" class="sec">Cargar</button>
-        <button id="borrar-plantilla" class="sec" hidden>Borrar</button>
+  <details class="g" data-tipo="nombre" open>
+    <summary><span class="t">Letra y texto</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Letras<span class="q" tabindex="0" data-tip="De 1 a 6 letras. Es la pieza grande del diseño.">?</span>
+          <input id="inicial" maxlength="6" value="M"></label></div>
+        <div><label>Fuente<select id="fuente_inicial"></select></label></div>
       </div>
+      <div class="fila">
+        <div><label>Altura (mm)<input id="tam_inicial" type="number" step="1" min="1"></label></div>
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor de la letra, en el color del nivel 1. Pon 0 para quitarlo.">?</span>
+          <input id="borde" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <label>Texto<span class="mover" tabindex="0" data-tip="Arrastra el texto en la vista 3D para colocarlo.">✥</span>
+        <textarea id="texto" rows="2" placeholder="Enter para una segunda línea"></textarea></label>
+      <div class="fila">
+        <div><label>Fuente<select id="fuente_texto"></select></label></div>
+        <div><label>Tamaño (mm)<input id="tam_texto" type="number" step="1" min="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Borde ext. (mm)<span class="q" tabindex="0" data-tip="Borde 1: el de fuera. Va en el nivel 1, el de la base.">?</span>
+          <input id="borde_texto1" type="number" step="0.5" min="0"></label></div>
+        <div><label>Borde int. (mm)<span class="q" tabindex="0" data-tip="Borde 2: el de dentro. Va en el nivel 2, el de la letra.">?</span>
+          <input id="borde_texto2" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="giro_texto" type="number" step="1"></label></div>
+        <div><label>Arco (°)<span class="q" tabindex="0" data-tip="Curva el texto en arco. 0 = recto.">?</span>
+          <input id="curva_texto" type="number" step="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Posición<span class="q" tabindex="0" data-tip="Dónde se coloca el texto respecto a la letra.">?</span>
+          <select id="posicion">
+            <option value="sobre">Sobre la letra</option>
+            <option value="arriba">Arriba</option>
+            <option value="derecha">A la derecha</option>
+          </select></label></div>
+        <div><label>Separación (mm)<span class="q" tabindex="0" data-tip="Hueco entre la letra y el texto.">?</span>
+          <input id="separacion" type="number" step="1" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>X (mm)<input id="texto_x" type="number" step="0.5"></label></div>
+        <div><label>Y (mm)<input id="texto_y" type="number" step="0.5"></label></div>
+      </div>
+      <label class="check"><input id="cortar_letra" type="checkbox"> El borde corta la letra
+        <span class="q" tabindex="0" data-tip="El borde exterior del texto recorta la letra por donde pasa, en vez de montarse encima.">?</span></label>
     </div>
-    <button id="guardar-plantilla" class="sec">Guardar diseño actual como plantilla</button>
-  </fieldset>
+  </details>
 
-  <fieldset>
-    <legend>Letra inicial</legend>
-    <div class="fila">
-      <div><label>Letras (1 a 6)<input id="inicial" maxlength="6" value="M"></label></div>
-      <div><label>Fuente<select id="fuente_inicial"></select></label></div>
+  <details class="g" data-tipo="nombre">
+    <summary><span class="t">Capas y colores</span>
+      <span class="q" tabindex="0" data-tip="Tres capas apiladas. Cada una termina a la altura que le pongas, medida desde la mesa, y gasta un filamento.">?</span></summary>
+    <div class="cont">
+      <div class="capas">
+        <span class="enc izq">Nivel</span><span class="enc">Alto mm</span><span class="enc">Color</span>
+        <span class="n">1 · base<span class="q" tabindex="0" data-tip="Borde de la letra + borde exterior del texto. Es la que apoya en la mesa.">?</span></span>
+        <input id="alto_nivel1" type="number" step="0.5" min="0.2"><input id="color_nivel1" type="color">
+        <span class="n">2 · letra<span class="q" tabindex="0" data-tip="La letra + el borde interior del texto, encima del nivel 1.">?</span></span>
+        <input id="alto_nivel2" type="number" step="0.5" min="0.2"><input id="color_nivel2" type="color">
+        <span class="n">3 · texto<span class="q" tabindex="0" data-tip="El texto y el patrón, encima del nivel 2.">?</span></span>
+        <input id="alto_nivel3" type="number" step="0.5" min="0.2"><input id="color_nivel3" type="color">
+      </div>
+      <label class="check"><input id="usar_chaflan" type="checkbox"> Bordes biselados
+        <span class="q" tabindex="0" data-tip="Rebaja los cantos: acabado más fino.">?</span></label>
     </div>
-    <div class="fila">
-      <div><label>Altura de la letra (mm)<input id="tam_inicial" type="number" step="1" min="1"></label></div>
-      <div><label>Borde (mm, 0 = sin borde)<input id="borde" type="number" step="0.5" min="0"></label></div>
-    </div>
-  </fieldset>
+  </details>
 
-  <fieldset>
-    <legend>Texto</legend>
-    <label>Texto <span class="mover">✥ se arrastra</span>
-      <textarea id="texto" rows="2" placeholder="Pulsa Enter para una segunda línea"></textarea></label>
-    <div class="fila">
-      <div><label>Fuente<select id="fuente_texto"></select></label></div>
-      <div><label>Tamaño (mm)<input id="tam_texto" type="number" step="1" min="1"></label></div>
-    </div>
-    <div class="fila">
-      <div><label>Borde 1, exterior (mm)<input id="borde_texto1" type="number" step="0.5" min="0"></label></div>
-      <div><label>Borde 2, interior (mm)<input id="borde_texto2" type="number" step="0.5" min="0"></label></div>
-    </div>
-    <div class="fila">
-      <div><label>Giro (grados)<input id="giro_texto" type="number" step="1"></label></div>
-      <div><label>Curva / arco (°)<input id="curva_texto" type="number" step="5"></label></div>
-    </div>
-    <div class="fila">
-      <div><label>Posición
-        <select id="posicion">
-          <option value="sobre">Sobre la letra</option>
-          <option value="arriba">Arriba de la letra</option>
-          <option value="derecha">A la derecha</option>
-        </select></label></div>
-      <div><label>Separación (mm)<input id="separacion" type="number" step="1" min="0"></label></div>
-    </div>
-    <div class="fila">
-      <div><label>Ajuste X (mm)<input id="texto_x" type="number" step="0.5"></label></div>
-      <div><label>Ajuste Y (mm)<input id="texto_y" type="number" step="0.5"></label></div>
-    </div>
-    <label class="check"><input id="cortar_letra" type="checkbox"> El borde 1 del texto corta la letra</label>
-  </fieldset>
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="usar_adorno" type="checkbox"><i></i></span>
+      <span class="t">Adorno<span class="mover" tabindex="0" data-tip="Arrastra el adorno en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Va a la altura del nivel 2, con el borde del nivel 1. Del SVG solo se usan las formas: el negro se descarta, los tonos casi iguales se juntan y quedan 3 como mucho. El color lo eliges tú, para no pasar de 4 filamentos.">?</span></summary>
+    <div class="cont"><div id="caja-adorno">
+      <div class="fila">
+        <div><label>Forma (SVG)<select id="adorno"></select><img id="vista_adorno" class="svgmini" alt=""></label></div>
+        <div><label>Color extra<span class="q" tabindex="0" data-tip="El 4º filamento, solo para el adorno.">?</span>
+          <input id="color_adorno" type="color"></label></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Solo aparecen tantos selectores como formas tenga de verdad el SVG elegido.">?</span></label>
+      <div class="fila3">
+        <div id="fila_c1"><label>1<select id="adorno_c1"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
+        <div id="fila_c2"><label>2<select id="adorno_c2"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
+        <div id="fila_c3"><label>3<select id="adorno_c3"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
+        <div><label>Giro (°)<input id="giro_adorno" type="number" step="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>X (mm)<input id="adorno_x" type="number" step="0.5"></label></div>
+        <div><label>Y (mm)<input id="adorno_y" type="number" step="0.5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Delante tapa la letra; detrás la letra lo tapa.">?</span>
+          <select id="adorno_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+        <div><label>Segundo<span class="q" tabindex="0" data-tip="Repite la misma forma al otro lado. Espejo la refleja sola; libre te deja moverla aparte, útil en letras como la L.">?</span>
+          <select id="segundo_adorno">
+            <option value="espejo">Espejo</option>
+            <option value="libre">Libre</option>
+            <option value="ninguno">Ninguno</option>
+          </select></label></div>
+      </div>
+      <div id="pos-adorno2" class="fila3" hidden>
+        <div><label>X2 (mm)<input id="adorno2_x" type="number" step="0.5"></label></div>
+        <div><label>Y2 (mm)<input id="adorno2_y" type="number" step="0.5"></label></div>
+        <div><label>Giro 2 (°)<input id="giro_adorno2" type="number" step="5"></label></div>
+      </div>
+      <label class="check"><input id="cortar_adorno" type="checkbox"> Separar con borde
+        <span class="q" tabindex="0" data-tip="Deja un borde entre el adorno y la letra para que se distingan.">?</span></label>
+    </div></div>
+  </details>
 
-  <fieldset>
-    <legend>Capas (apiladas, una sobre otra)</legend>
-    <label>Nivel 1 · base: borde letra + borde 1 del texto</label>
-    <div class="fila">
-      <div><label>Termina a (mm)<input id="alto_nivel1" type="number" step="0.5" min="0.2"></label></div>
-      <div><label>Color<input id="color_nivel1" type="color"></label></div>
-    </div>
-    <label>Nivel 2 · letra + borde 2 del texto (sobre el nivel 1)</label>
-    <div class="fila">
-      <div><label>Termina a (mm)<input id="alto_nivel2" type="number" step="0.5" min="0.2"></label></div>
-      <div><label>Color<input id="color_nivel2" type="color"></label></div>
-    </div>
-    <label>Nivel 3 · texto + patrón (sobre el nivel 2)</label>
-    <div class="fila">
-      <div><label>Termina a (mm)<input id="alto_nivel3" type="number" step="0.5" min="0.2"></label></div>
-      <div><label>Color<input id="color_nivel3" type="color"></label></div>
-    </div>
-  </fieldset>
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="usar_patron" type="checkbox"><i></i></span>
+      <span class="t">Patrón</span>
+      <span class="q" tabindex="0" data-tip="Reparte motivos al azar por la letra, a la altura del nivel 3. Cada figura separada del SVG es un motivo.">?</span></summary>
+    <div class="cont"><div id="caja-patron">
+      <label>Motivo (SVG)<select id="patron"></select><img id="vista_patron" class="svgmini" alt=""></label>
+      <div class="fila">
+        <div><label>Tamaño (mm)<input id="tam_patron" type="number" step="0.5" min="1"></label></div>
+        <div><label>Separación (mm)<input id="separacion_patron" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Margen (mm)<span class="q" tabindex="0" data-tip="Distancia que se respeta al texto y al borde de la letra.">?</span>
+          <input id="margen_patron" type="number" step="0.5" min="0"></label></div>
+        <div><label>Semilla<span class="q" tabindex="0" data-tip="El número del reparto al azar: el mismo número da siempre el mismo reparto.">?</span>
+          <input id="semilla" type="number" step="1"></label></div>
+      </div>
+      <label class="check"><input id="girar_patron" type="checkbox"> Girar al azar
+        <span class="q" tabindex="0" data-tip="Gira cada motivo al azar. Desactívalo si el motivo tiene arriba y abajo, como un arbolito.">?</span></label>
+      <div class="acciones">
+        <button id="otro-reparto" class="sec">🎲 Otro reparto</button>
+        <button id="subir-patron" class="sec solo-admin" hidden>Subir SVG…</button>
+      </div>
+      <input id="archivo-svg" type="file" accept=".svg,image/svg+xml" hidden>
+    </div></div>
+  </details>
 
-  <fieldset>
-    <legend>Adorno <span class="mover">✥ se arrastra</span></legend>
-    <label class="check"><input id="usar_adorno" type="checkbox"> Poner un adorno</label>
-    <div id="caja-adorno">
-    <div class="fila">
-      <div><label>SVG<select id="adorno"></select><img id="vista_adorno" class="svgmini" alt=""></label></div>
-      <div><label>Color extra (el 4º)<input id="color_adorno" type="color"></label></div>
-    </div>
-    <label>De qué color va cada forma del SVG</label>
-    <div class="fila3">
-      <div id="fila_c1"><label>Forma 1<select id="adorno_c1"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
-      <div id="fila_c2"><label>Forma 2<select id="adorno_c2"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
-      <div id="fila_c3"><label>Forma 3<select id="adorno_c3"><option value="base">Como la base</option><option value="letra">Como la letra</option><option value="texto">Como el texto</option><option value="extra">Color extra</option></select></label></div>
-    </div>
-    <div class="fila">
-      <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
-      <div><label>Giro (°)<input id="giro_adorno" type="number" step="5"></label></div>
-    </div>
-    <div class="fila">
-      <div><label>X (mm)<input id="adorno_x" type="number" step="0.5"></label></div>
-      <div><label>Y (mm)<input id="adorno_y" type="number" step="0.5"></label></div>
-    </div>
-    <label>Posición respecto a la letra
-      <select id="adorno_detras">
-        <option value="false">Delante (tapa la letra)</option>
-        <option value="true">Detrás (la letra lo tapa)</option>
-      </select></label>
-    <label>Segundo adorno (la misma forma, reflejada)
-      <select id="segundo_adorno">
-        <option value="espejo">Espejo automático</option>
-        <option value="libre">Posición libre (ej. letra L)</option>
-        <option value="ninguno">Sin segundo adorno</option>
-      </select></label>
-    <div id="pos-adorno2" class="fila3" hidden>
-      <div><label>X2 (mm)<input id="adorno2_x" type="number" step="0.5"></label></div>
-      <div><label>Y2 (mm)<input id="adorno2_y" type="number" step="0.5"></label></div>
-      <div><label>Giro 2 (°)<input id="giro_adorno2" type="number" step="5"></label></div>
-    </div>
-    <label class="check"><input id="cortar_adorno" type="checkbox"> Separarlo de la letra con un borde</label>
-    <label>Va a la altura del nivel 2 y con el borde del nivel 1. Arrástralo en la vista 3D.
-           Del SVG solo se usan las formas: el negro se descarta (suele ser el contorno), los
-           tonos casi iguales se juntan y quedan 3 formas como mucho. El color lo pones tú con
-           los selectores de arriba, para que el llavero nunca pase de 4 filamentos.</label>
-    </div>
-  </fieldset>
-
-  <fieldset>
-    <legend>Aro para llavero <span class="mover">✥ se arrastra</span></legend>
-    <label class="check"><input id="aro" type="checkbox"> Añadir aro para llavero</label>
-    <div id="caja-aro">
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="aro" type="checkbox"><i></i></span>
+      <span class="t">Aro de llavero<span class="mover" tabindex="0" data-tip="Arrastra el aro en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Tiene el grosor y el color del nivel 1. Si lo alejas de la letra se le añade solo un cuello para que no quede suelto.">?</span></summary>
+    <div class="cont"><div id="caja-aro">
       <div class="fila">
         <div><label>Diámetro (mm)<input id="aro_diametro" type="number" step="0.5" min="2"></label></div>
         <div><label>Agujero (mm)<input id="aro_agujero" type="number" step="0.5" min="1"></label></div>
@@ -260,15 +384,14 @@
         <div><label>X (mm)<input id="aro_x" type="number" step="0.5"></label></div>
         <div><label>Y (mm)<input id="aro_y" type="number" step="0.5"></label></div>
       </div>
-      <label>Tiene el grosor del nivel 1 y su mismo color. Si lo mueves lejos de la letra,
-             se le añade solo un cuello para que no quede suelto.</label>
-    </div>
-  </fieldset>
+    </div></div>
+  </details>
 
-  <fieldset>
-    <legend>Imán y acabado</legend>
-    <label class="check"><input id="iman" type="checkbox"> Hueco para imán por detrás</label>
-    <div id="caja-iman">
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="iman" type="checkbox"><i></i></span>
+      <span class="t">Imán</span>
+      <span class="q" tabindex="0" data-tip="Hueco por detrás para pegar un imán. Mide el tuyo y deja un poco de holgura.">?</span></summary>
+    <div class="cont"><div id="caja-iman">
       <div class="fila">
         <div><label>Diámetro (mm)<input id="iman_diametro" type="number" step="0.5" min="2"></label></div>
         <div><label>Profundidad (mm)<input id="iman_hondo" type="number" step="0.5" min="0.5"></label></div>
@@ -277,36 +400,457 @@
         <div><label>X (mm)<input id="iman_x" type="number" step="0.5"></label></div>
         <div><label>Y (mm)<input id="iman_y" type="number" step="0.5"></label></div>
       </div>
-    </div>
-    <label class="check"><input id="usar_chaflan" type="checkbox"> Bordes biselados (acabado más fino)</label>
-  </fieldset>
+    </div></div>
+  </details>
 
-  <fieldset>
-    <legend>Patrón de la letra (nivel 3)</legend>
-    <label class="check"><input id="usar_patron" type="checkbox"> Repartir un patrón por la letra</label>
-    <div id="caja-patron">
-    <label>Patrón SVG<select id="patron"></select><img id="vista_patron" class="svgmini" alt=""></label>
-    <div class="fila">
-      <div><label>Tamaño motivo (mm)<input id="tam_patron" type="number" step="0.5" min="1"></label></div>
-      <div><label>Separación (mm)<input id="separacion_patron" type="number" step="0.5" min="0"></label></div>
+  <details class="g" data-tipo="organizador" open>
+    <summary><span class="t">Nombre</span>
+      <span class="q" tabindex="0" data-tip="El nombre manda: el cuerpo se recorta con su misma silueta y los módulos se colocan en porcentaje de su ancho, así que todo se adapta al escribirlo.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Nombre<input id="org_texto" maxlength="20"></label></div>
+        <div><label>Fuente<select id="org_fuente"></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<span class="q" tabindex="0" data-tip="De la letra más alta a la más baja, tildes y rabitos incluidos.">?</span>
+          <input id="org_alto" type="number" step="1" min="10"></label></div>
+        <div><label>Relieve (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresale el nombre de la cara de delante.">?</span>
+          <input id="org_relieve" type="number" step="0.5" min="0.5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Color del cuerpo<input id="org_color_cuerpo" type="color"></label></div>
+        <div><label>Color del nombre<input id="org_color_nombre" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor de las letras, en su propio color y a la misma altura que ellas. 0 = sin borde. El cuerpo crece solo para que nunca se salga.">?</span>
+          <input id="org_borde" type="number" step="0.5" min="0"></label></div>
+        <div><label>Color del borde<input id="org_color_borde" type="color"></label></div>
+      </div>
+      <label class="check"><input id="org_aparte" type="checkbox"> Imprimir el nombre aparte
+        <span class="q" tabindex="0" data-tip="En vez de pegado a la cara del cuerpo, el nombre sale tumbado a su lado con la cara buena hacia arriba: se imprime sin soportes y luego lo pegas. Encaja en un hueco del cuerpo, así que no hay que alinearlo a ojo. Si sale en varios trozos, ponle un borde para que quede de una pieza.">?</span></label>
+      <div id="caja-aparte" class="fila">
+        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura de la caja que se abre en el cuerpo para que encaje el nombre. El nombre crece esa misma medida por detrás, así que lo que sobresale no cambia. Mínimo 4 mm: con menos no se aprecia en la vista 3D y sujeta poco.">?</span>
+          <input id="org_hueco" type="number" step="0.5" min="4"></label></div>
+        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor del nombre para que entre en su hueco sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
+          <input id="org_holgura" type="number" step="0.1" min="0"></label></div>
+      </div>
     </div>
-    <div class="fila">
-      <div><label>Margen texto/borde (mm)<input id="margen_patron" type="number" step="0.5" min="0"></label></div>
-      <div><label>Semilla<input id="semilla" type="number" step="1"></label></div>
-    </div>
-    <label class="check"><input id="girar_patron" type="checkbox"> Girar motivos al azar (desactívalo para arbolitos)</label>
-    <div class="acciones">
-      <button id="otro-reparto" class="sec">🎲 Otro reparto</button>
-      <button id="subir-patron" class="sec solo-admin" hidden>Subir SVG…</button>
-    </div>
-    <input id="archivo-svg" type="file" accept=".svg,image/svg+xml" hidden>
-    <label>Cada figura separada del SVG es un motivo; se reparten al azar por la letra.</label>
-    </div>
-  </fieldset>
+  </details>
 
-  <button id="generar">Actualizar vista previa</button>
-  <button id="generar-archivos" disabled>Generar archivos (3MF + STL)</button>
-  <div id="msg"></div>
+  <details class="g" data-tipo="organizador">
+    <summary><span class="t">Cuerpo</span>
+      <span class="q" tabindex="0" data-tip="La silueta sale de engordar el nombre y fundir los valles entre letras. Margen y suavizado deciden cuánto se parece al nombre o cuánto se redondea.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Fondo (mm)<span class="q" tabindex="0" data-tip="Lo que mide de delante a atrás. Tiene que dar cabida al vaso y a la ranura del móvil.">?</span>
+          <input id="org_fondo" type="number" step="1" min="20"></label></div>
+        <div><label>Margen (mm)<span class="q" tabindex="0" data-tip="Cuerpo que sobra alrededor de las letras. Poco margen = la silueta sigue de cerca al nombre.">?</span>
+          <input id="org_margen" type="number" step="0.5" min="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Suavizado (mm)<span class="q" tabindex="0" data-tip="Rellena los valles entre letras y redondea las esquinas. Mucho suavizado = un bloque; poco = se ve cada letra.">?</span>
+          <input id="org_suave" type="number" step="1" min="0"></label></div>
+        <div><label>Base (mm)<span class="q" tabindex="0" data-tip="Cuerpo por debajo de la letra más baja. Si la bandeja no cabe ahí, el nombre sube solo lo justo.">?</span>
+          <input id="org_base" type="number" step="1" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Pared (mm)<span class="q" tabindex="0" data-tip="Grosor de las paredes de los módulos: 3 o 4 mm aguantan bien.">?</span>
+          <input id="org_pared" type="number" step="0.5" min="1"></label></div>
+        <div><label>Canto (mm)<span class="q" tabindex="0" data-tip="Redondeo de los cantos y de las uniones entre piezas. 0 = canto vivo. Ni el apoyo ni las letras se redondean: la pieza se imprime de pie.">?</span>
+          <input id="org_canto" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <label>Pasos del canto<span class="q" tabindex="0" data-tip="En cuántos escalones se dibuja el redondeo. Con 16 y el canto de serie, cada escalón mide 0,2 mm: una capa, así que subirlo más no se nota al imprimir y sí engorda la malla y la espera.">?</span>
+        <input id="org_canto_pasos" type="number" step="1" min="1" max="64"></label>
+
+    </div>
+  </details>
+
+  <details class="g" data-tipo="organizador">
+    <summary><span class="sw"><input id="org_adorno" type="checkbox"><i></i></span>
+      <span class="t">Adorno</span>
+      <span class="q" tabindex="0" data-tip="Un dibujo SVG puesto en la cara, al lado del nombre: comparte relieve con él, lo rodea el mismo borde y entra en el mismo hueco al imprimirlo aparte. El cuerpo crece solo para taparlo.">?</span></summary>
+    <div class="cont"><div id="caja-org-adorno">
+      <div class="fila">
+        <div><label>Dibujo (SVG)<select id="org_adorno_svg"></select><img id="vista_org_adorno" class="svgmini" alt=""></label></div>
+        <div><label>Color extra<span class="q" tabindex="0" data-tip="El 4º filamento, por si alguna forma del adorno no lleva ninguno de los otros tres colores.">?</span>
+          <input id="org_color_adorno" type="color"></label></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Del SVG solo se aprovechan las formas: el color lo pones tú con la paleta de la pieza, así nunca se pasa de 4 filamentos. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="fila3">
+        <div id="org_fila_c1"><label>1<select id="org_adorno_c1"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="org_fila_c2"><label>2<select id="org_adorno_c2"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="org_fila_c3"><label>3<select id="org_adorno_c3"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="org_adorno_alto" type="number" step="1" min="5"></label></div>
+        <div><label>Giro (°)<input id="org_adorno_giro" type="number" step="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Posición (%)<span class="q" tabindex="0" data-tip="% del ancho del nombre. Pasado de 100 se sale por la derecha y el cuerpo crece para recogerlo, que es lo que le da vida a la silueta.">?</span>
+          <input id="org_adorno_x" type="number" step="1"></label></div>
+        <div><label>Altura (mm)<span class="q" tabindex="0" data-tip="A qué altura apoya su base, medida desde la mesa.">?</span>
+          <input id="org_adorno_y" type="number" step="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="organizador">
+    <summary><span class="sw"><input id="org_movil" type="checkbox"><i></i></span>
+      <span class="t">Soporte del móvil</span>
+      <span class="q" tabindex="0" data-tip="Ranura abierta por arriba. Medidas de serie: 84 mm de largo y 14 de ancho entran a casi cualquier móvil con funda.">?</span></summary>
+    <div class="cont"><div id="caja-movil">
+      <label>Posición (%)<span class="q" tabindex="0" data-tip="0 lo deja pegado al principio del nombre y 100 al final, así que no sobra cuerpo por los lados. Al cambiar el nombre, el módulo se mueve con él.">?</span>
+        <input id="org_movil_x" type="number" step="5" min="0" max="100"></label>
+      <div class="fila">
+        <div><label>Largo (mm)<span class="q" tabindex="0" data-tip="Ancho del móvil más un poco de holgura.">?</span>
+          <input id="org_movil_ancho" type="number" step="1" min="30"></label></div>
+        <div><label>Grueso (mm)<span class="q" tabindex="0" data-tip="Grosor del móvil con la funda puesta.">?</span>
+          <input id="org_movil_grueso" type="number" step="0.5" min="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Apoyo (mm)<span class="q" tabindex="0" data-tip="Altura a la que descansa el móvil. La ranura va desde ahí hasta lo alto del cuerpo.">?</span>
+          <input id="org_movil_suelo" type="number" step="1" min="2"></label></div>
+        <div><label>Inclinación (°)<span class="q" tabindex="0" data-tip="Cuánto se echa el móvil hacia atrás. 0 = de pie.">?</span>
+          <input id="org_movil_angulo" type="number" step="1" min="0" max="30"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="organizador">
+    <summary><span class="sw"><input id="org_vaso" type="checkbox"><i></i></span>
+      <span class="t">Vaso de lápices</span>
+      <span class="q" tabindex="0" data-tip="Agujero redondo abierto por arriba. Su borde queda plano aunque el nombre tenga letras más altas.">?</span></summary>
+    <div class="cont"><div id="caja-vaso">
+      <label>Posición (%)<span class="q" tabindex="0" data-tip="0 lo deja pegado al principio del nombre y 100 al final.">?</span>
+        <input id="org_vaso_x" type="number" step="5" min="0" max="100"></label>
+      <div class="fila">
+        <div><label>Diámetro (mm)<span class="q" tabindex="0" data-tip="Hueco libre para los lápices. Más el doble de la pared, tiene que caber en el fondo.">?</span>
+          <input id="org_vaso_diametro" type="number" step="1" min="15"></label></div>
+        <div><label>Alto (mm)<span class="q" tabindex="0" data-tip="Altura del borde del vaso, desde la mesa.">?</span>
+          <input id="org_vaso_alto" type="number" step="1" min="20"></label></div>
+      </div>
+      <label>Hondo (mm)<span class="q" tabindex="0" data-tip="Lo que baja el hueco desde el borde. Menos que el alto, si no el vaso se queda sin fondo.">?</span>
+        <input id="org_vaso_hondo" type="number" step="1" min="10"></label>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="organizador">
+    <summary><span class="sw"><input id="org_bandeja" type="checkbox"><i></i></span>
+      <span class="t">Bandeja de clips</span>
+      <span class="q" tabindex="0" data-tip="Cajón que sale por delante, bajo el nombre. Si choca con las letras, sube la base del cuerpo o baja su altura.">?</span></summary>
+    <div class="cont"><div id="caja-bandeja">
+      <label>Posición (%)<span class="q" tabindex="0" data-tip="0 la deja pegada al principio del nombre y 100 al final.">?</span>
+        <input id="org_bandeja_x" type="number" step="5" min="0" max="100"></label>
+      <div class="fila">
+        <div><label>Ancho (mm)<input id="org_bandeja_ancho" type="number" step="1" min="20"></label></div>
+        <div><label>Fondo (mm)<span class="q" tabindex="0" data-tip="Cuánto sale hacia delante.">?</span>
+          <input id="org_bandeja_fondo" type="number" step="1" min="15"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<span class="q" tabindex="0" data-tip="Altura del borde. Déjalo en 0 y se pega al nombre: baja si encima hay una g o una j, y sube si no.">?</span>
+          <input id="org_bandeja_alto" type="number" step="1" min="0"></label></div>
+        <div><label>Hondo (mm)<span class="q" tabindex="0" data-tip="Lo que baja el hueco desde el borde. Menos que el alto, si no la bandeja se queda sin fondo.">?</span>
+          <input id="org_bandeja_hondo" type="number" step="1" min="2"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro" open>
+    <summary><span class="t">Apellido</span>
+      <span class="q" tabindex="0" data-tip="El nombre grande del cuadro. Todo lo demás se coloca a su alrededor y la placa se recorta con la forma del conjunto.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Apellido<input id="cua_familia" maxlength="16"></label></div>
+        <div><label>Fuente<select id="cua_fuente"></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="cua_alto_familia" type="number" step="1" min="10"></label></div>
+        <div><label>Relieve (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresalen las letras y el adorno sobre la placa.">?</span>
+          <input id="cua_relieve" type="number" step="0.5" min="0.5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Color del apellido<input id="cua_color_familia" type="color"></label></div>
+        <div><label>Color de la placa<input id="cua_color_placa" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Palabra de arriba<span class="q" tabindex="0" data-tip="Va en letra pequeña justo encima del apellido, por ejemplo &laquo;Familia&raquo;. Déjala vacía si no la quieres.">?</span>
+          <input id="cua_titulo" maxlength="16" placeholder="Familia"></label></div>
+        <div><label>Su alto (mm)<input id="cua_alto_titulo" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Hueco con el apellido (mm)<input id="cua_sep_titulo" type="number" step="1"></label></div>
+        <div><label>Su color<input id="cua_color_titulo" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Desplazarla (mm)<span class="q" tabindex="0" data-tip="A la izquierda o a la derecha del centro. También puedes arrastrarla directamente en la vista 3D.">?</span>
+          <input id="cua_titulo_x" type="number" step="1"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="t">Nombres de la casa</span>
+      <span class="q" tabindex="0" data-tip="Van en una fila debajo del apellido, repartidos y centrados. Cada uno lleva su gancho debajo.">?</span></summary>
+    <div class="cont">
+      <label>Nombres<span class="q" tabindex="0" data-tip="Separados por coma o uno por línea. Hasta 8.">?</span>
+        <textarea id="cua_integrantes" rows="2" placeholder="Edgar, Giu, Matias"></textarea></label>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="cua_alto_integrantes" type="number" step="1" min="5"></label></div>
+        <div><label>Color<input id="cua_color_integrantes" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Separación (mm)<span class="q" tabindex="0" data-tip="Hueco entre el apellido y los nombres, por debajo o por los lados.">?</span>
+          <input id="cua_separacion" type="number" step="1" min="0"></label></div>
+        <div><label>Entre nombres (mm)<input id="cua_hueco" type="number" step="1" min="0"></label></div>
+      </div>
+      <input id="cua_pos" type="hidden">
+      <p class="pista">Arrastra cada nombre en la vista 3D para colocarlo donde quieras; su
+        gancho va con él. <button id="cua-recolocar" type="button" class="comollave">↺ Deshacer lo movido</button></p>
+      <label class="check"><input id="cua_alrededor" type="checkbox"> Repartirlos alrededor del apellido<span class="q" tabindex="0" data-tip="En vez de una fila debajo, los encadena siguiendo el contorno del apellido -empezando abajo y subiendo por los lados- y empuja cada uno hasta que no roza nada, de modo que la figura engorda por igual en todas las direcciones. Con muchos nombres, &laquo;Entre nombres&raquo; pasa a ser el hueco mínimo.">?</span></label>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="t">Placa</span>
+      <span class="q" tabindex="0" data-tip="El fondo. Su forma sale de engordar todo lo que lleva encima y fundirlo en un contorno continuo.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Grosor (mm)<input id="cua_placa" type="number" step="0.5" min="1"></label></div>
+        <div><label>Margen (mm)<span class="q" tabindex="0" data-tip="Placa que sobra alrededor de las letras.">?</span>
+          <input id="cua_margen" type="number" step="0.5" min="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Suavizado (mm)<span class="q" tabindex="0" data-tip="Une los trozos sueltos y redondea el contorno. Mucho = una mancha; poco = se ve cada letra.">?</span>
+          <input id="cua_suave" type="number" step="1" min="0"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_colgar" type="checkbox"><i></i></span>
+      <span class="t">Agujeros para colgarlo</span>
+      <span class="q" tabindex="0" data-tip="Dos agujeros pasantes, a la misma altura y lo más arriba que quepan, siempre en el negro de la placa y sin acercarse a las letras ni al adorno. Apágalos si vas a pegarlo con cinta de doble cara. Si no caben, el aviso te lo dice.">?</span></summary>
+    <div class="cont"><div id="caja-cua-colgar">
+      <p class="pista">¿Lo vas a pegar con cinta de doble cara? Apágalos y la placa sale entera.</p>
+      <label>Diámetro (mm)<input id="cua_colgar_diametro" type="number" step="0.5" min="2"></label>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_ganchos" type="checkbox"><i></i></span>
+      <span class="t">Ganchos</span>
+      <span class="q" tabindex="0" data-tip="Un pincho inclinado hacia arriba bajo cada nombre, con la punta redonda para que la llave no se escape. Salen hacia fuera, así que se imprimen sin soportes con el cuadro tumbado.">?</span></summary>
+    <div class="cont"><div id="caja-cua-ganchos">
+      <div class="fila">
+        <div><label>Largo (mm)<input id="cua_gancho_largo" type="number" step="1" min="5"></label></div>
+        <div><label>Grueso (mm)<input id="cua_gancho_grueso" type="number" step="0.5" min="2"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Inclinación (°)<input id="cua_gancho_angulo" type="number" step="5" min="0" max="60"></label></div>
+        <div><label>Bajada (mm)<span class="q" tabindex="0" data-tip="Cuánto baja el gancho respecto al pie de su nombre.">?</span>
+          <input id="cua_gancho_baja" type="number" step="1" min="0"></label></div>
+      </div>
+      <label>Color<input id="cua_color_gancho" type="color"></label>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_adorno" type="checkbox"><i></i></span>
+      <span class="t">Adorno</span>
+      <span class="q" tabindex="0" data-tip="Un SVG de la carpeta de adornos, al lado o encima del apellido. Del dibujo solo se aprovechan las formas: el color lo pones tú.">?</span></summary>
+    <div class="cont"><div id="caja-cua-adorno">
+      <div class="fila">
+        <div><label>Dibujo (SVG)<select id="cua_adorno_svg"></select><img id="vista_cua_adorno" class="svgmini" alt=""></label></div>
+        <div><label>Color extra<input id="cua_color_adorno" type="color"></label></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Solo aparecen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="fila3">
+        <div id="cua_fila_c1"><label>1<select id="cua_adorno_c1"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="cua_fila_c2"><label>2<select id="cua_adorno_c2"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="cua_fila_c3"><label>3<select id="cua_adorno_c3"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="cua_adorno_alto" type="number" step="1" min="5"></label></div>
+        <div><label>Giro (°)<input id="cua_adorno_giro" type="number" step="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Posición (%)<span class="q" tabindex="0" data-tip="% del ancho del apellido. Pasado de 100 se sale por la derecha y la placa crece para recogerlo.">?</span>
+          <input id="cua_adorno_x" type="number" step="1"></label></div>
+        <div><label>Altura (mm)<span class="q" tabindex="0" data-tip="Desde lo alto del apellido. En negativo se monta sobre las letras.">?</span>
+          <input id="cua_adorno_y" type="number" step="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_patron" type="checkbox"><i></i></span>
+      <span class="t">Patrón del apellido</span>
+      <span class="q" tabindex="0" data-tip="Reparte motivos DENTRO de las letras del apellido: o ahuecados en la letra, o en relieve encima y en otro color.">?</span></summary>
+    <div class="cont"><div id="caja-cua-patron">
+      <label>Motivo (SVG)<select id="cua_patron_svg"></select><img id="vista_cua_patron" class="svgmini" alt=""></label>
+      <div class="fila">
+        <div><label>Tamaño (mm)<input id="cua_tam_patron" type="number" step="0.5" min="1"></label></div>
+        <div><label>Separación (mm)<input id="cua_separacion_patron" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Margen (mm)<span class="q" tabindex="0" data-tip="Distancia que se respeta al borde de la letra. Si lo subes mucho no cabe ningún motivo.">?</span>
+          <input id="cua_margen_patron" type="number" step="0.5" min="0"></label></div>
+        <div><label>Semilla<input id="cua_semilla" type="number" step="1"></label></div>
+      </div>
+      <label class="check"><input id="cua_patron_corta" type="checkbox"> Ahuecar la letra<span class="q" tabindex="0" data-tip="Marcado, los motivos se recortan en la letra y se ve la placa por el hueco. Sin marcar, se montan encima en relieve y con su propio color.">?</span></label>
+      <div class="fila" id="caja-cua-encima">
+        <div><label>Relieve (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresale el patrón por encima de la letra.">?</span>
+          <input id="cua_patron_relieve" type="number" step="0.2" min="0"></label></div>
+        <div><label>Color del patrón<input id="cua_color_patron" type="color"></label></div>
+      </div>
+      <label class="check"><input id="cua_girar_patron" type="checkbox"> Girar los motivos al azar</label>
+      <button id="cua-otro-reparto" class="sec">🎲 Otro reparto</button>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="marca" open>
+    <summary><span class="t">Letra grande</span>
+      <span class="q" tabindex="0" data-tip="Es lo primero del marcapáginas: va arriba del todo y el resto se coloca debajo. Una o dos letras; déjala vacía si solo quieres el nombre.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Letra<input id="mar_inicial" maxlength="2" placeholder="S"></label></div>
+        <div><label>Fuente<select id="mar_fuente_inicial"></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="mar_alto_inicial" type="number" step="1" min="5"></label></div>
+        <div><label>Desde arriba (mm)<span class="q" tabindex="0" data-tip="Del extremo de arriba de la lámina al centro de la letra.">?</span>
+          <input id="mar_inicial_y" type="number" step="1" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Su color<input id="mar_color_inicial" type="color"></label></div>
+        <div><label>Aire con el nombre (mm)<span class="q" tabindex="0" data-tip="Hueco mínimo entre la letra grande y el nombre: si hace falta, el nombre baja solo.">?</span>
+          <input id="mar_hueco" type="number" step="0.5" min="0"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="marca">
+    <summary><span class="t">Nombre</span>
+      <span class="q" tabindex="0" data-tip="Va en relieve bajo la letra grande. Si sobresale por los lados, la lámina crece para sostenerlo: así se imprime tumbado y sin soportes.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Nombre<input id="mar_texto" maxlength="16" placeholder="Sophia"></label></div>
+        <div><label>Fuente<select id="mar_fuente"></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="mar_alto_texto" type="number" step="1" min="4"></label></div>
+        <div><label>Desde arriba (mm)<span class="q" tabindex="0" data-tip="Del extremo de arriba al centro del nombre. Si choca con la letra grande, baja lo justo para no pisarla.">?</span>
+          <input id="mar_texto_y" type="number" step="1" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Color del nombre<input id="mar_color_texto" type="color"></label></div>
+        <div><label>Color de la lámina<input id="mar_color_cuerpo" type="color"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="marca">
+    <summary><span class="t">Lámina</span>
+      <span class="q" tabindex="0" data-tip="La tira que se queda dentro del libro: los dos extremos van redondeados y crece sola alrededor de lo que sobresalga.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Largo (mm)<input id="mar_largo" type="number" step="5" min="40"></label></div>
+        <div><label>Ancho (mm)<input id="mar_ancho" type="number" step="1" min="8"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Grueso (mm)<span class="q" tabindex="0" data-tip="Lo que mide de canto. De 2 a 3 mm va bien: más abulta al cerrar el libro y menos se dobla.">?</span>
+          <input id="mar_grueso" type="number" step="0.2" min="0.6"></label></div>
+        <div><label>Relieve (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresalen las letras y el icono sobre la lámina.">?</span>
+          <input id="mar_relieve" type="number" step="0.2" min="0.2"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Margen (mm)<span class="q" tabindex="0" data-tip="Lámina que sobra alrededor de las letras y del icono.">?</span>
+          <input id="mar_margen" type="number" step="0.5" min="0.5"></label></div>
+        <div><label>Suavizado (mm)<span class="q" tabindex="0" data-tip="Funde el contorno en una sola forma y redondea las esquinas.">?</span>
+          <input id="mar_suave" type="number" step="0.5" min="0"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="marca">
+    <summary><span class="sw"><input id="mar_adorno" type="checkbox"><i></i></span>
+      <span class="t">Icono de arriba</span>
+      <span class="q" tabindex="0" data-tip="Un SVG de la carpeta adornos, encima del nombre. De cada dibujo se aprovechan hasta tres formas y eliges el color de cada una: el suyo propio o uno de la pieza.">?</span></summary>
+    <div class="cont"><div id="caja-mar-adorno">
+      <div class="fila">
+        <div><label>Dibujo (SVG)<select id="mar_adorno_svg"></select><img id="vista_mar_adorno" class="svgmini" alt=""></label></div>
+        <div><label>Color extra<input id="mar_color_adorno" type="color"></label></div>
+      </div>
+      <p class="pista">Color de cada forma del dibujo:</p>
+      <div class="fila">
+        <div id="mar_fila_c1"><label>1<select id="mar_adorno_c1"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="mar_fila_c2"><label>2<select id="mar_adorno_c2"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="mar_fila_c3"><label>3<select id="mar_adorno_c3"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="mar_adorno_alto" type="number" step="1" min="5"></label></div>
+        <div><label>Giro (°)<input id="mar_adorno_giro" type="number" step="5"></label></div>
+      </div>
+      <p class="pista">Dónde se pone, contando desde el centro de la letra grande (o del
+        hueco sobre el nombre si no la hay). También puedes arrastrarlo en la vista 3D.</p>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="mar_adorno_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="mar_adorno_y" type="number" step="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g destacada" data-tipo="marca">
+    <summary><span class="sw"><input id="mar_aparte" type="checkbox"><i></i></span>
+      <span class="t">Imprimir cada color por separado</span>
+      <span class="q" tabindex="0" data-tip="Para imprimir sin AMS: la letra, el nombre y el icono salen sueltos y al lado de la lámina. A la lámina se le vacía el hueco de cada pieza y a la pieza le crece una espiga por detrás, así que al pegar cae sola en su sitio.">?</span></summary>
+    <div class="cont"><div id="caja-mar-aparte">
+      <p class="pista">Imprime cada pieza con su filamento y pégala en su hueco: encajan solas.</p>
+      <div class="fila">
+        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura del hueco de la lámina y de la espiga de cada pieza. Tiene que caber en el grueso de la lámina.">?</span>
+          <input id="mar_espiga" type="number" step="0.2" min="0.4"></label></div>
+        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor de cada pieza para que entre sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
+          <input id="mar_holgura" type="number" step="0.05" min="0" max="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g destacada" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_aparte" type="checkbox"><i></i></span>
+      <span class="t">Imprimir cada color por separado</span>
+      <span class="q" tabindex="0" data-tip="Para imprimir sin AMS y sin cambiar de filamento a mano: cada color sale suelto y apoyado en la mesa, al lado de la placa. A la placa se le vacía el hueco de cada pieza y a la pieza le crece una espiga por detrás, así que al pegar cae sola en su sitio. Los ganchos salen rectos y de pie: el ángulo se lo da su hueco.">?</span></summary>
+    <div class="cont"><div id="caja-cua-aparte">
+      <p class="pista">Imprime cada pieza con su filamento y pégala en su hueco: encajan solas.</p>
+      <div class="fila">
+        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura del hueco de la placa y de la espiga que le crece a cada pieza. Tiene que caber en el grosor de la placa.">?</span>
+          <input id="cua_espiga" type="number" step="0.5" min="1"></label></div>
+        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor de cada pieza para que entre sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
+          <input id="cua_holgura" type="number" step="0.1" min="0" max="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" id="calc">
+    <summary><span class="t">Costo y precio</span>
+      <span class="q" tabindex="0" data-tip="Son cuentas solo para ti: no se guardan en el servidor, los ajustes quedan en este navegador.">?</span></summary>
+    <div class="cont">
+      <div class="ajustes">
+        <label>Filamento (/kg)<input id="c_kg" type="number" step="0.5" min="0" value="25"></label>
+        <label>Máquina (/h)<input id="c_hora" type="number" step="0.1" min="0" value="1.5"></label>
+        <label>Velocidad (cm³/h)<input id="c_vel" type="number" step="0.5" min="0.1" value="12"></label>
+        <label>Ganancia (%)<input id="c_margen" type="number" step="5" min="0" value="150"></label>
+        <label>Densidad (g/cm³)<input id="c_dens" type="number" step="0.01" min="0.1" value="1.24"></label>
+        <label>Relleno (%)<span class="q" tabindex="0" data-tip="El modelo se calcula macizo; el laminador lo imprime hueco. Pon aquí el relleno que uses para que el gasto y el tiempo se parezcan a la realidad.">?</span>
+          <input id="c_relleno" type="number" step="5" min="5" max="100" value="100"></label>
+        <label>Moneda<input id="c_moneda" maxlength="3" value="$"></label>
+      </div>
+      <table class="costos"><tbody id="tabla_costos"></tbody></table>
+    </div>
+  </details>
+
+  <div id="tamano"></div>
+  <div id="filamentos"></div>
+  <div id="avisos"></div>
 
   <div id="resultado" hidden>
     <p class="listo">Archivos listos ✔</p>
@@ -321,31 +865,21 @@
        bajarlos cuando quieras sin gastar otra generación.</p>
   </div>
 
-  <div id="filamentos"></div>
-  <div id="avisos"></div>
-
-  <details class="calc" id="calc">
-    <summary>Calcular costo y precio de venta</summary>
-    <p class="nota">Son solo cuentas para ti: no se guardan en el servidor. Los ajustes quedan
-       únicamente en este navegador.</p>
-    <div class="ajustes">
-      <label>Filamento (precio/kg)<input id="c_kg" type="number" step="0.5" min="0" value="25"></label>
-      <label>Máquina (precio/hora)<input id="c_hora" type="number" step="0.1" min="0" value="1.5"></label>
-      <label>Velocidad (cm³/h)<input id="c_vel" type="number" step="0.5" min="0.1" value="12"></label>
-      <label>Ganancia (%)<input id="c_margen" type="number" step="5" min="0" value="150"></label>
-      <label>Densidad (g/cm³)<input id="c_dens" type="number" step="0.01" min="0.1" value="1.24"></label>
-      <label>Moneda<input id="c_moneda" maxlength="3" value="$"></label>
+  <div id="acciones-pie">
+    <div class="dos">
+      <button id="generar" class="sec">↻ Vista previa</button>
+      <button id="generar-archivos" disabled>Generar archivos</button>
     </div>
-    <table class="costos"><tbody id="tabla_costos"></tbody></table>
-  </details>
-
-  <p class="nota">La vista previa es gratis y puedes cambiarla todas las veces que quieras.
-     Solo «Generar archivos» descuenta 1 de tu licencia.</p>
+    <div id="msg"></div>
+    <p class="nota">Solo «Generar archivos» gasta 1 generación
+      <span class="q" tabindex="0" data-tip="La vista previa es gratis y puedes cambiarla todas las veces que quieras. Al generar se crean el 3MF y el STL, y puedes volver a bajarlos sin gastar más.">?</span></p>
+  </div>
 </aside>
 
 <main>
   <div id="visor"></div>
-  <div id="info">Arrastra para girar · rueda para zoom · clic derecho para mover · arrastra el adorno para moverlo</div>
+  <div id="info"><span id="medidas">…</span>
+    <span class="q" tabindex="0" data-tip="Medidas de todo el diseño: ancho × fondo × alto. Arrastra para girar · rueda para zoom · clic derecho para mover la vista · doble clic para centrar · arrastra las piezas con ✥ para colocarlas">?</span></div>
   <button id="centrar" class="sec">Centrar vista</button>
 </main>
 </div>
@@ -367,7 +901,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
 
-const CAMPOS = ['inicial','fuente_inicial','tam_inicial','borde',
+const CAMPOS = ['tipo',
+                'inicial','fuente_inicial','tam_inicial','borde',
                 'texto','fuente_texto','tam_texto','borde_texto1','borde_texto2','giro_texto','posicion','separacion',
                 'alto_nivel1','color_nivel1','alto_nivel2','color_nivel2','alto_nivel3','color_nivel3','cortar_letra',
                 'patron','tam_patron','separacion_patron','margen_patron','semilla','girar_patron',
@@ -376,8 +911,42 @@ const CAMPOS = ['inicial','fuente_inicial','tam_inicial','borde',
                 'aro','aro_diametro','aro_agujero','aro_x','aro_y',
                 'curva_texto','texto_x','texto_y',
                 'iman','iman_diametro','iman_hondo','iman_x','iman_y','adorno_detras',
-                'adorno_c1','adorno_c2','adorno_c3'];
-const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_moneda'];
+                'adorno_c1','adorno_c2','adorno_c3',
+                // diseño 2: organizador de escritorio
+                'org_texto','org_fuente','org_alto','org_relieve','org_color_cuerpo','org_color_nombre',
+                'org_borde','org_color_borde','org_aparte','org_hueco','org_holgura',
+                'org_fondo','org_margen','org_suave','org_base','org_pared','org_canto','org_canto_pasos',
+                'org_adorno','org_adorno_svg','org_adorno_alto','org_adorno_x','org_adorno_y',
+                'org_adorno_giro','org_color_adorno',
+                'org_adorno_c1','org_adorno_c2','org_adorno_c3',
+                'org_movil','org_movil_x','org_movil_ancho','org_movil_grueso','org_movil_suelo','org_movil_angulo',
+                'org_vaso','org_vaso_x','org_vaso_diametro','org_vaso_alto','org_vaso_hondo',
+                'org_bandeja','org_bandeja_x','org_bandeja_ancho','org_bandeja_fondo',
+                'org_bandeja_alto','org_bandeja_hondo',
+                // diseño 3: cuadro para las llaves
+                'cua_familia','cua_titulo','cua_alto_titulo','cua_sep_titulo',
+                'cua_color_titulo','cua_titulo_x','cua_integrantes','cua_alrededor',
+                'cua_pos','cua_fuente',
+                'cua_alto_familia',
+                'cua_alto_integrantes','cua_separacion','cua_hueco','cua_placa','cua_relieve',
+                'cua_margen','cua_suave','cua_color_placa','cua_color_familia',
+                'cua_color_integrantes','cua_adorno','cua_adorno_svg','cua_adorno_alto',
+                'cua_adorno_x','cua_adorno_y','cua_adorno_giro','cua_adorno_c1','cua_adorno_c2',
+                'cua_adorno_c3','cua_color_adorno','cua_patron','cua_patron_svg','cua_tam_patron',
+                'cua_separacion_patron','cua_margen_patron','cua_semilla','cua_girar_patron',
+                'cua_patron_corta','cua_patron_relieve','cua_color_patron',
+                'cua_ganchos','cua_gancho_largo',
+                'cua_gancho_grueso','cua_gancho_angulo','cua_gancho_baja','cua_color_gancho',
+                'cua_colgar','cua_colgar_diametro','cua_aparte','cua_espiga',
+                'cua_holgura',
+                'mar_inicial','mar_fuente_inicial','mar_alto_inicial','mar_inicial_y',
+                'mar_color_inicial','mar_hueco','mar_texto','mar_fuente','mar_alto_texto',
+                'mar_texto_y','mar_largo','mar_ancho','mar_grueso','mar_relieve',
+                'mar_margen','mar_suave','mar_color_cuerpo','mar_color_texto','mar_adorno',
+                'mar_adorno_svg','mar_adorno_alto','mar_adorno_x','mar_adorno_y',
+                'mar_adorno_giro','mar_adorno_c1','mar_adorno_c2','mar_adorno_c3',
+                'mar_color_adorno','mar_aparte','mar_espiga','mar_holgura'];
+const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
 let generacion = null, resumen = null, invitado = false, analisis = null, pedido = 0, temporizador = null;
@@ -410,9 +979,27 @@ addEventListener('resize', ajustar); ajustar();
 
 // ---------- iconos ✥ sobre las piezas que se pueden arrastrar
 // Un adorno puede venir partido en varias piezas (una por color), así que se agrupan.
-const esMovible = n => n === 'Aro' || n === 'Texto' || n.startsWith('Adorno');
-const grupoDe = n => (n === 'Aro' || n === 'Texto') ? n
+// el cuadro mueve la palabra de arriba y cada nombre con su gancho; el llavero, sus
+// adornos, el aro y el texto; el organizador coloca por campos y no se arrastra
+const esMovible = n => $('tipo').value === 'cuadro'
+  ? (n === 'Titulo' || /^(Nombre|Gancho) \d+$/.test(n))
+  : $('tipo').value === 'marca' ? n.startsWith('Icono')
+  : $('tipo').value === 'organizador' ? false
+  : (n === 'Aro' || n === 'Texto' || n.startsWith('Adorno'));
+const grupoDe = n => /^(?:Nombre|Gancho) (\d+)$/.test(n) ? 'n' + /(\d+)$/.exec(n)[1]
+                   : n.startsWith('Icono') ? 'Icono'
+                   : (n === 'Aro' || n === 'Texto' || n === 'Titulo') ? n
                    : n.startsWith('Adorno derecho') ? 'der' : 'izq';
+
+// lo arrastrado de cada nombre del cuadro, como pares [dx, dy] (campo oculto cua_pos)
+const medio = v => Math.round(v * 2) / 2;
+function posNombres() {
+  const cuantos = $('cua_integrantes').value.split(/[,\n]/).filter(s => s.trim()).length;
+  const puestos = ($('cua_pos').value || '').split(';')
+    .map(p => p.split(',').map(Number)).filter(p => p.length === 2 && p.every(Number.isFinite));
+  while (puestos.length < cuantos) puestos.push([0, 0]);
+  return puestos.slice(0, Math.max(cuantos, 1));
+}
 const iconos = new THREE.Group();
 escena.add(iconos);
 
@@ -461,8 +1048,9 @@ function mostrar(buffer) {
   escena.add(malla);
   ponerIconos();
   if (!encuadrado) { centrarVista(); encuadrado = true; }
-  $('info').textContent = `${tam.x.toFixed(1)} × ${tam.y.toFixed(1)} × ${tam.z.toFixed(1)} mm  ·  ` +
-    `arrastra para girar · arrastra las piezas con ✥ para moverlas`;
+  const medidas = `${tam.x.toFixed(1)} × ${tam.y.toFixed(1)} × ${tam.z.toFixed(1)} mm`;
+  $('medidas').textContent = medidas;
+  $('tamano').innerHTML = `<b>${medidas}</b> ancho × fondo × alto`;
 }
 
 function centrarVista() {
@@ -471,8 +1059,12 @@ function centrarVista() {
   const c = new THREE.Vector3(); caja.getCenter(c);
   const tam = new THREE.Vector3(); caja.getSize(tam);
   const d = Math.max(tam.x, tam.y, tam.z) * 1.6;
+  // Una pieza de pie se mira de tres cuartos: desde muy arriba, su cara delantera sale tan
+  // escorzada que no se distingue lo que tiene (el nombre, o el hueco donde encaja).
+  // Una pieza plana, como el llavero, se sigue viendo mejor casi desde arriba.
+  const alzado = (tam.z > 0.2 * Math.max(tam.x, tam.y) ? 30 : 58) * Math.PI / 180;
   controles.target.copy(c);
-  camara.position.set(c.x, c.y - d * .55, c.z + d);
+  camara.position.set(c.x, c.y - d * Math.cos(alzado), c.z + d * Math.sin(alzado));
   controles.update();
 }
 $('centrar').onclick = centrarVista;
@@ -487,6 +1079,55 @@ $('btn-panel').onclick = () => abrirPanel(!document.body.classList.contains('pan
 $('fondo-panel').onclick = () => abrirPanel(false);
 $('cerrar-panel').onclick = () => abrirPanel(false);
 addEventListener('keydown', e => { if (e.key === 'Escape') abrirPanel(false); });
+
+// ---------- ayudas: cualquier elemento con data-tip enseña su globo al pasar por encima
+const tip = document.createElement('div');
+tip.id = 'tip'; tip.hidden = true; document.body.appendChild(tip);
+const conTip = e => e.target.closest && e.target.closest('[data-tip]');
+function verTip(el) {
+  tip.textContent = el.dataset.tip; tip.hidden = false;
+  const r = el.getBoundingClientRect();
+  tip.style.left = Math.min(Math.max(8, r.left + r.width / 2 - tip.offsetWidth / 2),
+                            innerWidth - tip.offsetWidth - 8) + 'px';
+  tip.style.top = Math.min(r.bottom + 7, innerHeight - tip.offsetHeight - 8) + 'px';
+}
+document.addEventListener('pointerover', e => { const q = conTip(e); if (q) verTip(q); else tip.hidden = true; });
+document.addEventListener('focusin', e => { const q = conTip(e); if (q) verTip(q); else tip.hidden = true; });
+document.addEventListener('click', e => {   // pantallas táctiles
+  const q = conTip(e);
+  if (!q) return;
+  if (q.tagName === 'SPAN') e.preventDefault();   // dentro de un label no debe marcar la casilla
+  verTip(q);
+});
+addEventListener('scroll', () => { tip.hidden = true; }, true);
+
+// ---------- menú de usuario (licencias, contraseña, salir)
+const menuUsuario = $('menu-usuario');
+function abrirMenu(abierto) {
+  menuUsuario.hidden = !abierto;
+  $('btn-usuario').setAttribute('aria-expanded', abierto ? 'true' : 'false');
+}
+$('btn-usuario').onclick = e => { e.stopPropagation(); abrirMenu(menuUsuario.hidden); };
+document.addEventListener('click', e => { if (!e.target.closest('.usuario')) abrirMenu(false); });
+addEventListener('keydown', e => { if (e.key === 'Escape') abrirMenu(false); });
+
+// ---------- interruptores en la cabecera de cada sección: abren y cierran su contenido
+const interruptores = [...document.querySelectorAll('summary .sw input')];
+for (const c of interruptores) {
+  c.addEventListener('click', e => e.stopPropagation());   // no vuelve a plegar la sección
+  c.addEventListener('change', () => { c.closest('details').open = c.checked; });
+}
+const abrirSecciones = () => interruptores.forEach(c => { c.closest('details').open = c.checked; });
+
+// ---------- tipo de diseño: cada sección propia lleva data-tipo. Para añadir otro diseño,
+// basta una opción más en #tipo, sus secciones marcadas con ese valor y su rama en el servidor.
+function sincronizarTipo() {
+  const t = $('tipo').value;
+  document.querySelectorAll('[data-tipo]').forEach(el => {
+    el.hidden = !el.dataset.tipo.split(' ').includes(t);
+  });
+}
+$('tipo').addEventListener('change', () => { sincronizarTipo(); encuadrado = false; });
 
 // ---------- patrón
 function listarPatrones(lista, elegido) {
@@ -506,17 +1147,13 @@ $('archivo-svg').onchange = async e => {
     listarPatrones(d.patrones, d.nombre); generar();
   } catch (err) { msg.className = 'err'; msg.textContent = err.message; }
 };
-['patron', 'tam_patron', 'separacion_patron', 'margen_patron', 'semilla',
- 'adorno', 'tam_adorno', 'adorno_x', 'adorno_y', 'giro_adorno', 'adorno2_x', 'adorno2_y', 'giro_adorno2',
- 'aro_diametro', 'aro_agujero', 'aro_x', 'aro_y']
-  .forEach(k => $(k).addEventListener('input', pronto));
 const libre = () => $('segundo_adorno').value === 'libre';
 $('segundo_adorno').addEventListener('change', () => {
   if (libre()) {  // arranca donde estaba el espejo, para moverlo desde ahí
     $('adorno2_x').value = -(+$('adorno_x').value); $('adorno2_y').value = $('adorno_y').value;
     $('giro_adorno2').value = -(+$('giro_adorno').value);
   }
-  $('pos-adorno2').hidden = !libre(); generar();
+  $('pos-adorno2').hidden = !libre();
 });
 
 // ---------- arrastrar los adornos en la vista 3D (en modo espejo el otro se mueve reflejado)
@@ -551,19 +1188,43 @@ render.domElement.addEventListener('pointerdown', e => {
   controles.enabled = false;
   render.domElement.setPointerCapture(e.pointerId);
 
-  // qué campos edita y qué grupo se mueve con él
-  let cx, cy, compañero = null;
-  if (grupo === 'Aro') {
-    [cx, cy] = ['aro_x', 'aro_y'];
-  } else if (grupo === 'Texto') {
-    [cx, cy] = ['texto_x', 'texto_y'];
+  // qué apunta cada arrastre y qué grupo se mueve con él
+  let fijar, compañero = null, signo = 1;
+  if ($('tipo').value === 'cuadro') {
+    if (grupo === 'Titulo') {
+      const x0 = +$('cua_titulo_x').value, y0 = +$('cua_sep_titulo').value;
+      fijar = (dx, dy) => {
+        $('cua_titulo_x').value = medio(x0 + dx); $('cua_sep_titulo').value = medio(y0 + dy);
+      };
+    } else {
+      const i = +grupo.slice(1) - 1, puestos = posNombres();
+      const [x0, y0] = puestos[i] || [0, 0];
+      fijar = (dx, dy) => {
+        puestos[i] = [medio(x0 + dx), medio(y0 + dy)];
+        $('cua_pos').value = puestos.map(p => p.join(',')).join(';');
+      };
+    }
+  } else if ($('tipo').value === 'marca') {
+    const x0 = +$('mar_adorno_x').value, y0 = +$('mar_adorno_y').value;
+    fijar = (dx, dy) => {
+      $('mar_adorno_x').value = medio(x0 + dx); $('mar_adorno_y').value = medio(y0 + dy);
+    };
   } else {
-    const derecho = grupo === 'der';
-    // libre: cada adorno tiene sus campos. espejo: ambos mueven el original (X invertida)
-    [cx, cy] = libre() && derecho ? ['adorno2_x', 'adorno2_y'] : ['adorno_x', 'adorno_y'];
-    if (!libre()) compañero = derecho ? 'izq' : 'der';
+    let cx, cy;
+    if (grupo === 'Aro') {
+      [cx, cy] = ['aro_x', 'aro_y'];
+    } else if (grupo === 'Texto') {
+      [cx, cy] = ['texto_x', 'texto_y'];
+    } else {
+      const derecho = grupo === 'der';
+      // libre: cada adorno tiene sus campos. espejo: ambos mueven el original (X invertida)
+      [cx, cy] = libre() && derecho ? ['adorno2_x', 'adorno2_y'] : ['adorno_x', 'adorno_y'];
+      if (!libre()) compañero = derecho ? 'izq' : 'der';
+      if (derecho && !libre()) signo = -1;
+    }
+    const x0 = +$(cx).value, y0 = +$(cy).value;
+    fijar = (dx, dy) => { $(cx).value = medio(x0 + dx); $(cy).value = medio(y0 + dy); };
   }
-  const signo = (grupo === 'der' && !libre()) ? -1 : 1;
 
   // cada parte (mallas e icono) se mueve desde su posición actual; el compañero, reflejado
   const partes = [];
@@ -578,7 +1239,7 @@ render.domElement.addEventListener('pointerdown', e => {
   caja.getCenter(c);
   const ini = puntoEnPlano(c.z);
   if (!ini) return;
-  arrastre = { z: c.z, ini, cx, cy, x0: +$(cx).value, y0: +$(cy).value, signo, partes };
+  arrastre = { z: c.z, ini, fijar, signo, partes };
 }, true);
 
 render.domElement.addEventListener('pointermove', e => {
@@ -588,8 +1249,7 @@ render.domElement.addEventListener('pointermove', e => {
   if (!p) return;
   const dx = p.x - arrastre.ini.x, dy = p.y - arrastre.ini.y;
   for (const { obj, base, s } of arrastre.partes) obj.position.set(base.x + s * dx, base.y + dy, base.z);
-  $(arrastre.cx).value = (Math.round((arrastre.x0 + arrastre.signo * dx) * 2) / 2).toString();
-  $(arrastre.cy).value = (Math.round((arrastre.y0 + dy) * 2) / 2).toString();
+  arrastre.fijar(arrastre.signo * dx, dy);
 });
 function soltar() {
   if (!arrastre) return;
@@ -599,11 +1259,17 @@ render.domElement.addEventListener('pointerup', soltar);
 render.domElement.addEventListener('pointercancel', soltar);
 
 // ---------- formulario
+const CAJAS = [['usar_adorno', 'caja-adorno'], ['usar_patron', 'caja-patron'],
+               ['aro', 'caja-aro'], ['iman', 'caja-iman'], ['org_movil', 'caja-movil'],
+               ['org_vaso', 'caja-vaso'], ['org_bandeja', 'caja-bandeja'],
+               ['org_aparte', 'caja-aparte'], ['org_adorno', 'caja-org-adorno'],
+               ['cua_adorno', 'caja-cua-adorno'], ['cua_patron', 'caja-cua-patron'],
+               ['cua_ganchos', 'caja-cua-ganchos'], ['cua_aparte', 'caja-cua-aparte'],
+               ['cua_colgar', 'caja-cua-colgar'], ['mar_adorno', 'caja-mar-adorno'],
+               ['mar_aparte', 'caja-mar-aparte']];
 function sincronizarCajas() {
-  $('caja-adorno').hidden = !$('usar_adorno').checked;
-  $('caja-patron').hidden = !$('usar_patron').checked;
-  $('caja-aro').hidden = !$('aro').checked;
-  $('caja-iman').hidden = !$('iman').checked;
+  for (const [casilla, caja] of CAJAS) $(caja).hidden = !$(casilla).checked;
+  $('caja-cua-encima').hidden = $('cua_patron_corta').checked;   // al revés: solo si NO corta
 }
 
 function leer() {
@@ -626,10 +1292,12 @@ function pintarCostos(analisis) {
   const mon = $('c_moneda').value || '$';
   const dinero = v => mon + v.toFixed(2);
 
+  // el modelo es macizo, pero se imprime con relleno: el material y el tiempo bajan con él
+  const relleno = Math.min(Math.max(num('c_relleno', 100), 5), 100) / 100;
   const porColor = {};
-  for (const p of analisis.piezas) porColor[p.color] = (porColor[p.color] || 0) + p.cm3;
-  const gramos = analisis.cm3 * dens;
-  const horas = analisis.cm3 / vel + 0.1;          // +6 min de arranque y purga
+  for (const p of analisis.piezas) porColor[p.color] = (porColor[p.color] || 0) + p.cm3 * relleno;
+  const gramos = analisis.cm3 * relleno * dens;
+  const horas = analisis.cm3 * relleno / vel + 0.1;   // +6 min de arranque y purga
   const material = gramos / 1000 * kg;
   const maquina = horas * hora;
   const costo = material + maquina;
@@ -653,7 +1321,11 @@ function pintarAvisos(analisis) {
 // solo se enseñan tantos selectores como formas tenga de verdad el SVG elegido
 function pintarFormasAdorno(analisis) {
   const n = (analisis && analisis.grupos_adorno) || 0;
-  for (let i = 1; i <= 3; i++) $('fila_c' + i).hidden = i > n;
+  for (let i = 1; i <= 3; i++) {
+    for (const p of ['fila_c', 'org_fila_c', 'cua_fila_c', 'mar_fila_c']) {
+      $(p + i).hidden = i > n;
+    }
+  }
 }
 
 function pintarFilamentos(analisis) {
@@ -687,6 +1359,10 @@ async function generar() {
     if (yo === pedido) { msg.className = 'err'; msg.textContent = e.message; }
   }
 }
+
+$('cua-recolocar').onclick = () => {
+  $('cua_pos').value = ''; $('cua_titulo_x').value = '0'; generar();
+};
 
 $('generar').onclick = generar;
 
@@ -755,10 +1431,10 @@ $('generar-archivos').onclick = generarArchivos;
 
 // ---------- datos de la cuenta
 function pintarCupo() {
-  if (invitado) { $('yo_cupo').textContent = '· sin límite, con el texto modificado'; return; }
+  if (invitado) { $('yo_cupo').textContent = 'Sin límite, con el texto modificado'; return; }
   if (!resumen) return;
   const disp = resumen.restantes === null ? 'ilimitadas' : resumen.restantes;
-  $('yo_cupo').textContent = `· ${disp} disponibles` +
+  $('yo_cupo').textContent = `${disp} generaciones disponibles` +
     (resumen.vence ? ` · vence ${resumen.vence.slice(0, 10)}` : '');
 }
 
@@ -777,20 +1453,20 @@ async function cargarYo() {
 }
 
 $('cambiar-clave').onclick = async () => {
+  $('menu-usuario').hidden = true;
   const actual = prompt('Tu contraseña actual:');
   if (!actual) return;
   const nueva = prompt('Nueva contraseña (mínimo 6 caracteres):');
   if (!nueva) return;
   if (nueva !== prompt('Repítela para confirmar:')) return alert('No coinciden.');
-  const msg = $('msg');
   try {
     const r = await fetch('/api/clave', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ actual, nueva }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'No se pudo cambiar');
-    msg.className = ''; msg.textContent = 'Contraseña cambiada.';
-  } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+    alert('Contraseña cambiada.');
+  } catch (e) { alert(e.message); }
 };
 
 function aplicarParametros(p) {
@@ -801,7 +1477,9 @@ function aplicarParametros(p) {
   if (!$('patron').value) $('patron').selectedIndex = 0;
   $('pos-adorno2').hidden = !libre();
   $('usar_chaflan').checked = (+p.chaflan || 0) > 0;
+  sincronizarTipo();
   sincronizarCajas();
+  abrirSecciones();
   pintarMiniSvg();
 }
 
@@ -813,14 +1491,17 @@ async function cargarGeneracion(id) {
   mostrarResultado(id);
   return true;
 }
+// Todo campo del modelo redibuja la vista previa: al escribir, en cuanto para de teclear;
+// al elegir color, casilla o desplegable, en cuanto se suelta. Así un campo nuevo no hay
+// que acordarse de cablearlo: basta con meterlo en CAMPOS.
+for (const k of CAMPOS) {
+  const el = $(k);
+  const suelta = el.type === 'checkbox' || el.type === 'color' || el.tagName === 'SELECT';
+  el.addEventListener(suelta ? 'change' : 'input', pronto);
+}
+// las casillas que solo existen en la pantalla (no viajan al servidor) también redibujan
+['usar_adorno', 'usar_patron', 'usar_chaflan'].forEach(k => $(k).addEventListener('change', pronto));
 document.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') generar(); }));
-document.querySelectorAll('input[type=color], input[type=checkbox]').forEach(i => i.addEventListener('change', generar));
-['fuente_inicial', 'fuente_texto'].forEach(k => $(k).addEventListener('change', generar));
-['curva_texto', 'texto_x', 'texto_y', 'iman_diametro', 'iman_hondo', 'iman_x', 'iman_y',
- 'texto', 'inicial']
-  .forEach(k => $(k).addEventListener('input', pronto));
-['adorno_detras', 'adorno_c1', 'adorno_c2', 'adorno_c3']
-  .forEach(k => $(k).addEventListener('change', generar));
 
 // la calculadora no toca el modelo: solo recalcula y recuerda los ajustes en este navegador
 AJUSTES_CALC.forEach(k => $(k).addEventListener('input', () => {
@@ -833,11 +1514,22 @@ for (const k of AJUSTES_CALC) {
 }
 
 // miniatura del patrón y del adorno elegidos
+// el nombre puede llevar subcarpeta ('desktop/lapiz.svg'): la barra va tal cual en la ruta
+const rutaSvg = (tipo, n) => n ? '/api/svg/' + tipo + '/' + n.split('/').map(encodeURIComponent).join('/') : '';
 function pintarMiniSvg() {
-  $('vista_patron').src = $('patron').value ? '/api/svg/patron/' + encodeURIComponent($('patron').value) : '';
-  $('vista_adorno').src = $('adorno').value ? '/api/svg/adorno/' + encodeURIComponent($('adorno').value) : '';
+  $('vista_patron').src = rutaSvg('patron', $('patron').value);
+  $('vista_adorno').src = rutaSvg('adorno', $('adorno').value);
+  $('vista_org_adorno').src = rutaSvg('adorno', $('org_adorno_svg').value);
+  $('vista_cua_adorno').src = rutaSvg('adorno', $('cua_adorno_svg').value);
+  $('vista_mar_adorno').src = rutaSvg('adorno', $('mar_adorno_svg').value);
+  $('vista_cua_patron').src = rutaSvg('patron', $('cua_patron_svg').value);
 }
-['patron', 'adorno'].forEach(k => $(k).addEventListener('change', pintarMiniSvg));
+['patron', 'adorno', 'org_adorno_svg', 'cua_adorno_svg', 'cua_patron_svg',
+ 'mar_adorno_svg']
+  .forEach(k => $(k).addEventListener('change', pintarMiniSvg));
+$('cua-otro-reparto').onclick = () => {
+  $('cua_semilla').value = Math.floor(Math.random() * 100000); generar();
+};
 
 // ---------- plantillas
 function pintarPlantillas(ps) {
@@ -900,11 +1592,19 @@ const cfg = await (await fetch('/api/config')).json();
 const opcionesFuentes = g => g.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
 const htmlFuentes = `<optgroup label="De la carpeta fuentes">${opcionesFuentes(cfg.fuentes.carpeta)}</optgroup>` +
                     `<optgroup label="Instaladas en el equipo">${opcionesFuentes(cfg.fuentes.sistema)}</optgroup>`;
-$('fuente_inicial').innerHTML = $('fuente_texto').innerHTML = htmlFuentes;
+$('fuente_inicial').innerHTML = $('fuente_texto').innerHTML =
+  $('org_fuente').innerHTML = $('cua_fuente').innerHTML =
+  $('mar_fuente').innerHTML = $('mar_fuente_inicial').innerHTML = htmlFuentes;
 // las listas se llenan ANTES de poner los valores, si no el select no los acepta
 listarPatrones(cfg.patrones, cfg.defaults.patron);
-$('adorno').innerHTML = cfg.adornos
-  .map(n => `<option${n === cfg.defaults.adorno ? ' selected' : ''}>${n}</option>`).join('');
+const opcionesAdorno = elegido => cfg.adornos
+  .map(n => `<option${n === elegido ? ' selected' : ''}>${esc(n)}</option>`).join('');
+$('adorno').innerHTML = opcionesAdorno(cfg.defaults.adorno);
+$('org_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.org_adorno_svg);
+$('cua_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.cua_adorno_svg);
+$('mar_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.mar_adorno_svg);
+$('cua_patron_svg').innerHTML = cfg.patrones
+  .map(n => `<option${n === cfg.defaults.cua_patron_svg ? ' selected' : ''}>${esc(n)}</option>`).join('');
 aplicarParametros(cfg.defaults);
 await cargarYo();
 $('caja-plantillas').hidden = false;

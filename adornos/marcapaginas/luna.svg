@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Luna menguante (un círculo al que otro le come el trozo) y dos estrellas. -->
+  <path fill="#f2c14e" d="M0 60 a50 50 0 1 0 100 0 a50 50 0 1 0 -100 0 Z M34 52 a44 44 0 1 0 88 0 a44 44 0 1 0 -88 0 Z"/>
+  <path fill="#9ec7e8" d="M96 18 L101 36 L119 41 L101 46 L96 64 L91 46 L73 41 L91 36 Z"/>
+  <path fill="#9ec7e8" d="M95 82 L99 94 L111 98 L99 102 L95 114 L91 102 L79 98 L91 94 Z"/>
+</svg>

@@ -187,6 +187,11 @@ Actualizar el código:
   .venv/bin/pip install -r requirements.txt
   sudo systemctl restart monkeds
 
+Al ACTUALIZAR el código en el servidor, antes de reiniciar el servicio:
+  cd /opt/monkeds && sudo -u monkeds .venv/bin/pip install -r requirements.txt
+  (el organizador de escritorio necesita manifold3d, que las instalaciones viejas no tienen)
+  sudo systemctl restart monkeds
+
 Copias de seguridad (IMPORTANTE: la base tiene usuarios, licencias e historial):
   - Activa snapshots automáticos de la instancia en Lightsail.
   - Y además, copia diaria de la base:

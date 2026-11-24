@@ -25,7 +25,8 @@ import datos
 from generador_stl import (AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, Parametros,
                            adornos_disponibles, construir_con_analisis, exportar_3mf,
                            exportar_stl, fuentes_instaladas, miniatura_png,
-                           parametros_desde_dict, patrones_disponibles, svg_a_poligono)
+                           parametros_desde_dict, patrones_disponibles, svg_a_poligono,
+                           svg_dentro_de)
 
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
@@ -250,15 +251,12 @@ def estaticos(resto):
     return send_file(ruta, mimetype="text/javascript")
 
 
-@app.get("/api/svg/<tipo>/<nombre>")
+@app.get("/api/svg/<tipo>/<path:nombre>")
 @pide_login
 def api_svg(tipo, nombre):
     """Sirve un patrón o adorno para verlo en la biblioteca."""
-    carpeta = {"patron": CARPETA_PATRONES, "adorno": CARPETA_ADORNOS}.get(tipo)
-    if not carpeta:
-        return "No encontrado", 404
-    ruta = os.path.normpath(os.path.join(carpeta, os.path.basename(nombre)))
-    if not ruta.startswith(carpeta + os.sep) or not os.path.isfile(ruta):
+    ruta = _ruta_svg(tipo, nombre)
+    if not ruta:
         return "No encontrado", 404
     return send_file(ruta, mimetype="image/svg+xml")
 
@@ -312,7 +310,14 @@ def texto_de_invitado(texto: str) -> str:
 
 
 def _nombre_archivo(p: Parametros):
-    base = f"{p.inicial.strip() or 'letra'}_{p.texto.strip() or 'sin_texto'}"
+    if p.tipo == "organizador":
+        base = f"organizador_{p.org_texto.strip() or 'sin_nombre'}"
+    elif p.tipo == "cuadro":
+        base = f"llaves_{p.cua_familia.strip() or 'sin_nombre'}"
+    elif p.tipo == "marca":
+        base = f"marcapaginas_{(p.mar_texto or p.mar_inicial).strip() or 'sin_nombre'}"
+    else:
+        base = f"{p.inicial.strip() or 'letra'}_{p.texto.strip() or 'sin_texto'}"
     return re.sub(r"[^\w\-]+", "_", base)[:60] or "monkeds"
 
 
@@ -354,7 +359,11 @@ def api_generar():
     uid = request.usuario["id"]
     invitado = bool(request.usuario["es_invitado"])
     if invitado:
-        cuerpo = dict(cuerpo or {}, texto=texto_de_invitado((cuerpo or {}).get("texto", "")))
+        c = cuerpo or {}
+        cuerpo = dict(c, texto=texto_de_invitado(c.get("texto", "")),
+                      org_texto=texto_de_invitado(c.get("org_texto", "")),
+                      cua_familia=texto_de_invitado(c.get("cua_familia", "")),
+                      mar_texto=texto_de_invitado(c.get("mar_texto", "")))
     elif not datos.licencia_vigente(uid):    # aviso rápido antes de calcular
         return jsonify(error="No tienes una licencia vigente con generaciones disponibles."), 402
     try:
@@ -369,7 +378,9 @@ def api_generar():
                                             ip=ip_cliente(), exigir_licencia=not invitado)
     except datos.SinLicencia as e:
         return jsonify(error=str(e)), 402
-    return jsonify(id=gen_id, nombre=_nombre_archivo(p), texto=p.texto,
+    return jsonify(id=gen_id, nombre=_nombre_archivo(p),
+                   texto={"organizador": p.org_texto, "cuadro": p.cua_familia,
+                          "marca": p.mar_texto}.get(p.tipo, p.texto),
                    analisis=analisis, resumen=datos.resumen_usuario(uid))
 
 
@@ -700,19 +711,16 @@ def _carpeta_svg(tipo):
 
 
 def _ruta_svg(tipo, nombre):
-    """Ruta real de un SVG, solo si está dentro de su carpeta (nada de ../)."""
+    """Ruta real de un SVG, con subcarpetas, y solo si está dentro de su carpeta (nada de ../)."""
     carpeta = _carpeta_svg(tipo)
-    if not carpeta:
-        return None
-    ruta = os.path.normpath(os.path.join(carpeta, os.path.basename(nombre or "")))
-    return ruta if ruta.startswith(carpeta + os.sep) and os.path.isfile(ruta) else None
+    return svg_dentro_de(carpeta, nombre) if carpeta else None
 
 
 def _listas_svg():
     return {"patrones": patrones_disponibles(), "adornos": adornos_disponibles()}
 
 
-@app.delete("/api/admin/svg/<tipo>/<nombre>")
+@app.delete("/api/admin/svg/<tipo>/<path:nombre>")
 @pide_admin
 def api_admin_borrar_svg(tipo, nombre):
     ruta = _ruta_svg(tipo, nombre)
@@ -722,7 +730,7 @@ def api_admin_borrar_svg(tipo, nombre):
     return jsonify(**_listas_svg())
 
 
-@app.post("/api/admin/svg/<tipo>/<nombre>")
+@app.post("/api/admin/svg/<tipo>/<path:nombre>")
 @pide_admin
 def api_admin_renombrar_svg(tipo, nombre):
     """Renombra un SVG. Las generaciones antiguas que lo usaban dejarán de rehacerse."""
