@@ -30,7 +30,7 @@ from generador_stl import (APP, AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, CONTACT
                            miniatura_png, parametros_desde_dict, patrones_disponibles,
                            svg_a_poligono, svg_dentro_de)
 
-REGALO_DE_BIENVENIDA = 1    # generaciones limpias que lleva de serie una cuenta nueva
+REGALO_DE_BIENVENIDA = 3    # generaciones limpias que lleva de serie una cuenta nueva
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
 LIMITE_INVITADO = 40      # vistas previas por minuto e IP (los invitados no pagan nada)
@@ -349,6 +349,8 @@ def _nombre_archivo(p: Parametros):
         base = f"llaves_{p.cua_familia.strip() or 'sin_nombre'}"
     elif p.tipo == "marca":
         base = f"marcapaginas_{(p.mar_texto or p.mar_inicial).strip() or 'sin_nombre'}"
+    elif p.tipo == "torta":
+        base = f"topper_{(p.tor_nombre or p.tor_numero).strip() or 'sin_nombre'}"
     else:
         base = f"{p.inicial.strip() or 'letra'}_{p.texto.strip() or 'sin_texto'}"
     return re.sub(r"[^\w\-]+", "_", base)[:60] or "monkeds"
@@ -403,7 +405,7 @@ def api_generar():
     con_marca = not datos.licencia_vigente(uid)
     if con_marca:      # solo se marca lo que venga escrito: un campo ausente sigue ausente
         cuerpo = dict(cuerpo or {})
-        for campo in ("texto", "org_texto", "cua_familia", "mar_texto"):
+        for campo in ("texto", "org_texto", "cua_familia", "mar_texto", "tor_nombre"):
             if cuerpo.get(campo):
                 cuerpo[campo] = texto_de_invitado(cuerpo[campo])
     try:
@@ -419,8 +421,9 @@ def api_generar():
     except datos.SinLicencia as e:
         return jsonify(error=str(e)), 402
     return jsonify(id=gen_id, nombre=_nombre_archivo(p), con_marca=con_marca,
+                   con_licencia=bool(datos.licencia_vigente(uid)),   # para la próxima
                    texto={"organizador": p.org_texto, "cuadro": p.cua_familia,
-                          "marca": p.mar_texto}.get(p.tipo, p.texto),
+                          "marca": p.mar_texto, "torta": p.tor_nombre}.get(p.tipo, p.texto),
                    analisis=analisis, resumen=datos.resumen_usuario(uid))
 
 

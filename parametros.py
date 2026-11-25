@@ -7,7 +7,7 @@ MAX_LETRAS = 6
 
 @dataclass
 class Parametros:
-    tipo: str = "nombre"   # nombre (llavero) | organizador | cuadro (llaves) | marca
+    tipo: str = "nombre"   # nombre | organizador | cuadro | marca | torta
     inicial: str = "M"
     texto: str = "Monkeds"
     fuente_inicial: str = "Cooper Black"
@@ -246,6 +246,62 @@ class Parametros:
     mar_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
     mar_adorno_tinta3: str = ""
     mar_color_adorno: str = "#9ec77a"
+
+    # ---------------------------------------------------------- diseño 5: topper de tarta
+    tor_nombre: str = "Mateo"
+    tor_fuente: str = "Pacifico"
+    tor_alto_nombre: float = 28.0
+    tor_nombre_x: float = 0.0           # lo que se ha arrastrado cada texto (mm)
+    tor_nombre_y: float = 0.0
+    tor_palabra: str = "cumple"         # la que acompaña al nombre (vacía = ninguna)
+    tor_palabra_arriba: bool = False    # False = debajo del nombre
+    tor_alto_palabra: float = 22.0
+    tor_palabra_x: float = 0.0
+    tor_palabra_y: float = 0.0
+    tor_numero: str = "4"               # a la derecha y más grande (vacío = ninguno)
+    tor_alto_numero: float = 46.0
+    tor_numero_x: float = 0.0
+    tor_numero_y: float = 0.0
+    tor_hueco: float = 4.0              # aire entre nombre, palabra y número (mm)
+    tor_borde: float = 4.0              # la placa que sobra alrededor y lo une todo
+    tor_grueso: float = 3.0             # grosor de la placa
+    tor_relieve: float = 1.6            # cuánto sobresalen las letras y los adornos
+    tor_suave: float = 2.0
+    tor_color_base: str = "#8fc7e8"
+    tor_color_letras: str = "#ffffff"
+    tor_color_extra: str = "#e8705a"
+    tor_palo: bool = True               # el palo que se clava en la tarta
+    tor_palos: int = 1                  # 1 o 2
+    tor_palo_largo: float = 70.0
+    tor_palo_ancho: float = 10.0
+    tor_palo_x: float = 0.0             # desplazamiento respecto al centro (mm)
+    tor_ad1: bool = True
+    tor_ad1_svg: str = "estrella_color.svg"
+    tor_ad1_alto: float = 22.0
+    tor_ad1_x: float = -70.0          # desde el centro del bloque de texto (mm)
+    tor_ad1_y: float = 28.0
+    tor_ad1_giro: float = 0.0
+    tor_ad1_color: str = "auto"       # auto | base | letras | extra | svg
+    tor_ad1_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_ad2: bool = False
+    tor_ad2_svg: str = "corazon.svg"
+    tor_ad2_alto: float = 18.0
+    tor_ad2_x: float = 62.0          # desde el centro del bloque de texto (mm)
+    tor_ad2_y: float = 28.0
+    tor_ad2_giro: float = 0.0
+    tor_ad2_color: str = "auto"       # auto | base | letras | extra | svg
+    tor_ad2_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_ad3: bool = False
+    tor_ad3_svg: str = "baston.svg"
+    tor_ad3_alto: float = 18.0
+    tor_ad3_x: float = -58.0          # desde el centro del bloque de texto (mm)
+    tor_ad3_y: float = -20.0
+    tor_ad3_giro: float = 0.0
+    tor_ad3_color: str = "auto"       # auto | base | letras | extra | svg
+    tor_ad3_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_aparte: bool = False            # cada color se imprime suelto y se pega
+    tor_espiga: float = 1.6
+    tor_holgura: float = 0.25
 
     mar_aparte: bool = False            # cada color se imprime suelto y se pega
     mar_espiga: float = 1.2             # hondura del hueco donde encaja cada pieza (mm)

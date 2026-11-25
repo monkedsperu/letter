@@ -86,7 +86,7 @@
   .nota { font-size:11px; color:var(--mut); line-height:1.45; margin:8px 0 0; }
 
   /* modelos: un botón cuadrado por diseño */
-  .modelos { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin:0 0 10px; }
+  .modelos { display:grid; grid-template-columns:repeat(5, 1fr); gap:5px; margin:0 0 10px; }
   .modelos button { display:flex; flex-direction:column; align-items:center; gap:3px;
                     padding:9px 2px 7px; font-size:9.5px; line-height:1.2; text-align:center;
                     border:1px solid var(--bd); border-radius:10px; background:var(--suave);
@@ -272,6 +272,7 @@
     <button type="button" data-valor="organizador" data-tip="Cuerpo con la forma del nombre, con portamóvil, vaso y bandeja."><span class="ic">✏️</span>Organizador</button>
     <button type="button" data-valor="cuadro" data-tip="Placa de pared con el apellido y un gancho por cada nombre."><span class="ic">🏠</span>Llaves</button>
     <button type="button" data-valor="marca" data-tip="Lámina para el libro con la letra grande, el nombre y un icono."><span class="ic">🔖</span>Marcapáginas</button>
+    <button type="button" data-valor="torta" data-tip="Topper para clavar en la tarta: nombre, palabra, número y adornos."><span class="ic">🎂</span>Topper</button>
   </div>
   <input type="hidden" id="tipo" value="nombre">
 
@@ -959,6 +960,180 @@
     </div></div>
   </details>
 
+  <details class="g" data-tipo="torta" open>
+    <summary><span class="sw"><input id="usar_tor_nombre" type="checkbox"><i></i></span>
+      <span class="t">Nombre</span>
+      <span class="q" tabindex="0" data-tip="Lo principal del topper. Todo lo demás se coloca a su alrededor y la placa se recorta con la forma del conjunto.">?</span></summary>
+    <div class="cont"><div id="caja-tor-nombre">
+      <div class="fila">
+        <div><label>Nombre<input id="tor_nombre" maxlength="20" placeholder="Mateo"></label></div>
+        <div><label>Fuente<select id="tor_fuente"></select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Alto (mm)<input id="tor_alto_nombre" type="number" step="1" min="8"></label></div>
+        <div><label>Aire entre piezas (mm)<span class="q" tabindex="0" data-tip="Hueco entre el nombre, la palabra y el número.">?</span>
+          <input id="tor_hueco" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Moverlo ↔ (mm)<span class="q" tabindex="0" data-tip="También puedes arrastrarlo en la vista 3D.">?</span>
+          <input id="tor_nombre_x" type="number" step="1"></label></div>
+        <div><label>Moverlo ↕ (mm)<input id="tor_nombre_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Color de las letras<input id="tor_color_letras" type="color"></label></div>
+        <div><label>Color de la placa<input id="tor_color_base" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Color extra<span class="q" tabindex="0" data-tip="El tercer filamento, para los adornos que no lleven ni el color de la placa ni el de las letras.">?</span>
+          <input id="tor_color_extra" type="color"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="usar_tor_palabra" type="checkbox"><i></i></span>
+      <span class="t">Palabra que acompaña</span>
+      <span class="q" tabindex="0" data-tip="Por ejemplo «cumple» o «feliz cumpleaños». Va pegada al nombre, encima o debajo. Déjala vacía si no la quieres.">?</span></summary>
+    <div class="cont"><div id="caja-tor-palabra">
+      <div class="fila">
+        <div><label>Palabra<input id="tor_palabra" maxlength="20" placeholder="cumple"></label></div>
+        <div><label>Alto (mm)<input id="tor_alto_palabra" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Moverla ↔ (mm)<input id="tor_palabra_x" type="number" step="1"></label></div>
+        <div><label>Moverla ↕ (mm)<input id="tor_palabra_y" type="number" step="1"></label></div>
+      </div>
+      <label class="check"><input id="tor_palabra_arriba" type="checkbox"> Ponerla encima del nombre
+        <span class="q" tabindex="0" data-tip="Sin marcar va debajo, como en «Mateo / cumple».">?</span></label>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="usar_tor_numero" type="checkbox"><i></i></span>
+      <span class="t">Número</span>
+      <span class="q" tabindex="0" data-tip="Va a la derecha de todo y más grande que el nombre, como la edad del cumpleaños. Déjalo vacío si no lo quieres.">?</span></summary>
+    <div class="cont"><div id="caja-tor-numero">
+      <div class="fila">
+        <div><label>Número<input id="tor_numero" maxlength="20" placeholder="4"></label></div>
+        <div><label>Alto (mm)<input id="tor_alto_numero" type="number" step="1" min="8"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Moverlo ↔ (mm)<input id="tor_numero_x" type="number" step="1"></label></div>
+        <div><label>Moverlo ↕ (mm)<input id="tor_numero_y" type="number" step="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="t">Placa</span>
+      <span class="q" tabindex="0" data-tip="No se dibuja: sale de engordar las letras y los adornos y fundirlo todo en un contorno continuo. Es lo que mantiene unidas las letras sueltas.">?</span></summary>
+    <div class="cont">
+      <div class="fila">
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Placa que sobra alrededor de las letras. Si el topper sale en trozos, súbelo.">?</span>
+          <input id="tor_borde" type="number" step="0.5" min="0"></label></div>
+        <div><label>Suavizado (mm)<input id="tor_suave" type="number" step="0.5" min="0"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Grosor (mm)<span class="q" tabindex="0" data-tip="Lo que mide de canto. De 3 a 4 mm aguanta bien el palo.">?</span>
+          <input id="tor_grueso" type="number" step="0.5" min="1"></label></div>
+        <div><label>Relieve (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresalen las letras y los adornos sobre la placa.">?</span>
+          <input id="tor_relieve" type="number" step="0.2" min="0.2"></label></div>
+      </div>
+    </div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="tor_palo" type="checkbox"><i></i></span>
+      <span class="t">Palo para clavarlo</span>
+      <span class="q" tabindex="0" data-tip="Baja de la placa con la punta en pico para entrar en la tarta. Con dos palos el topper queda más firme y no se gira.">?</span></summary>
+    <div class="cont"><div id="caja-tor-palo">
+      <div class="fila">
+        <div><label>Largo (mm)<input id="tor_palo_largo" type="number" step="5" min="10"></label></div>
+        <div><label>Ancho (mm)<input id="tor_palo_ancho" type="number" step="1" min="3"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Cuántos<select id="tor_palos"><option value="1">Uno</option><option value="2">Dos</option></select></label></div>
+        <div><label>Desplazarlo (mm)<span class="q" tabindex="0" data-tip="A la izquierda o a la derecha del centro. Si se sale del topper, avisa.">?</span>
+          <input id="tor_palo_x" type="number" step="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="tor_ad1" type="checkbox"><i></i></span>
+      <span class="t">Adorno 1</span>
+      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca. Se coloca contando desde el centro del texto, y la placa crece para recogerlo: si lo alejas mucho se queda suelto y el aviso te lo dice. También se arrastra en la vista 3D.">?</span></summary>
+    <div class="cont"><div id="caja-tor-ad1">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="tor_ad1_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="tor_ad1_svg"></div>
+        <div><label>Alto (mm)<input id="tor_ad1_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="tor_ad1_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="tor_ad1_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="tor_ad1_giro" type="number" step="5"></label></div>
+        <div><label>Color<select id="tor_ad1_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad1_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad1_tinta"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="tor_ad2" type="checkbox"><i></i></span>
+      <span class="t">Adorno 2</span>
+      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca. Se coloca contando desde el centro del texto, y la placa crece para recogerlo: si lo alejas mucho se queda suelto y el aviso te lo dice. También se arrastra en la vista 3D.">?</span></summary>
+    <div class="cont"><div id="caja-tor-ad2">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="tor_ad2_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="tor_ad2_svg"></div>
+        <div><label>Alto (mm)<input id="tor_ad2_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="tor_ad2_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="tor_ad2_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="tor_ad2_giro" type="number" step="5"></label></div>
+        <div><label>Color<select id="tor_ad2_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad2_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad2_tinta"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="torta">
+    <summary><span class="sw"><input id="tor_ad3" type="checkbox"><i></i></span>
+      <span class="t">Adorno 3</span>
+      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca. Se coloca contando desde el centro del texto, y la placa crece para recogerlo: si lo alejas mucho se queda suelto y el aviso te lo dice. También se arrastra en la vista 3D.">?</span></summary>
+    <div class="cont"><div id="caja-tor-ad3">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="tor_ad3_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="tor_ad3_svg"></div>
+        <div><label>Alto (mm)<input id="tor_ad3_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="tor_ad3_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="tor_ad3_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="tor_ad3_giro" type="number" step="5"></label></div>
+        <div><label>Color<select id="tor_ad3_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad3_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad3_tinta"></label></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g destacada" data-tipo="torta">
+    <summary><span class="sw"><input id="tor_aparte" type="checkbox"><i></i></span>
+      <span class="t">Imprimir cada color por separado</span>
+      <span class="q" tabindex="0" data-tip="Para imprimir sin AMS: las letras y los adornos salen sueltos y al lado de la placa. A la placa se le vacía el hueco de cada pieza y a la pieza le crece una espiga por detrás, así que al pegar cae sola en su sitio.">?</span></summary>
+    <div class="cont"><div id="caja-tor-aparte">
+      <p class="pista">Imprime cada pieza con su filamento y pégala en su hueco: encajan solas.</p>
+      <div class="fila">
+        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura del hueco y de la espiga. Tiene que caber en el grosor de la placa.">?</span>
+          <input id="tor_espiga" type="number" step="0.2" min="0.4"></label></div>
+        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor de cada pieza para que entre sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
+          <input id="tor_holgura" type="number" step="0.05" min="0" max="1"></label></div>
+      </div>
+    </div></div>
+  </details>
+
   <details class="g" id="calc">
     <summary><span class="t">Costo y precio</span>
       <span class="q" tabindex="0" data-tip="Son cuentas solo para ti: no se guardan en el servidor, los ajustes quedan en este navegador.">?</span></summary>
@@ -1099,7 +1274,20 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'mar_adorno_svg','mar_adorno_alto','mar_adorno_x','mar_adorno_y',
                 'mar_adorno_giro','mar_adorno_detras','mar_adorno_aire',
                 'mar_adorno_c1','mar_adorno_c2','mar_adorno_c3',
-                'mar_color_adorno','mar_aparte','mar_espiga','mar_holgura'];
+                'mar_color_adorno','mar_aparte','mar_espiga','mar_holgura',
+                'tor_nombre','tor_fuente','tor_alto_nombre','tor_nombre_x','tor_nombre_y',
+                'tor_palabra','tor_palabra_arriba','tor_palabra_x','tor_palabra_y',
+                'tor_numero_x','tor_numero_y',
+                'tor_alto_palabra','tor_numero','tor_alto_numero','tor_hueco','tor_borde',
+                'tor_grueso','tor_relieve','tor_suave','tor_color_base','tor_color_letras',
+                'tor_color_extra','tor_palo','tor_palos','tor_palo_largo','tor_palo_ancho',
+                'tor_palo_x','tor_aparte','tor_espiga','tor_holgura',
+                'tor_ad1','tor_ad1_svg','tor_ad1_alto','tor_ad1_x','tor_ad1_y',
+                'tor_ad1_giro','tor_ad1_color','tor_ad1_tinta',
+                'tor_ad2','tor_ad2_svg','tor_ad2_alto','tor_ad2_x','tor_ad2_y',
+                'tor_ad2_giro','tor_ad2_color','tor_ad2_tinta',
+                'tor_ad3','tor_ad3_svg','tor_ad3_alto','tor_ad3_x','tor_ad3_y',
+                'tor_ad3_giro','tor_ad3_color','tor_ad3_tinta'];
 const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
@@ -1230,12 +1418,16 @@ addEventListener('resize', ajustar); ajustar();
 // Un adorno puede venir partido en varias piezas (una por color), así que se agrupan.
 // el cuadro mueve la palabra de arriba y cada nombre con su gancho; el llavero, sus
 // adornos, el aro y el texto; el organizador coloca por campos y no se arrastra
-const esMovible = n => $('tipo').value === 'cuadro'
+const esMovible = n => $('tipo').value === 'torta'
+  ? (n.startsWith('Adorno') || ['Nombre', 'Palabra', 'Numero'].includes(n))
+  : $('tipo').value === 'cuadro'
   ? (n === 'Titulo' || /^(Nombre|Gancho) \d+$/.test(n) || n.startsWith('Adorno'))
   : $('tipo').value === 'marca' ? n.startsWith('Icono')
   : $('tipo').value === 'organizador' ? n.startsWith('Adorno')
   : (n === 'Aro' || n === 'Texto' || n.startsWith('Adorno'));
-const grupoDe = n => /^(?:Nombre|Gancho) (\d+)$/.test(n) ? 'n' + /(\d+)$/.exec(n)[1]
+const grupoDe = n => $('tipo').value === 'torta'
+                     ? (n.startsWith('Adorno') ? 'a' + n.replace(/[^0-9.]/g, '').split('.')[0] : n)
+                   : /^(?:Nombre|Gancho) (\d+)$/.test(n) ? 'n' + /(\d+)$/.exec(n)[1]
                    : n.startsWith('Icono') ? 'Icono'
                    : (n === 'Aro' || n === 'Texto' || n === 'Titulo') ? n
                    : $('tipo').value !== 'nombre' ? 'Adorno'     // los demás tienen uno solo
@@ -1485,6 +1677,14 @@ render.domElement.addEventListener('pointerdown', e => {
       $(pre + 'adorno_x').value = medio(x0 + dx / ancho * 100);
       $(pre + 'adorno_y').value = medio(y0 + dy);
     };
+  } else if ($('tipo').value === 'torta') {
+    // a1, a2, a3 son los adornos; Nombre, Palabra y Numero llevan sus propias medidas
+    const campo = { Nombre: 'tor_nombre', Palabra: 'tor_palabra', Numero: 'tor_numero' }[grupo]
+                  || `tor_ad${grupo.slice(1)}`;
+    const x0 = +$(campo + '_x').value, y0 = +$(campo + '_y').value;
+    fijar = (dx, dy) => {
+      $(campo + '_x').value = medio(x0 + dx); $(campo + '_y').value = medio(y0 + dy);
+    };
   } else if ($('tipo').value === 'marca') {
     const x0 = +$('mar_adorno_x').value, y0 = +$('mar_adorno_y').value;
     fijar = (dx, dy) => {
@@ -1553,7 +1753,12 @@ const CAJAS = [['usar_adorno', 'caja-adorno'], ['usar_patron', 'caja-patron'],
                ['cua_ganchos', 'caja-cua-ganchos'], ['cua_aparte', 'caja-cua-aparte'],
                ['cua_colgar', 'caja-cua-colgar'], ['mar_adorno', 'caja-mar-adorno'],
                ['mar_aparte', 'caja-mar-aparte'],
-               ['aparte', 'caja-aparte-llavero'], ['mar_tope', 'caja-mar-tope']];
+               ['aparte', 'caja-aparte-llavero'], ['mar_tope', 'caja-mar-tope'],
+               ['tor_palo', 'caja-tor-palo'], ['tor_aparte', 'caja-tor-aparte'],
+               ['tor_ad1', 'caja-tor-ad1'], ['tor_ad2', 'caja-tor-ad2'],
+               ['tor_ad3', 'caja-tor-ad3'], ['usar_tor_nombre', 'caja-tor-nombre'],
+               ['usar_tor_palabra', 'caja-tor-palabra'],
+               ['usar_tor_numero', 'caja-tor-numero']];
 function sincronizarCajas() {
   for (const [casilla, caja] of CAJAS) $(caja).hidden = !$(casilla).checked;
   $('caja-cua-encima').hidden = $('cua_patron_corta').checked;   // al revés: solo si NO corta
@@ -1566,6 +1771,9 @@ function leer() {
   for (const k of CAMPOS) o[k] = valor($(k));
   if (!$('usar_inicial').checked) o.mar_inicial = '';    // apagada = sin letra grande
   if (!$('usar_nombre').checked) o.mar_texto = '';      // apagado = sin nombre
+  if (!$('usar_tor_nombre').checked) o.tor_nombre = '';
+  if (!$('usar_tor_palabra').checked) o.tor_palabra = '';
+  if (!$('usar_tor_numero').checked) o.tor_numero = '';
   if (!$('usar_adorno').checked) o.adorno = '';   // las casillas mandan sobre el desplegable
   if (!$('usar_patron').checked) o.patron = '';
   o.chaflan = $('usar_chaflan').checked ? 0.6 : 0;   // un solo interruptor, sin número que elegir
@@ -1718,8 +1926,8 @@ const marcar = t => {
   return t.length > 1 ? t.slice(0, mitad) + '+' + t.slice(mitad) : t + '+';
 };
 const textoDelDiseno = () =>
-  $({ organizador: 'org_texto', cuadro: 'cua_familia',
-      marca: 'mar_texto' }[$('tipo').value] || 'texto').value.trim();
+  $({ organizador: 'org_texto', cuadro: 'cua_familia', marca: 'mar_texto',
+      torta: 'tor_nombre' }[$('tipo').value] || 'texto').value.trim();
 
 async function generarArchivos() {
   const msg = $('msg'); msg.className = ''; msg.textContent = '';
@@ -1770,12 +1978,14 @@ async function generarArchivos() {
     if (!r.ok) throw new Error(d.error || 'No se pudieron generar');
     generacion = { id: d.id, firma };
     resumen = d.resumen;
-    pintarCupo();
     mostrarResultado(d.id, d.texto);
-    conMarca = !!d.con_marca;
+    // el servidor dice si AÚN queda licencia: así, al gastar la última, la pantalla pasa
+    // sola al modo "texto marcado" sin tener que recargar
+    conMarca = !d.con_licencia;
     pintarCupo();
     msg.textContent = d.con_marca ? 'Archivos listos, con el texto marcado.'
-                                  : 'Listo: se descontó 1 de tu licencia.';
+      : conMarca ? 'Listo: era tu última generación. Las próximas saldrán con el texto marcado.'
+      : 'Listo: se descontó 1 de tu licencia.';
   } catch (e) {
     msg.className = 'err'; msg.textContent = e.message;
   } finally { $('generar-archivos').disabled = false; }
@@ -1837,6 +2047,9 @@ function aplicarParametros(p) {
   for (const k of CAMPOS) if (k in p) $(k)[$(k).type === 'checkbox' ? 'checked' : 'value'] = p[k];
   $('usar_inicial').checked = !!(p.mar_inicial || '').trim();
   $('usar_nombre').checked = !!(p.mar_texto || '').trim();
+  $('usar_tor_nombre').checked = !!(p.tor_nombre || '').trim();
+  $('usar_tor_palabra').checked = !!(p.tor_palabra || '').trim();
+  $('usar_tor_numero').checked = !!(p.tor_numero || '').trim();
   $('usar_adorno').checked = !!p.adorno;        // vacío = sin adorno / sin patrón
   $('usar_patron').checked = !!p.patron;
   // si venían vacíos (adorno o patrón apagados), se deja uno puesto por si los encienden
@@ -1867,7 +2080,8 @@ for (const k of CAMPOS) {
   el.addEventListener(suelta ? 'change' : 'input', pronto);
 }
 // las casillas que solo existen en la pantalla (no viajan al servidor) también redibujan
-['usar_adorno', 'usar_patron', 'usar_chaflan', 'usar_inicial', 'usar_nombre']
+['usar_adorno', 'usar_patron', 'usar_chaflan', 'usar_inicial', 'usar_nombre',
+ 'usar_tor_nombre', 'usar_tor_palabra', 'usar_tor_numero']
   .forEach(k => $(k).addEventListener('change', pronto));
 document.querySelectorAll('input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') generar(); }));
 
@@ -1888,7 +2102,7 @@ const rutaSvg = (tipo, n) => n ? '/api/svg/' + tipo + '/' + n.split('/').map(enc
 // ---------- biblioteca de dibujos: todos ven los de la carpeta común y, además, los de
 // la suya propia (adornos/llavero, adornos/cuadro...), por si algún día hay exclusivos.
 const CARPETA_SVG = { nombre: 'llavero', organizador: 'organizador',
-                      cuadro: 'cuadro', marca: 'marcapaginas' };
+                      cuadro: 'cuadro', marca: 'marcapaginas', torta: 'topper' };
 const bonito = n => n.split('/').pop().replace(/\.svg$/i, '').replace(/[_-]+/g, ' ');
 
 function listaSvg(clase) {
@@ -2037,7 +2251,8 @@ const htmlFuentes = `<optgroup label="De la carpeta fuentes">${opcionesFuentes(c
                     `<optgroup label="Instaladas en el equipo">${opcionesFuentes(cfg.fuentes.sistema)}</optgroup>`;
 $('fuente_inicial').innerHTML = $('fuente_texto').innerHTML =
   $('org_fuente').innerHTML = $('cua_fuente').innerHTML =
-  $('mar_fuente').innerHTML = $('mar_fuente_inicial').innerHTML = htmlFuentes;
+  $('mar_fuente').innerHTML = $('mar_fuente_inicial').innerHTML =
+  $('tor_fuente').innerHTML = htmlFuentes;
 aplicarParametros(cfg.defaults);
 try {                       // ¿veníamos de crear la cuenta? se recupera lo que había
   const guardado = localStorage.getItem(CAJON);

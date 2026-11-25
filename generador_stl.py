@@ -5,7 +5,8 @@ Monkeds Letter: genera 3MF a color (una pieza por filamento) de cuatro diseños 
     1. llavero      letra inicial con borde + texto en tres niveles de relieve
     2. organizador  cuerpo con la forma del nombre, portamóvil, vaso y bandeja
     3. cuadro       placa de pared para las llaves, con un gancho por nombre
-    4. marcapáginas lámina con nombre, letra grande y un icono arriba
+    4. marcapáginas lámina con nombre, letra grande y un icono
+    5. torta        topper para clavar en la tarta: nombre, palabra, número y adornos arriba
 
 Este archivo es la fachada: reparte el trabajo entre los módulos de cada diseño y ofrece
 la línea de órdenes. La geometría vive en comun.py y en diseno_*.py.
@@ -38,10 +39,12 @@ from diseno_cuadro import construir_cuadro
 from diseno_llavero import _construir_llavero
 from diseno_marca import construir_marca
 from diseno_organizador import construir_organizador
+from diseno_torta import construir_torta
 from parametros import MAX_LETRAS, Parametros, parametros_desde_dict  # noqa: F401
 
 DISENOS = {"nombre": _construir_llavero, "organizador": construir_organizador,
-           "cuadro": construir_cuadro, "marca": construir_marca}
+           "cuadro": construir_cuadro, "marca": construir_marca,
+           "torta": construir_torta}
 
 
 def construir_con_analisis(a: Parametros):

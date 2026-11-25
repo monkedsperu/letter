@@ -651,6 +651,54 @@ for _mal, _dice in (({"mar_texto": " ", "mar_inicial": "", "mar_adorno": False},
     except ValueError as e:
         assert _dice in str(e), (e, _dice)
 
+# --------------------------------------------------- el topper de tarta
+topper, datos_topper = gen.construir_con_analisis(gen.Parametros(tipo="torta"))
+piezas_topper = [n for n, _, _ in topper]
+assert piezas_topper[:4] == ["Placa", "Nombre", "Palabra", "Numero"], piezas_topper
+assert any(n.startswith("Adorno") for n in piezas_topper), piezas_topper
+assert all(m.is_watertight and m.volume > 0 for _, _, m in topper), piezas_topper
+assert len(datos_topper["colores"]) <= 4, datos_topper["colores"]
+# todo plano y en una sola pieza, con el palo colgando por debajo del texto
+_placa_t = [m for n, _, m in topper if n == "Placa"][0]
+_letras_t = trimesh.util.concatenate(
+    [m for n, _, m in topper if n in ("Nombre", "Palabra", "Numero")])
+assert abs(_placa_t.bounds[0][2]) < 1e-6, "la placa no apoya en la mesa"
+assert _placa_t.bounds[0][1] < _letras_t.bounds[0][1] - 50, "el palo no baja lo suficiente"
+assert not [v for v in datos_topper["avisos"] if "trozos sueltos" in v], datos_topper["avisos"]
+# el número va a la derecha del nombre y más grande
+_sin_num = gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_numero=""))[0]
+_ancho_con = _letras_t.extents[0]
+_ancho_sin = trimesh.util.concatenate(
+    [m for n, _, m in _sin_num if n in ("Nombre", "Palabra")]).extents[0]
+assert _ancho_con > _ancho_sin + 20, (_ancho_con, _ancho_sin)
+# la palabra puede ir arriba o abajo, y se nota en dónde empieza el bloque
+_abajo = [m for n, _, m in topper if n == "Palabra"][0].bounds[0][1]
+_arriba = [m for n, _, m in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_palabra_arriba=True))[0] if n == "Palabra"][0].bounds[0][1]
+assert _arriba > _abajo + 10, (_abajo, _arriba)
+# hasta tres adornos, cada uno con su sitio
+_tres = gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_ad2=True, tor_ad3=True))[0]
+assert len({n.split(".")[0] for n, _, _ in _tres if n.startswith("Adorno")}) == 3, _tres
+# cada texto es su pieza y se mueve por su cuenta: el nombre a la derecha no arrastra
+# ni al número ni a la palabra
+_movido_t = {n: m for n, _, m in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_nombre_x=15, tor_nombre_y=6))[0]}
+_quieto_t = {n: m for n, _, m in topper}
+assert abs(_movido_t["Nombre"].centroid[0] - _quieto_t["Nombre"].centroid[0] - 15) < 0.6
+assert abs(_movido_t["Nombre"].centroid[1] - _quieto_t["Nombre"].centroid[1] - 6) < 0.6
+assert abs(_movido_t["Numero"].centroid[0] - _quieto_t["Numero"].centroid[0]) < 0.6
+# y los tres textos son opcionales: con solo un adorno el topper sigue saliendo
+_solo_ad = [n for n, _, _ in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_nombre="", tor_palabra="", tor_numero=""))[0]]
+assert _solo_ad[0] == "Placa" and not {"Nombre", "Palabra", "Numero"} & set(_solo_ad), _solo_ad
+
+# y el palo tiene que caer dentro del topper
+try:
+    gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_palo_x=300))
+    raise AssertionError("un palo fuera del topper debería rechazarse")
+except ValueError as e:
+    assert "fuera del topper" in str(e), e
+
 # --------------------------------------------------- un STL por color (Snapmaker y demás)
 import io as _io            # noqa: E402
 import zipfile as _zip      # noqa: E402
@@ -709,11 +757,16 @@ _pantalla = como(_inv["id"]).get("/login")
 assert _pantalla.status_code == 200 and b"/registro" in _pantalla.data, _pantalla.status_code
 assert como(ana).get("/login").status_code == 302, "con cuenta no hace falta volver ahí"
 
-# toda cuenta nueva nace con una generación de regalo: esa sale limpia
-_regalo = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
-                                                        "cua_familia": "Medina"}).get_json()
-assert _regalo["con_marca"] is False and _regalo["texto"] == "Medina", _regalo
-assert _regalo["resumen"]["restantes"] == 0, _regalo["resumen"]
+# toda cuenta nueva nace con unas cuantas generaciones de regalo: esas salen limpias
+_regalos = aplicacion.REGALO_DE_BIENVENIDA
+for _i in range(_regalos):
+    _r = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
+                                                       "cua_familia": "Medina"}).get_json()
+    assert _r["con_marca"] is False and _r["texto"] == "Medina", (_i, _r)
+    assert _r["resumen"]["restantes"] == _regalos - _i - 1, (_i, _r["resumen"])
+    # al gastar la última, la respuesta ya avisa de que no queda licencia: la pantalla
+    # cambia de modo en el acto, sin recargar
+    assert _r["con_licencia"] is (_i < _regalos - 1), (_i, _r["con_licencia"])
 # y a partir de ahí, mientras no le den licencia, el texto sale marcado y no cuesta nada
 _sin = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
                                                      "cua_familia": "Medina"}).get_json()
@@ -733,4 +786,4 @@ assert mal.status_code == 400 and "vaso" in mal.get_json()["error"], mal.get_jso
 raro = como(ana).post("/api/preview", json={"tipo": "nave espacial"})
 assert raro.status_code == 400, raro.get_json()
 
-print("OK: plantillas, contraseñas y los cuatro diseños (llavero, organizador, cuadro y marcapáginas).")
+print("OK: plantillas, contraseñas y los cinco diseños (llavero, organizador, cuadro, marcapáginas y topper).")

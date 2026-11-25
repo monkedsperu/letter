@@ -31,13 +31,15 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
 4) USUARIOS Y LICENCIAS
    - CUALQUIERA SE CREA SU CUENTA desde la pantalla de entrada: usuario, correo y
      contraseña. Un correo, una cuenta. Cada cuenta nueva nace con una LICENCIA DE
-     BIENVENIDA de 1 generación -sin caducidad y con la nota "regalo de bienvenida", así se
-     reconoce en Administración-, para que pueda bajarse un archivo limpio y probarlo de
-     verdad. Gastada esa, sigue pudiendo generar, pero el texto sale MARCADO (partido con
+     BIENVENIDA de 3 generaciones -sin caducidad y con la nota "regalo de bienvenida", así
+     se reconoce en Administración-, para que pueda bajarse archivos limpios y probarlo de
+     verdad. Gastadas esas, sigue pudiendo generar, pero el texto sale MARCADO (partido con
      un "+" por la mitad) y no se le descuenta nada. Antes de generar se le avisa, con SU
      texto de ejemplo -"Monkeds" saldrá como "Monk+eds"- y con el correo al que pedir
      licencia; al terminar, el aviso se repite junto a los archivos.
-     El regalo se cambia con REGALO_DE_BIENVENIDA, en app.py.
+     El regalo se cambia con REGALO_DE_BIENVENIDA, en app.py. La respuesta de cada
+     generación dice si TODAVÍA queda licencia, así que al gastar la última la pantalla
+     pasa sola al modo "texto marcado" sin tener que recargar.
    - LOS INVITADOS ya NO generan: diseñan y ven la vista previa sin límite, y al pulsar
      "Generar" se les invita a crearse la cuenta (el botón incluso lo dice). Un invitado SÍ
      puede abrir /login -es la única manera de registrarse- y, al irse a crear la cuenta, su
@@ -353,7 +355,28 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
    detrás, así que al pegar cae sola en su sitio. Como la lámina es fina, el hueco por
    defecto es de 1,2 mm: si no cabe en el grueso, avisa y no genera.
 
-14) FORMATOS QUE SE DESCARGAN
+14) EL QUINTO DISEÑO: TOPPER DE TARTA
+   Para clavar en la tarta. Lleva el NOMBRE en grande; una PALABRA que lo acompaña -"cumple",
+   "feliz cumpleaños"- encima o debajo; y un NÚMERO a la derecha, más grande que el nombre,
+   para la edad. Los TRES son opcionales, cada uno con su interruptor: puedes hacer un topper
+   solo con el número, solo con la palabra o incluso solo con adornos. Hasta TRES ADORNOS más,
+   cada uno con su dibujo, su alto, su giro, su color y su sitio (se colocan contando desde el
+   centro del texto).
+   Las CUATRO PIEZAS -nombre, palabra, número y cada adorno- se arrastran en la vista 3D, o se
+   mueven a mano con sus casillas "Moverlo". El programa primero las coloca solo -la palabra
+   encima o debajo del nombre, el número a su derecha- y encima aplica lo que hayas movido tú,
+   así que mover el nombre no empuja al número: cada una va por su cuenta.
+   La PLACA no se dibuja: sale de engordar las letras y los adornos y fundirlo todo, que es
+   lo que mantiene unidas las letras de una fuente manuscrita. Si algo queda demasiado lejos
+   y el topper sale en trozos, avisa: se arregla subiendo el borde o el suavizado.
+   El PALO baja de la placa con la punta en pico. Puede ser uno o dos -con dos no se gira en
+   la tarta-, y se le cambia largo, ancho y posición. No se queda pegado al borde: sube hasta
+   media placa por dentro de la silueta, así que queda fundido con ella y no colgando de un
+   pico (es del mismo color, no se ve). Si lo mueves fuera del topper, avisa.
+   Todo es plano: se imprime tumbado y sin soportes, y también admite "imprimir cada color
+   por separado".
+
+15) FORMATOS QUE SE DESCARGAN
    3MF a color       un objeto por filamento con su color dentro. Es lo que leen Bambu
                      Studio y Orca: abres el archivo y te piden asignar un filamento a cada
                      color. Lo normal si tienes AMS.
@@ -367,13 +390,13 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
                      separado" activado, que les pone hueco y espiga para que encajen).
    Los tres salen de la misma generación y no gastan cupo al volver a bajarlos.
 
-15) CAPAS DEL MODELO (diseño de llavero)
+16) CAPAS DEL MODELO (diseño de llavero)
    Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).
    Cada capa es maciza y de un solo color. El 3MF lleva los colores en "m:colorgroup",
    que Bambu Studio / Orca leen para pedirte asignar un filamento a cada uno.
    El STL es una sola malla sin colores.
 
-16) USO POR CONSOLA (sin servidor, para pruebas; solo el diseño de llavero)
+17) USO POR CONSOLA (sin servidor, para pruebas; solo el diseño de llavero)
    python generador_stl.py --inicial M --texto "Matias" --salida salida.3mf
    Opciones: --patron, --tam-patron, --separacion-patron, --semilla, --sin-girar-patron,
              --adorno, --tam-adorno, --adorno-x, --adorno-y, --segundo-adorno libre|espejo|ninguno,
@@ -384,10 +407,10 @@ ARCHIVOS
    app.py             servidor web (usuarios, licencias, API)
    datos.py           base de datos SQLite
    generador_stl.py   fachada del motor: reparte por diseño y da la línea de órdenes
-   parametros.py      todos los parámetros de los cuatro diseños, con su valor por defecto
+   parametros.py      todos los parámetros de los cinco diseños, con su valor por defecto
    comun.py           lo compartido: fuentes, SVG, patrones, adornos, geometría, exportación
-   diseno_llavero.py / diseno_organizador.py / diseno_cuadro.py / diseno_marca.py
-                      un archivo por diseño, cada uno con su construir_*
+   diseno_llavero.py / diseno_organizador.py / diseno_cuadro.py / diseno_marca.py /
+   diseno_torta.py    un archivo por diseño, cada uno con su construir_*
    pantalla.html      generador 3D
    generaciones.html  historial del usuario · licencias.html detalle de sus licencias
    login.html         entrar · admin.html panel de administración (pestañas: usuarios y

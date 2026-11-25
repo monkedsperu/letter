@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 118" width="120" height="118">
-  <!-- Gatito sentado: silueta de un color y collar de otro. -->
-  <path fill="#e8705a" d="M40 28 L35 3 L62 21 Z"/>
-  <path fill="#e8705a" d="M80 28 L85 3 L58 21 Z"/>
-  <ellipse fill="#e8705a" cx="60" cy="45" rx="28" ry="25"/>
-  <path fill="#e8705a" d="M38 58 C27 76 24 94 30 112 L90 112 C96 94 93 76 82 58 Z"/>
-  <path fill="#e8705a" d="M88 110 C108 107 114 88 103 80 C101 93 96 102 85 105 Z"/>
-  <rect fill="#f2c14e" x="40" y="63" width="40" height="9" rx="4.5"/>
-</svg>
