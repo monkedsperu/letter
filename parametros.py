@@ -36,7 +36,7 @@ class Parametros:
     margen_patron: float = 1.0     # distancia mínima al texto y al borde de la letra (mm)
     semilla: int = 1               # cambia el reparto al azar
     girar_patron: bool = True      # giro libre; False = solo leve inclinación (ej. arbolitos derechos)
-    adorno: str = "horn.svg"       # archivo en "adornos"; "" = sin adorno
+    adorno: str = "cuernos.svg"       # archivo en "adornos"; "" = sin adorno
     tam_adorno: float = 40.0       # medida mayor del adorno (mm)
     adorno_x: float = -42.0        # centro del adorno en mm desde el centro de la letra
     adorno_y: float = 38.0
@@ -49,9 +49,12 @@ class Parametros:
     adorno_detras: bool = False    # True = el adorno pasa por detrás y la letra lo corta
     # El SVG solo sirve para separar las formas: el color sale de la paleta del llavero,
     # así nunca se pasa de 4 filamentos. Cada grupo va a "letra", "texto" o "extra".
-    adorno_c1: str = "extra"
-    adorno_c2: str = "letra"
-    adorno_c3: str = "texto"
+    adorno_c1: str = "auto"
+    adorno_c2: str = "auto"
+    adorno_c3: str = "auto"
+    adorno_tinta1: str = ""      # color a mano de cada forma del dibujo;
+    adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
+    adorno_tinta3: str = ""
     color_adorno: str = "#8a5a33"  # el color "extra", el cuarto del llavero
     # Aro para llavero: anillo plano pegado a la letra, con el grosor del nivel 1
     aro: bool = False
@@ -67,6 +70,9 @@ class Parametros:
     iman_y: float = 0.0
     # Acabado
     chaflan: float = 0.0           # bisel en el canto superior de cada capa (mm); 0 = canto recto
+    aparte: bool = False           # cada nivel se imprime suelto y se pega
+    espiga: float = 1.6            # hondura del hueco donde encaja cada nivel (mm)
+    holgura: float = 0.3           # aire del hueco, por las tolerancias (mm)
 
     # ---------------- Diseño 2: organizador de escritorio ----------------
     # El cuerpo es un prisma con la silueta del nombre; los módulos se restan (vaso, ranura)
@@ -91,7 +97,8 @@ class Parametros:
     org_hueco: float = 4.0         # hondura del hueco donde encaja el nombre suelto (mm)
     # Adorno: un SVG de la carpeta "adornos" puesto en la cara, al lado del nombre
     org_adorno: bool = False
-    org_adorno_svg: str = "desktop/lapiz.svg"
+    org_adorno_svg: str = "pincel.svg"
+    org_adorno_borde: float = 0.0       # borde propio del adorno (mm); va aparte del texto
     org_adorno_alto: float = 52.0  # alto del adorno (mm)
     org_adorno_x: float = 107.0    # % del ancho del nombre; pasado de 100 se sale por la derecha
     org_adorno_y: float = 8.0      # altura de su base, desde la mesa (mm)
@@ -99,9 +106,12 @@ class Parametros:
     # Como en el llavero: el SVG solo separa las formas y el color sale de la paleta de la
     # pieza, así que nunca se pasa de 4 filamentos. Cada grupo va a cuerpo, nombre, borde
     # o al color extra.
-    org_adorno_c1: str = "extra"
-    org_adorno_c2: str = "nombre"
-    org_adorno_c3: str = "borde"
+    org_adorno_c1: str = "auto"
+    org_adorno_c2: str = "auto"
+    org_adorno_c3: str = "auto"
+    org_adorno_tinta1: str = ""      # color a mano de cada forma del dibujo;
+    org_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
+    org_adorno_tinta3: str = ""
     org_color_adorno: str = "#e8b43a"
     org_holgura: float = 0.3       # aire alrededor del nombre para que entre en su hueco (mm)
     # Soporte para el móvil: ranura en lo alto del cuerpo. Medidas de un móvil corriente con funda.
@@ -151,14 +161,18 @@ class Parametros:
     cua_color_integrantes: str = "#d63a2f"
     # Adorno: un SVG de la carpeta "adornos", al lado o encima del apellido
     cua_adorno: bool = True
-    cua_adorno_svg: str = "hogar/casa.svg"
+    cua_adorno_svg: str = "house.svg"
     cua_adorno_alto: float = 38.0
     cua_adorno_x: float = 74.0          # % del ancho del apellido
     cua_adorno_y: float = -8.0          # mm desde lo alto del apellido; negativo = lo monta
     cua_adorno_giro: float = 0.0
-    cua_adorno_c1: str = "familia"      # cada forma del dibujo, a un color distinto
-    cua_adorno_c2: str = "extra"
-    cua_adorno_c3: str = "placa"
+    cua_adorno_c1: str = "auto"         # "auto": manda el dibujo si trae color
+                                        # de verdad y son pocos; si no, la paleta
+    cua_adorno_c2: str = "auto"
+    cua_adorno_c3: str = "auto"
+    cua_adorno_tinta1: str = ""      # color a mano de cada forma del dibujo;
+    cua_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
+    cua_adorno_tinta3: str = ""
     cua_color_adorno: str = "#e8872b"
     # Patrón: motivos repartidos DENTRO del apellido, en relieve sobre las letras
     cua_patron: bool = True
@@ -175,9 +189,9 @@ class Parametros:
     cua_ganchos: bool = True
     cua_gancho_largo: float = 20.0
     cua_gancho_grueso: float = 6.0
-    cua_gancho_angulo: float = 25.0     # inclinación hacia arriba (grados)
+    cua_gancho_curva: float = 60.0      # cuánto se arquea el gancho hacia arriba (grados)
     cua_gancho_baja: float = 9.0        # cuánto baja respecto al pie del nombre (mm)
-    cua_color_gancho: str = "#d63a2f"
+    cua_color_gancho: str = "#f2f2f2"   # a juego con el apellido
     # Agujeros para colgar el cuadro
     cua_aparte: bool = False            # cada color se imprime suelto y se pega
     cua_espiga: float = 3.0             # hondura del hueco donde encaja cada pieza (mm)
@@ -204,18 +218,33 @@ class Parametros:
     mar_relieve: float = 1.2            # cuánto sobresalen las letras y el icono
     mar_margen: float = 4.0             # lámina que sobra alrededor de lo que sobresale
     mar_suave: float = 4.0              # funde el contorno en una sola forma
+    mar_estilo: str = "solido"          # solido | ranura (abierta) | calado (patrón)
+    mar_ranura_ancho: float = 2.5       # el hueco que rodea la lengüeta (mm)
+    mar_ranura_centro: float = 10.0     # ancho de la lengüeta, la que engancha la página
+    mar_patron_svg: str = "copos_y_puntos.svg"
+    mar_tam_patron: float = 7.0         # tamaño de cada motivo del calado (mm)
+    mar_separacion_patron: float = 4.0
+    mar_semilla: int = 1
+    mar_tope: bool = True               # murito que frena el marcapáginas en la página
+    mar_tope_alto: float = 5.0          # lo que sobresale (mm)
+    mar_tope_grueso: float = 3.0        # lo que mide a lo largo de la lámina (mm)
     mar_color_cuerpo: str = "#e8a07a"
     mar_color_texto: str = "#fdf6ee"
 
     mar_adorno: bool = True
-    mar_adorno_svg: str = "marcapaginas/hoja.svg"
-    mar_adorno_alto: float = 26.0
-    mar_adorno_x: float = 18.0          # desde el centro de la letra grande (mm)
-    mar_adorno_y: float = 12.0          # arrástralo también en la vista 3D
+    mar_adorno_svg: str = "planta.svg"
+    mar_adorno_alto: float = 18.0
+    mar_adorno_x: float = 20.0          # desde el centro de la letra grande (mm)
+    mar_adorno_y: float = 15.0          # arrástralo también en la vista 3D
     mar_adorno_giro: float = 0.0
-    mar_adorno_c1: str = "svg"          # "svg" = el color que trae el dibujo
-    mar_adorno_c2: str = "svg"
-    mar_adorno_c3: str = "svg"
+    mar_adorno_detras: bool = False     # True = el icono pasa por detrás y la letra lo corta
+    mar_adorno_aire: float = 0.8        # hueco que deja el que manda alrededor del otro (mm)
+    mar_adorno_c1: str = "auto"         # "svg" = siempre el color del dibujo
+    mar_adorno_c2: str = "auto"
+    mar_adorno_c3: str = "auto"
+    mar_adorno_tinta1: str = ""      # color a mano de cada forma del dibujo;
+    mar_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
+    mar_adorno_tinta3: str = ""
     mar_color_adorno: str = "#9ec77a"
 
     mar_aparte: bool = False            # cada color se imprime suelto y se pega

@@ -176,23 +176,106 @@ sin_borde, _ = gen.construir_con_analisis(gen.Parametros(tipo="organizador", org
 assert [n for n, _, _ in sin_borde] == ["Cuerpo", "Nombre"], sin_borde
 # el adorno se parte en las formas que traiga el SVG, cada una con el color que se le
 # asigne de la paleta de la pieza: por eso nunca se pasa de 4 filamentos
+_tres = os.path.join(gen.CARPETA_ADORNOS, "_tres_colores.svg")
+with open(_tres, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 10">'
+              '<rect fill="#c0392b" x="0" y="0" width="10" height="10"/>'
+              '<rect fill="#2ca9bc" x="10" y="0" width="10" height="10"/>'
+              '<rect fill="#e8b43a" x="20" y="0" width="10" height="10"/></svg>')
 con_adorno, datos_adorno = gen.construir_con_analisis(
-    gen.Parametros(tipo="organizador", org_adorno=True))
+    gen.Parametros(tipo="organizador", org_adorno=True, org_adorno_svg="_tres_colores.svg"))
 nombres_piezas = [n for n, _, _ in con_adorno]
 assert nombres_piezas[:2] == ["Cuerpo", "Nombre"] and nombres_piezas[-1] == "Borde", nombres_piezas
 assert datos_adorno["grupos_adorno"] == 3, datos_adorno["grupos_adorno"]
 assert sum(n.startswith("Adorno") for n in nombres_piezas) == 3, nombres_piezas
 assert len(datos_adorno["colores"]) == 4, datos_adorno["colores"]
 
+# el borde del adorno es cosa suya: por defecto no lleva, aunque el texto sí
+_sin = gen.construir_con_analisis(gen.Parametros(
+    tipo="organizador", org_adorno=True, org_borde=3))[0]
+_con = gen.construir_con_analisis(gen.Parametros(
+    tipo="organizador", org_adorno=True, org_borde=3, org_adorno_borde=2.5))[0]
+_borde_de = lambda ps: [m for n_, _, m in ps if n_ == "Borde"][0].volume
+assert _borde_de(_con) > _borde_de(_sin) + 500, (_borde_de(_sin), _borde_de(_con))
+_adorno_de = lambda ps: [m for n_, _, m in ps if n_.startswith("Adorno")][0].volume
+assert abs(_adorno_de(_con) - _adorno_de(_sin)) < 1, "el adorno no debería cambiar"
+# y puede llevarlo él aunque el texto no lo lleve
+_solo = gen.construir_con_analisis(gen.Parametros(
+    tipo="organizador", org_adorno=True, org_borde=0, org_adorno_borde=2.5))[0]
+assert "Borde" in [n_ for n_, _, _ in _solo], _solo
+
 # y si todas las formas van al mismo sitio, no aparece un filamento de más
 de_un_color = gen.construir_con_analisis(gen.Parametros(
-    tipo="organizador", org_adorno=True, org_adorno_c1="nombre", org_adorno_c2="nombre",
-    org_adorno_c3="nombre"))[1]
+    tipo="organizador", org_adorno=True, org_adorno_svg="_tres_colores.svg",
+    org_adorno_c1="nombre", org_adorno_c2="nombre", org_adorno_c3="nombre"))[1]
 assert len(de_un_color["colores"]) == 3, de_un_color["colores"]
 
-# el adorno se lee de una subcarpeta, y ningún nombre puede salirse de la carpeta de adornos
-assert "desktop/lapiz.svg" in gen.adornos_disponibles(), gen.adornos_disponibles()
-assert gen.svg_dentro_de(gen.CARPETA_ADORNOS, "desktop/lapiz.svg")
+# "auto": un dibujo con pocos colores DE VERDAD se respeta tal cual; uno de tres, o en
+# blanco y negro, se pinta con la paleta de la pieza para no inflar los filamentos
+_dos = os.path.join(gen.CARPETA_ADORNOS, "_dos_colores.svg")
+with open(_dos, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 10">'
+              '<rect fill="#2ca9bc" x="0" y="0" width="10" height="10"/>'
+              '<rect fill="#e02d2d" x="10" y="0" width="10" height="10"/></svg>')
+# un contorno dibujado con trazo también cuenta: es una forma más, con su color
+_trazo = os.path.join(gen.CARPETA_ADORNOS, "_con_trazo.svg")
+with open(_trazo, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+              '<circle cx="10" cy="10" r="7" fill="#2ca9bc" stroke="#000000"'
+              ' stroke-width="2"/></svg>')
+assert [c for c, _ in gen.grupos_adorno(_trazo)] == ["#2ca9bc", "#000000"],     gen.grupos_adorno(_trazo)
+# ...pero un contorno de pelo, que al tamaño al que se imprime saldría más fino que la
+# boquilla, se ignora en vez de gastarle un filamento
+_pelo = os.path.join(gen.CARPETA_ADORNOS, "_pelo.svg")
+with open(_pelo, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+              '<circle cx="10" cy="10" r="8" fill="#2ca9bc" stroke="#000000"'
+              ' stroke-width="0.12"/></svg>')
+assert [c for c, _ in gen.grupos_adorno(_pelo, mm_alto=30)] == ["#2ca9bc"], "no ignoró el pelo"
+assert [c for c, _ in gen.grupos_adorno(_trazo, mm_alto=30)] == ["#2ca9bc", "#000000"],     "se cargó un contorno que sí se imprime"
+os.remove(_trazo), os.remove(_pelo)
+
+_negro = os.path.join(gen.CARPETA_ADORNOS, "_un_negro.svg")
+with open(_negro, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+              '<rect fill="#000000" x="0" y="0" width="10" height="10"/></svg>')
+try:
+    _suyos = gen.construir_con_analisis(gen.Parametros(
+        tipo="organizador", org_adorno=True, org_adorno_svg="_dos_colores.svg"))[1]["colores"]
+    assert "#2ca9bc" in _suyos and "#e02d2d" in _suyos, ("no respetó el dibujo", _suyos)
+    _paleta = gen.construir_con_analisis(gen.Parametros(
+        tipo="organizador", org_adorno=True, org_adorno_svg="_un_negro.svg"))[1]["colores"]
+    assert "#000000" not in [c.lower() for c in _paleta], ("un icono negro debe ir a la "
+                                                           "paleta", _paleta)
+    _mandado = gen.construir_con_analisis(gen.Parametros(
+        tipo="organizador", org_adorno=True, org_adorno_svg="_dos_colores.svg",
+        org_adorno_c1="nombre", org_adorno_c2="nombre"))[1]["colores"]
+    assert "#2ca9bc" not in _mandado, ("eligiendo a mano manda la paleta", _mandado)
+    # y el color de cada forma se puede cambiar una a una, sin tocar las demás
+    _retocado = gen.construir_con_analisis(gen.Parametros(
+        tipo="organizador", org_adorno=True, org_adorno_svg="_dos_colores.svg",
+        org_adorno_tinta2="#1b7f4b"))[1]
+    assert _retocado["colores_adorno"] == ["#2ca9bc", "#1b7f4b"], _retocado["colores_adorno"]
+    # hasta en un icono de un solo color, que por su cuenta iría a la paleta
+    _negro_a_mano = gen.construir_con_analisis(gen.Parametros(
+        tipo="organizador", org_adorno=True, org_adorno_svg="_un_negro.svg",
+        org_adorno_tinta1="#e8872b"))[1]
+    assert _negro_a_mano["colores_adorno"] == ["#e8872b"], _negro_a_mano["colores_adorno"]
+finally:
+    os.remove(_tres), os.remove(_dos), os.remove(_negro)
+
+# los dibujos se leen también de las subcarpetas -una por diseño, para los exclusivos- y
+# ningún nombre puede salirse de la carpeta de adornos
+_suelto = os.path.join(gen.CARPETA_ADORNOS, "llavero", "_prueba.svg")
+os.makedirs(os.path.dirname(_suelto), exist_ok=True)
+with open(_suelto, "w", encoding="utf-8") as _fh:
+    _fh.write('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">'
+              '<rect fill="#ff0000" x="1" y="1" width="8" height="8"/></svg>')
+try:
+    assert "llavero/_prueba.svg" in gen.adornos_disponibles(), gen.adornos_disponibles()
+    assert gen.svg_dentro_de(gen.CARPETA_ADORNOS, "llavero/_prueba.svg")
+finally:
+    os.remove(_suelto)
 for fuga in ("../app.py", "..\app.py", "/etc/passwd", "desktop/../../app.py"):
     assert gen.svg_dentro_de(gen.CARPETA_ADORNOS, fuga) is None, fuga
 
@@ -206,7 +289,23 @@ for nombre_pieza, _, malla in piezas[1:]:
     assert abs(grueso - (suelto.org_relieve + suelto.org_hueco)) < 1e-6, (nombre_pieza, grueso)
     assert malla.bounds[1][1] < cuerpo_suelto.bounds[0][1], (nombre_pieza, "se pisa con el cuerpo")
     assert abs(malla.bounds[0][2]) < 1e-6, (nombre_pieza, "no apoya en la mesa")
-assert any("aparte" in s for s in info["avisos"]), info["avisos"]
+# el nombre y su borde son colores distintos: salen apartados, no uno dentro del otro
+_nom = [m for n, _, m in piezas if n == "Nombre"][0]
+_bor = [m for n, _, m in piezas if n == "Borde"][0]
+assert _bor.bounds[0][0] > _nom.bounds[1][0] or _nom.bounds[0][0] > _bor.bounds[1][0], \
+    "el nombre y su borde salen pegados: no se pueden imprimir por separado"
+assert any("pégalo en su hueco" in s for s in info["avisos"]), info["avisos"]
+
+# los cuatro diseños ofrecen lo mismo: imprimir cada color suelto, con su hueco de encaje
+for _tipo, _flag in (("nombre", "aparte"), ("organizador", "org_aparte"),
+                     ("cuadro", "cua_aparte"), ("marca", "mar_aparte")):
+    _piezas, _info = gen.construir_con_analisis(gen.Parametros(tipo=_tipo, **{_flag: True}))
+    assert any("pégalo en su hueco" in s for s in _info["avisos"]), (_tipo, _info["avisos"])
+    assert all(m.is_watertight for _, _, m in _piezas), _tipo
+    _base = _piezas[0][2]
+    assert all(abs(m.bounds[0][2]) < 1e-6 for _, _, m in _piezas), (_tipo, "algo no apoya")
+    _entera = gen.construir_con_analisis(gen.Parametros(tipo=_tipo, **{_flag: False}))[0][0][2]
+    assert _base.volume < _entera.volume, (_tipo, "la pieza de abajo no se vació")
 
 # y el cuerpo lleva cajeada la silueta del nombre, con su holgura: lo que se quita tiene que
 # ser el área del nombre engordado por la hondura del hueco
@@ -284,6 +383,32 @@ assert all(g.bounds[1][2] > placa_3.bounds[1][2] + 10 for g in ganchos), "no sob
 for i, g in enumerate(ganchos, 1):
     suyo = [m for n, _, m in cuadro if n == f"Nombre {i}"][0]
     assert abs(g.centroid[0] - suyo.centroid[0]) < 12, ("gancho descolocado", i)
+# el gancho es una C: cuanto más cierra, más se curva hacia arriba, y sale del mismo color
+# que la palabra de arriba
+_poco = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_gancho_curva=60))[0]
+_mucho = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_gancho_curva=180))[0]
+_alto_de = lambda ps: [m for n_, _, m in ps if n_ == "Gancho 1"][0].extents[1]
+assert _alto_de(_mucho) > _alto_de(_poco) + 8, (_alto_de(_poco), _alto_de(_mucho))
+_color_gancho = [c for n_, c, _ in cuadro if n_ == "Gancho 1"][0]
+_color_familia = [c for n_, c, _ in cuadro if n_ == "Familia"][0]
+assert _color_gancho == _color_familia, (_color_gancho, _color_familia)
+# y como aguanta el peso de las llaves, se clava más hondo que las letras, pero sin
+# dejar la placa sin suelo
+import diseno_cuadro as _dc   # noqa: E402
+
+assert _dc.hondura_del_gancho(3.0, 5.0, 0.3) > 3.0, "el gancho debería entrar más hondo"
+assert _dc.hondura_del_gancho(3.0, 5.0, 0.3) + 0.3 <= 5.0 - _dc.GROSOR_MINIMO + 1e-9, "sin suelo"
+assert _dc.hondura_del_gancho(3.0, 20.0, 0.3) == 7.5, "con placa de sobra, 2,5 veces"
+assert _dc.hondura_del_gancho(0.0, 5.0, 0.3) == 0.0, "pegado a la placa no lleva espiga"
+# suelto se imprime tumbado de lado: la C queda plana sobre la mesa
+_tumbado = [m for n_, _, m in gen.construir_con_analisis(
+    gen.Parametros(tipo="cuadro", cua_aparte=True))[0] if n_ == "Gancho 1"][0]
+assert abs(_tumbado.extents[2] - gen.Parametros().cua_gancho_grueso) < 0.2, _tumbado.extents
+# la pantalla necesita saber el ancho al que se refiere el % del adorno, para arrastrarlo
+assert datos_cuadro["ancho_base"] > 50, datos_cuadro["ancho_base"]
+assert gen.construir_con_analisis(
+    gen.Parametros(tipo="organizador"))[1]["ancho_base"] > 50
+
 # y al arrastrar un nombre, su gancho le sigue
 movido = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_pos="0,0;0,0;30,-20"))[0]
 antes = [m for n, _, m in cuadro if n == "Gancho 3"][0].centroid
@@ -342,8 +467,11 @@ assert abs(por_nombre["Familia"].extents[2] - pegada["Familia"].extents[2] - esp
 assert all(m.is_watertight and m.bounds[0][2] > -0.01 for m in por_nombre.values()), "mal apoyo"
 assert all(abs(m.bounds[0][2]) < 0.01 for n_, m in por_nombre.items() if n_ != "Placa"), \
     "alguna pieza suelta no apoya en la mesa"
-assert por_nombre["Familia"].bounds[1][1] < por_nombre["Placa"].bounds[0][1], \
+assert por_nombre["Familia"].bounds[0][0] > por_nombre["Placa"].bounds[1][0], \
     "las piezas sueltas se solapan con la placa"
+# y cada color va a su sitio: el apellido y los nombres no se pisan entre ellos
+assert por_nombre["Nombre 1"].bounds[0][0] > por_nombre["Familia"].bounds[1][0], \
+    "los colores sueltos siguen pegados unos a otros"
 # el hueco de cada gancho no atraviesa la placa por detrás
 assert por_nombre["Placa"].section(plane_origin=[0, 0, 0.3], plane_normal=[0, 0, 1]), \
     "el hueco del gancho perfora la placa"
@@ -405,10 +533,41 @@ assert any(n.startswith("Icono") for n in piezas_marca), piezas_marca
 assert all(m.is_watertight and m.volume > 0 for _, _, m in marca), piezas_marca
 assert len(datos_marca["colores"]) <= 4, datos_marca["colores"]
 
-# todo plano y apoyado en la mesa: la lámina abajo y el relieve justo encima
+# todo plano y apoyado en la mesa: la lámina abajo y el relieve justo encima. Lo único que
+# sube más es el tope, que va en la misma pieza que la lámina
 _lamina = [m for n, _, m in marca if n == "Lamina"][0]
 _grueso_m, _relieve_m = gen.Parametros().mar_grueso, gen.Parametros().mar_relieve
-assert abs(_lamina.bounds[0][2]) < 1e-6 and abs(_lamina.bounds[1][2] - _grueso_m) < 1e-6
+_tope_alto = gen.Parametros().mar_tope_alto
+assert abs(_lamina.bounds[0][2]) < 1e-6, "la lámina no apoya en la mesa"
+assert abs(_lamina.bounds[1][2] - _grueso_m - _tope_alto) < 1e-6, "el tope no sobresale"
+_sin_tope = [m for n, _, m in gen.construir_con_analisis(
+    gen.Parametros(tipo="marca", mar_tope=False))[0] if n == "Lamina"][0]
+assert abs(_sin_tope.bounds[1][2] - _grueso_m) < 1e-6, "sin tope, la lámina es plana"
+assert _lamina.volume > _sin_tope.volume + 100, "el tope apenas añade material"
+
+# los tres estilos de lámina: entera, con ranura y calada. Las dos últimas le quitan
+# material y ninguna puede partirla en trozos
+for _estilo in ("ranura", "calado"):
+    _l = [m for n, _, m in gen.construir_con_analisis(
+        gen.Parametros(tipo="marca", mar_estilo=_estilo))[0] if n == "Lamina"][0]
+    assert _l.volume < _lamina.volume - 200, (_estilo, _l.volume, _lamina.volume)
+    assert _l.is_watertight, (_estilo, "la lámina salió abierta")
+_ranurada = [m for n_, _, m in gen.construir_con_analisis(
+    gen.Parametros(tipo="marca", mar_estilo="ranura"))[0] if n_ == "Lamina"][0]
+# la lengüeta cuelga de arriba y acaba suelta: a media altura hay tres trozos de material
+# (marco, lengüeta, marco) y cerca del final de la lámina vuelve a haber uno solo
+_corte = lambda y: len(_cortes.mesh_plane(_ranurada, [0, 1, 0], [0, y, 0]).reshape(-1, 3))
+assert _corte(40) > _corte(6) > 0, ("la lengüeta no queda suelta", _corte(40), _corte(6))
+# y lo que partiría la lámina en dos se rechaza en vez de salir roto
+for _mal, _dice in ((dict(mar_estilo="lo que sea"), "solido, ranura o calado"),
+                    (dict(mar_estilo="ranura", mar_ranura_centro=20), "no caben a lo ancho"),
+                    (dict(mar_estilo="ranura", mar_largo=60), "sitio para el tope"),
+                    (dict(mar_estilo="calado", mar_largo=75, mar_tope=False), "sin sitio")):
+    try:
+        gen.construir_con_analisis(gen.Parametros(tipo="marca", **_mal))
+        raise AssertionError(("debería rechazarse", _mal))
+    except ValueError as e:
+        assert _dice in str(e), (e, _mal)
 for _n, _, _m in marca:
     if _n != "Lamina":
         assert abs(_m.bounds[0][2] - _grueso_m) < 1e-6, ("el relieve no apoya en la lámina", _n)
@@ -457,6 +616,19 @@ try:
 except ValueError as e:
     assert "no cabe" in str(e), e
 
+# el icono puede montarse sobre la letra: delante la corta él, detrás lo corta ella
+_encima = dict(tipo="marca", mar_adorno_x=11, mar_adorno_y=7)
+_sueltos = {n_: m.volume for n_, _, m in gen.construir_con_analisis(
+    gen.Parametros(tipo="marca"))[0]}
+_delante = {n_: m.volume for n_, _, m in gen.construir_con_analisis(
+    gen.Parametros(**_encima))[0]}
+_detras = {n_: m.volume for n_, _, m in gen.construir_con_analisis(
+    gen.Parametros(**_encima, mar_adorno_detras=True))[0]}
+assert _delante["Inicial"] < _sueltos["Inicial"] - 50, "delante, el icono corta la letra"
+assert abs(_delante["Icono"] - _sueltos["Icono"]) < 0.5, "y el icono sale entero"
+assert _detras["Icono"] < _sueltos["Icono"] - 50, "detrás, la letra corta el icono"
+assert _detras["Inicial"] >= _sueltos["Inicial"], "y la letra sale entera"
+
 # sin nada que poner, se avisa; y una lámina más ancha que larga tampoco vale
 for _mal, _dice in (({"mar_texto": " ", "mar_inicial": "", "mar_adorno": False}, "vacío"),
                     ({"mar_largo": 20}, "más larga que ancha")):
@@ -465,6 +637,33 @@ for _mal, _dice in (({"mar_texto": " ", "mar_inicial": "", "mar_adorno": False},
         raise AssertionError(("debería rechazarse", _mal))
     except ValueError as e:
         assert _dice in str(e), (e, _dice)
+
+# --------------------------------------------------- un STL por color (Snapmaker y demás)
+import io as _io            # noqa: E402
+import zipfile as _zip      # noqa: E402
+
+_paquete = _zip.ZipFile(_io.BytesIO(gen.exportar_stl_por_color(cuadro)))
+_stls = [n for n in _paquete.namelist() if n.endswith(".stl")]
+assert len(_stls) == len(datos_cuadro["colores"]), (_stls, datos_cuadro["colores"])
+assert "leeme.txt" in _paquete.namelist(), _paquete.namelist()
+for _c in datos_cuadro["colores"]:          # el nombre del archivo lleva su color
+    assert any(_c.lstrip("#").lower() in n for n in _stls), (_c, _stls)
+# todos en las mismas coordenadas: al cargarlos uno a uno quedan alineados
+_juntas = trimesh.util.concatenate(
+    [trimesh.load(_io.BytesIO(_paquete.read(n)), file_type="stl") for n in _stls])
+_entero = trimesh.util.concatenate([m for _, _, m in cuadro])
+assert abs(_juntas.volume - _entero.volume) < 1.0, (_juntas.volume, _entero.volume)
+assert max(abs(a_ - b_) for a_, b_ in                     # el STL guarda en float simple
+           zip(_juntas.bounds.ravel(), _entero.bounds.ravel())) < 0.01
+
+# la pantalla recibe el nombre, la versión, el correo del administrador y la cama
+_cfg = como(ana).get("/api/config").get_json()
+assert _cfg["app"]["nombre"] == "Monkeds Letter" and _cfg["app"]["version"], _cfg["app"]
+assert "@" in _cfg["app"]["contacto"] and _cfg["app"]["cama"] > 100, _cfg["app"]
+# y la marca viaja dentro del 3MF
+import zipfile as _z2   # noqa: E402
+_modelo = _z2.ZipFile(_io.BytesIO(gen.exportar_3mf(marca))).read("3D/3dmodel.model").decode()
+assert _cfg["app"]["marca"] in _modelo, "el 3MF no lleva el nombre de la aplicación"
 
 # por la web: el diseño entero y un error claro cuando las medidas no encajan
 assert como(ana).post("/api/preview", json={"tipo": "organizador"}).status_code == 200

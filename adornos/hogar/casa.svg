@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 112" width="120" height="112">
-  <!-- Casita de frente: tejado, cuerpo y puerta. Tres formas, una por color, para que el
-       generador pueda darle a cada una un filamento distinto. -->
-  <path fill="#c0392b" d="M60 4 L116 52 H96 L60 22 L24 52 H4 Z"/>
-  <path fill="#e8705a" d="M22 50 H98 V108 H22 Z"/>
-  <path fill="#9aa3ad" d="M48 74 H72 V108 H48 Z"/>
-</svg>
