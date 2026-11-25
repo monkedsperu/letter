@@ -58,28 +58,31 @@ def _revisar_torta(a: Parametros):
 
 
 def _adornos_del_topper(a: Parametros, caja):
-    """[(nombre, polígono, color)] de los adornos encendidos, colocados respecto al centro
-    del bloque de texto. Cada adorno elige su color igual que en los demás diseños."""
+    """([(nº, nombre, polígono, color)], {nº de adorno: [colores de sus formas]}): los adornos
+    encendidos, colocados respecto al centro del bloque de texto. Cada forma del dibujo
+    lleva su propio color -igual que en los demás diseños-, así que un dibujo de dos
+    tintas se puede repintar sin perder el contorno."""
     x0, y0, x1, y1 = caja
     cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     paleta = {"base": a.tor_color_base, "letras": a.tor_color_letras,
               "extra": a.tor_color_extra}
-    puestos = []
+    puestos, por_adorno = [], {}
     for i in range(1, ADORNOS_TORTA + 1):
         if not getattr(a, f"tor_ad{i}"):
             continue
         alto = getattr(a, f"tor_ad{i}_alto")
-        sitio = getattr(a, f"tor_ad{i}_color")
         partes = adorno_en_grupos(
             getattr(a, f"tor_ad{i}_svg"), alto, getattr(a, f"tor_ad{i}_giro"),
             cx + getattr(a, f"tor_ad{i}_x"),
             cy + getattr(a, f"tor_ad{i}_y") - alto / 2,
-            paleta, [sitio] * 3, a.tor_color_extra, ("extra",) * 3,
-            (getattr(a, f"tor_ad{i}_tinta"),) * 3)
+            paleta, [getattr(a, f"tor_ad{i}_c{j}") for j in (1, 2, 3)],
+            a.tor_color_extra, ("extra", "base", "letras"),
+            tuple(getattr(a, f"tor_ad{i}_tinta{j}") for j in (1, 2, 3)))
         varios = len(partes) > 1
         for j, (color, g) in enumerate(partes, 1):
-            puestos.append((f"Adorno {i}" + (f".{j}" if varios else ""), g, color))
-    return puestos
+            puestos.append((i, f"Adorno {i}" + (f".{j}" if varios else ""), g, color))
+        por_adorno[str(i)] = [c for c, _ in partes]
+    return puestos, por_adorno
 
 
 def construir_torta(a: Parametros):
@@ -121,9 +124,32 @@ def construir_torta(a: Parametros):
         raise ValueError("El topper se queda vacío: ponle al menos un nombre, un número, "
                          "una palabra o un adorno.")
 
-    adornos = _adornos_del_topper(a, bloque.bounds if not bloque.is_empty
-                                  else (0.0, 0.0, 0.0, 0.0))
-    todo = unary_union([bloque] + [g for _, g, _ in adornos])
+    adornos, formas_adorno = _adornos_del_topper(
+        a, bloque.bounds if not bloque.is_empty else (0.0, 0.0, 0.0, 0.0))
+
+    # ---- capa de cada adorno: delante tapa las letras y detrás son ellas las que lo cortan.
+    # En los dos casos el que manda deja un aire alrededor, para que la junta se vea a
+    # propósito y no salga un empalme sucio donde el dibujo roza el texto
+    for i in range(1, ADORNOS_TORTA + 1):
+        suyos = [k for k, p in enumerate(adornos) if p[0] == i]
+        letras = unary_union([g for _, g in textuales]) if textuales else Polygon()
+        if not suyos or letras.is_empty:
+            continue
+        aire = max(getattr(a, f"tor_ad{i}_aire"), 0.0)
+        if getattr(a, f"tor_ad{i}_detras"):
+            corte = letras.buffer(aire, join_style=1) if aire else letras
+            for k in suyos:
+                j, nombre, g, color = adornos[k]
+                adornos[k] = (j, nombre, g.difference(corte), color)
+        else:
+            dibujo = unary_union([adornos[k][2] for k in suyos])
+            corte = dibujo.buffer(aire, join_style=1) if aire else dibujo
+            textuales = [(n, g.difference(corte)) for n, g in textuales]
+    adornos = [p for p in adornos if not p[2].is_empty]
+    textuales = [(n, g) for n, g in textuales if not g.is_empty]
+    bloque = unary_union([g for _, g in textuales]) if textuales else Polygon()
+
+    todo = unary_union([bloque] + [g for _, _, g, _ in adornos])
 
     # ---- la placa: todo engordado y fundido, que es lo que mantiene unidas las letras
     borde = max(a.tor_borde, 0.0)
@@ -166,7 +192,7 @@ def construir_torta(a: Parametros):
     # ---- las alturas: la placa abajo y las letras encima. Sueltas, cada pieza crece su
     # espiga hacia dentro y la placa se vacía su silueta con holgura
     suelo, techo = a.tor_grueso, a.tor_grueso + a.tor_relieve
-    relieve = [(n, g, a.tor_color_letras) for n, g in textuales] + adornos
+    relieve = [(n, g, a.tor_color_letras) for n, g in textuales] +         [(n, g, c) for _, n, g, c in adornos]
     relieve = [(n, g, c) for n, g, c in relieve if not g.is_empty]
     if espiga:
         hondo = espiga + holgura
@@ -188,8 +214,9 @@ def construir_torta(a: Parametros):
     regiones = [("Placa", placa, 0.0, suelo, a.tor_color_base)]
     regiones += [(n, g, suelo - espiga, techo, c) for n, g, c in relieve]
     analisis = _analizar(niveles, placa, regiones,
-                         [c for _, _, c in adornos])
-    analisis["ancho_base"] = round(bloque.bounds[2] - bloque.bounds[0], 2)
+                         [c for _, _, _, c in adornos])
+    analisis["formas_adorno"] = formas_adorno   # qué color salió en cada forma, por adorno
+    analisis["ancho_base"] = round(placa.bounds[2] - placa.bounds[0], 2)
     analisis["avisos"].append("Todo es plano: se imprime tumbado, con la cara buena hacia "
                               "arriba y sin soportes.")
     sueltas = len(_poligonos(placa))

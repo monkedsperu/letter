@@ -692,6 +692,28 @@ _solo_ad = [n for n, _, _ in gen.construir_con_analisis(gen.Parametros(
     tipo="torta", tor_nombre="", tor_palabra="", tor_numero=""))[0]]
 assert _solo_ad[0] == "Placa" and not {"Nombre", "Palabra", "Numero"} & set(_solo_ad), _solo_ad
 
+# el dibujo de dos tintas se respeta, y repintar una forma no se lleva por delante la otra
+_dos = [c for n, c, _ in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_ad1_svg="estrella_color.svg"))[0] if n.startswith("Adorno")]
+assert len(_dos) == 2 and len(set(_dos)) == 2, _dos
+_repintado = [c for n, c, _ in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_ad1_svg="estrella_color.svg", tor_ad1_tinta2="#ff0000"))[0]
+    if n.startswith("Adorno")]
+assert _repintado == [_dos[0], "#ff0000"], _repintado
+
+# si el adorno pisa el texto, la capa decide quién corta a quién (y nadie se superpone)
+def _areas_torta(**kw):
+    piezas = gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_ad1_x=-52, **kw))[0]
+    letra = sum(m.volume for n, _, m in piezas if n == "Nombre")
+    ador = sum(m.volume for n, _, m in piezas if n.startswith("Adorno"))
+    return letra, ador
+
+
+_l_detras, _a_detras = _areas_torta()                        # de serie pasa por detrás
+_l_delante, _a_delante = _areas_torta(tor_ad1_detras=False)
+assert _a_detras < _a_delante, (_a_detras, _a_delante)       # detrás, lo cortan las letras
+assert _l_delante < _l_detras, (_l_delante, _l_detras)       # delante, corta él a las letras
+
 # y el palo tiene que caer dentro del topper
 try:
     gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_palo_x=300))

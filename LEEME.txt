@@ -360,8 +360,16 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
    "feliz cumpleaños"- encima o debajo; y un NÚMERO a la derecha, más grande que el nombre,
    para la edad. Los TRES son opcionales, cada uno con su interruptor: puedes hacer un topper
    solo con el número, solo con la palabra o incluso solo con adornos. Hasta TRES ADORNOS más,
-   cada uno con su dibujo, su alto, su giro, su color y su sitio (se colocan contando desde el
-   centro del texto).
+   cada uno con su dibujo, su alto, su giro y su sitio (se colocan contando desde el centro
+   del texto). Cada adorno tiene además su CAPA: de serie pasa por
+   DETRÁS, así que si lo acercas al texto son las letras las que lo cortan y nunca se
+   superponen; con "Delante" es él quien las tapa a ellas. El "aire al cortar" (0,8 mm de
+   serie) es el hueco que deja el que manda alrededor del otro, para que la junta se vea a
+   propósito. Los COLORES van como en el llavero: "Color de cada forma"
+   enseña una línea por cada forma que tenga el dibujo -el contorno y el relleno de la
+   estrella son dos- y cada una lleva su destino (Automático, Placa, Letras, Extra, Del
+   dibujo) y su cuadradito de color. Así se repinta el relleno sin perder el contorno, y
+   "↺ Colores del dibujo" deshace lo que hayas puesto a mano.
    Las CUATRO PIEZAS -nombre, palabra, número y cada adorno- se arrastran en la vista 3D, o se
    mueven a mano con sus casillas "Moverlo". El programa primero las coloca solo -la palabra
    encima o debajo del nombre, el número a su derecha- y encima aplica lo que hayas movido tú,

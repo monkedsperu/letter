@@ -276,29 +276,47 @@ class Parametros:
     tor_palo_ancho: float = 10.0
     tor_palo_x: float = 0.0             # desplazamiento respecto al centro (mm)
     tor_ad1: bool = True
-    tor_ad1_svg: str = "estrella_color.svg"
+    tor_ad1_svg: str = "estrella.svg"
     tor_ad1_alto: float = 22.0
     tor_ad1_x: float = -70.0          # desde el centro del bloque de texto (mm)
     tor_ad1_y: float = 28.0
     tor_ad1_giro: float = 0.0
-    tor_ad1_color: str = "auto"       # auto | base | letras | extra | svg
-    tor_ad1_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_ad1_detras: bool = True      # True = pasa por detrás y las letras lo cortan
+    tor_ad1_aire: float = 0.8        # hueco que deja el que manda alrededor (mm)
+    tor_ad1_c1: str = "auto"         # destino de cada forma del dibujo:
+    tor_ad1_c2: str = "auto"         # auto | base | letras | extra | svg
+    tor_ad1_c3: str = "auto"
+    tor_ad1_tinta1: str = ""        # color a mano de cada forma del dibujo;
+    tor_ad1_tinta2: str = ""        # vacío = el que le toque
+    tor_ad1_tinta3: str = ""
     tor_ad2: bool = False
     tor_ad2_svg: str = "corazon.svg"
     tor_ad2_alto: float = 18.0
     tor_ad2_x: float = 62.0          # desde el centro del bloque de texto (mm)
     tor_ad2_y: float = 28.0
     tor_ad2_giro: float = 0.0
-    tor_ad2_color: str = "auto"       # auto | base | letras | extra | svg
-    tor_ad2_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_ad2_detras: bool = True      # True = pasa por detrás y las letras lo cortan
+    tor_ad2_aire: float = 0.8        # hueco que deja el que manda alrededor (mm)
+    tor_ad2_c1: str = "auto"         # destino de cada forma del dibujo:
+    tor_ad2_c2: str = "auto"         # auto | base | letras | extra | svg
+    tor_ad2_c3: str = "auto"
+    tor_ad2_tinta1: str = ""        # color a mano de cada forma del dibujo;
+    tor_ad2_tinta2: str = ""        # vacío = el que le toque
+    tor_ad2_tinta3: str = ""
     tor_ad3: bool = False
     tor_ad3_svg: str = "baston.svg"
     tor_ad3_alto: float = 18.0
     tor_ad3_x: float = -58.0          # desde el centro del bloque de texto (mm)
     tor_ad3_y: float = -20.0
     tor_ad3_giro: float = 0.0
-    tor_ad3_color: str = "auto"       # auto | base | letras | extra | svg
-    tor_ad3_tinta: str = ""           # color a mano; vacío = el que toque
+    tor_ad3_detras: bool = True      # True = pasa por detrás y las letras lo cortan
+    tor_ad3_aire: float = 0.8        # hueco que deja el que manda alrededor (mm)
+    tor_ad3_c1: str = "auto"         # destino de cada forma del dibujo:
+    tor_ad3_c2: str = "auto"         # auto | base | letras | extra | svg
+    tor_ad3_c3: str = "auto"
+    tor_ad3_tinta1: str = ""        # color a mano de cada forma del dibujo;
+    tor_ad3_tinta2: str = ""        # vacío = el que le toque
+    tor_ad3_tinta3: str = ""
     tor_aparte: bool = False            # cada color se imprime suelto y se pega
     tor_espiga: float = 1.6
     tor_holgura: float = 0.25

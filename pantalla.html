@@ -371,7 +371,7 @@
         <div id="fila_c2"><label>2<select id="adorno_c2"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="adorno_tinta2" title="Color de esta forma"><input type="hidden" id="adorno_tinta2"></label></div>
         <div id="fila_c3"><label>3<select id="adorno_c3"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="adorno_tinta3" title="Color de esta forma"><input type="hidden" id="adorno_tinta3"></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
+      <button type="button" class="sec tintas-dibujo" data-pref="adorno_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
         <div><label>Giro (°)<input id="giro_adorno" type="number" step="5"></label></div>
@@ -533,7 +533,7 @@
         <div id="org_fila_c2"><label>2<select id="org_adorno_c2"><option value="auto">Automático</option><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="org_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="org_adorno_tinta2"></label></div>
         <div id="org_fila_c3"><label>3<select id="org_adorno_c3"><option value="auto">Automático</option><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="org_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="org_adorno_tinta3"></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="org_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
+      <button type="button" class="sec tintas-dibujo" data-pref="org_adorno_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="org_adorno_alto" type="number" step="1" min="5"></label></div>
         <div><label>Su borde (mm)<span class="q" tabindex="0" data-tip="El borde del adorno va por su cuenta: aunque el texto lleve borde, el adorno no tiene por qué llevarlo. 0 = sin borde, que es lo normal.">?</span>
@@ -740,7 +740,7 @@
         <div id="cua_fila_c2"><label>2<select id="cua_adorno_c2"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="cua_adorno_tinta2"></label></div>
         <div id="cua_fila_c3"><label>3<select id="cua_adorno_c3"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="cua_adorno_tinta3"></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="cua_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
+      <button type="button" class="sec tintas-dibujo" data-pref="cua_adorno_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="cua_adorno_alto" type="number" step="1" min="5"></label></div>
         <div><label>Giro (°)<input id="cua_adorno_giro" type="number" step="5"></label></div>
@@ -907,7 +907,7 @@
         <div id="mar_fila_c2"><label>2<select id="mar_adorno_c2"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="mar_adorno_tinta2"></label></div>
         <div id="mar_fila_c3"><label>3<select id="mar_adorno_c3"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="mar_adorno_tinta3"></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="mar_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
+      <button type="button" class="sec tintas-dibujo" data-pref="mar_adorno_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="mar_adorno_alto" type="number" step="1" min="5"></label></div>
         <div><label>Giro (°)<input id="mar_adorno_giro" type="number" step="5"></label></div>
@@ -1074,8 +1074,24 @@
       </div>
       <div class="fila">
         <div><label>Giro (°)<input id="tor_ad1_giro" type="number" step="5"></label></div>
-        <div><label>Color<select id="tor_ad1_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad1_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad1_tinta"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa las letras y detrás son ellas las que lo tapan a él. Así puedes montarlo sobre el texto sin que se peguen de mala manera.">?</span>
+          <select id="tor_ad1_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
       </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="tor_ad1_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="tor_ad1_fila_c1"><label>1<select id="tor_ad1_c1"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad1_tinta1" title="Color de esta forma"><input type="hidden" id="tor_ad1_tinta1"></label></div>
+        <div id="tor_ad1_fila_c2"><label>2<select id="tor_ad1_c2"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad1_tinta2" title="Color de esta forma"><input type="hidden" id="tor_ad1_tinta2"></label></div>
+        <div id="tor_ad1_fila_c3"><label>3<select id="tor_ad1_c3"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad1_tinta3" title="Color de esta forma"><input type="hidden" id="tor_ad1_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="tor_ad1_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
     </div></div>
   </details>
 
@@ -1094,8 +1110,24 @@
       </div>
       <div class="fila">
         <div><label>Giro (°)<input id="tor_ad2_giro" type="number" step="5"></label></div>
-        <div><label>Color<select id="tor_ad2_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad2_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad2_tinta"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa las letras y detrás son ellas las que lo tapan a él. Así puedes montarlo sobre el texto sin que se peguen de mala manera.">?</span>
+          <select id="tor_ad2_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
       </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="tor_ad2_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="tor_ad2_fila_c1"><label>1<select id="tor_ad2_c1"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad2_tinta1" title="Color de esta forma"><input type="hidden" id="tor_ad2_tinta1"></label></div>
+        <div id="tor_ad2_fila_c2"><label>2<select id="tor_ad2_c2"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad2_tinta2" title="Color de esta forma"><input type="hidden" id="tor_ad2_tinta2"></label></div>
+        <div id="tor_ad2_fila_c3"><label>3<select id="tor_ad2_c3"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad2_tinta3" title="Color de esta forma"><input type="hidden" id="tor_ad2_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="tor_ad2_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
     </div></div>
   </details>
 
@@ -1114,8 +1146,24 @@
       </div>
       <div class="fila">
         <div><label>Giro (°)<input id="tor_ad3_giro" type="number" step="5"></label></div>
-        <div><label>Color<select id="tor_ad3_color"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad3_tinta" title="Color de este adorno"><input type="hidden" id="tor_ad3_tinta"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa las letras y detrás son ellas las que lo tapan a él. Así puedes montarlo sobre el texto sin que se peguen de mala manera.">?</span>
+          <select id="tor_ad3_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
       </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="tor_ad3_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="tor_ad3_fila_c1"><label>1<select id="tor_ad3_c1"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad3_tinta1" title="Color de esta forma"><input type="hidden" id="tor_ad3_tinta1"></label></div>
+        <div id="tor_ad3_fila_c2"><label>2<select id="tor_ad3_c2"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad3_tinta2" title="Color de esta forma"><input type="hidden" id="tor_ad3_tinta2"></label></div>
+        <div id="tor_ad3_fila_c3"><label>3<select id="tor_ad3_c3"><option value="auto">Automático</option><option value="base">Placa</option><option value="letras">Letras</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="tor_ad3_tinta3" title="Color de esta forma"><input type="hidden" id="tor_ad3_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="tor_ad3_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
     </div></div>
   </details>
 
@@ -1283,11 +1331,14 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'tor_color_extra','tor_palo','tor_palos','tor_palo_largo','tor_palo_ancho',
                 'tor_palo_x','tor_aparte','tor_espiga','tor_holgura',
                 'tor_ad1','tor_ad1_svg','tor_ad1_alto','tor_ad1_x','tor_ad1_y',
-                'tor_ad1_giro','tor_ad1_color','tor_ad1_tinta',
+                'tor_ad1_giro','tor_ad1_detras','tor_ad1_aire','tor_ad1_c1','tor_ad1_c2','tor_ad1_c3',
+                'tor_ad1_tinta1','tor_ad1_tinta2','tor_ad1_tinta3',
                 'tor_ad2','tor_ad2_svg','tor_ad2_alto','tor_ad2_x','tor_ad2_y',
-                'tor_ad2_giro','tor_ad2_color','tor_ad2_tinta',
+                'tor_ad2_giro','tor_ad2_detras','tor_ad2_aire','tor_ad2_c1','tor_ad2_c2','tor_ad2_c3',
+                'tor_ad2_tinta1','tor_ad2_tinta2','tor_ad2_tinta3',
                 'tor_ad3','tor_ad3_svg','tor_ad3_alto','tor_ad3_x','tor_ad3_y',
-                'tor_ad3_giro','tor_ad3_color','tor_ad3_tinta'];
+                'tor_ad3_giro','tor_ad3_detras','tor_ad3_aire','tor_ad3_c1','tor_ad3_c2','tor_ad3_c3',
+                'tor_ad3_tinta1','tor_ad3_tinta2','tor_ad3_tinta3'];
 const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
@@ -1832,6 +1883,19 @@ function pintarFormasAdorno(analisis) {
       if (colores[i - 1]) tinta.value = colores[i - 1];     // el color que salió de verdad
     }
   }
+  // el topper lleva tres adornos, y cada uno cuenta sus propias formas
+  const porAdorno = (analisis && analisis.formas_adorno) || {};
+  for (let a = 1; a <= 3; a++) {
+    const suyos = porAdorno[a] || [];
+    for (let i = 1; i <= 3; i++) {
+      const fila = $('tor_ad' + a + '_fila_c' + i);
+      fila.hidden = i > suyos.length;
+      const tinta = fila.querySelector('.tinta');
+      const sitio = fila.querySelector('select').value;
+      tinta.hidden = !(sitio === 'auto' || sitio === 'svg');
+      if (suyos[i - 1]) tinta.value = suyos[i - 1];
+    }
+  }
 }
 
 // cambiar una tinta a mano: se guarda aparte, así un campo vacío sigue queriendo decir
@@ -1841,7 +1905,7 @@ document.querySelectorAll('.tinta').forEach(t => t.addEventListener('change', ()
   generar();
 }));
 document.querySelectorAll('.tintas-dibujo').forEach(b => b.addEventListener('click', () => {
-  for (let i = 1; i <= 3; i++) $(b.dataset.pref + 'adorno_tinta' + i).value = '';
+  for (let i = 1; i <= 3; i++) $(b.dataset.pref + 'tinta' + i).value = '';
   generar();
 }));
 
