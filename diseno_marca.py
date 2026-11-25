@@ -9,7 +9,7 @@ from shapely import affinity
 from shapely.geometry import LineString, Polygon, box
 from shapely.ops import unary_union
 
-from comun import (GROSOR_MINIMO, _analizar, _poligonos, adorno_en_grupos,
+from comun import (GROSOR_MINIMO, _analizar, _poligonos, adorno_en_grupos, adornos_extra,
                    apartar_por_color, extruir, repartir_patron, texto_a_poligono)
 from parametros import Parametros
 
@@ -81,19 +81,20 @@ def construir_marca(a: Parametros):
         piezas.append(("Nombre", texto, a.mar_color_texto))
 
     # ---- el icono, suelto alrededor de la letra grande (o del nombre, si no hay letra)
+    if letra is not None:                   # manda la letra: el icono orbita a su alrededor
+        lx0, ly0, lx1, ly1 = letra.bounds
+        cx, cy = (lx0 + lx1) / 2, (ly0 + ly1) / 2
+    elif texto is not None:                 # sin letra, el hueco que queda sobre el nombre
+        cx, cy = 0.0, (texto.bounds[3] + a.mar_largo) / 2
+    else:
+        cx, cy = 0.0, a.mar_largo - radio
+    paleta_adorno = {"cuerpo": a.mar_color_cuerpo, "texto": a.mar_color_texto,
+                     "inicial": a.mar_color_inicial, "extra": a.mar_color_adorno}
     if a.mar_adorno:
-        if letra is not None:               # manda la letra: el icono orbita a su alrededor
-            lx0, ly0, lx1, ly1 = letra.bounds
-            cx, cy = (lx0 + lx1) / 2, (ly0 + ly1) / 2
-        elif texto is not None:             # sin letra, el hueco que queda sobre el nombre
-            cx, cy = 0.0, (texto.bounds[3] + a.mar_largo) / 2
-        else:
-            cx, cy = 0.0, a.mar_largo - radio
         partes = adorno_en_grupos(
             a.mar_adorno_svg, a.mar_adorno_alto, a.mar_adorno_giro,
             cx + a.mar_adorno_x, cy + a.mar_adorno_y - a.mar_adorno_alto / 2,
-            {"cuerpo": a.mar_color_cuerpo, "texto": a.mar_color_texto,
-             "inicial": a.mar_color_inicial, "extra": a.mar_color_adorno},
+            paleta_adorno,
             [a.mar_adorno_c1, a.mar_adorno_c2, a.mar_adorno_c3], a.mar_color_adorno,
             ("extra", "cuerpo", "texto"),
             (a.mar_adorno_tinta1, a.mar_adorno_tinta2, a.mar_adorno_tinta3))
@@ -116,6 +117,18 @@ def construir_marca(a: Parametros):
             piezas.append((f"Icono {i}" if varios else "Icono", g, color))
     else:
         partes = []
+
+    # ---- dos iconos más, sueltos y cada uno con su capa: detrás los cortan las letras y
+    # delante son ellos los que cortan, igual que el primero
+    extra, formas_extra, recorte = adornos_extra(
+        a, "mar_", (2, 3), cx, cy, paleta_adorno, a.mar_color_adorno,
+        ("extra", "cuerpo", "texto"),
+        unary_union([g for n, g, _ in piezas if not n.startswith("Icono")]))
+    if not recorte.is_empty:
+        piezas = [(n, g if n.startswith("Icono") else g.difference(recorte), c)
+                  for n, g, c in piezas]
+    piezas += [(n, g, c) for _, n, g, c in extra]
+    piezas = [(n, g, c) for n, g, c in piezas if not g.is_empty]
 
     # ---- el cuerpo: la lámina más lo que sobresalga, engordado y fundido en una silueta
     margen = max(a.mar_margen, 0.3)
@@ -204,6 +217,7 @@ def construir_marca(a: Parametros):
         apartar_por_color([p for p in niveles if p[0] != "Lamina"], cuerpo.bounds[2])
 
     analisis = _analizar(niveles, cuerpo, regiones, [c for c, _ in partes])
+    analisis["formas_adorno"] = formas_extra
     analisis["avisos"].append("Todo es plano: se imprime tumbado, con la cara buena hacia "
                               "arriba y sin soportes.")
     if not tope.is_empty:

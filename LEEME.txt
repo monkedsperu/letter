@@ -123,13 +123,26 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
      en el marcapáginas, la letra grande, el nombre y el icono.
 
 9) PIEZAS OPCIONALES
+   - LA LETRA GRANDE del llavero también se apaga: sin ella el llavero sale solo con el
+     texto y los adornos. Y en vez de una letra puede llevar un DIBUJO DE FONDO de la
+     biblioteca ("Qué va de fondo"), a la altura que le pongas; el borde, el patrón y el
+     texto se comportan igual que con la letra.
+   - HASTA TRES ADORNOS en llavero, cuadro, marcapáginas y topper. El primero es el de
+     siempre (el de cuernos, la casita, la planta...), y los otros dos se encienden con su
+     interruptor: dibujo, alto, sitio en mm, giro, capa y el color de cada forma. Se miden
+     desde el centro de la pieza grande -la letra, el apellido, el texto del topper- y se
+     arrastran en la vista 3D como todo lo demás.
+   - LA CAPA de esos adornos decide quién corta a quién cuando se tocan: "Detrás" (lo
+     normal) deja que las letras lo recorten y "Delante" hace que sea él quien las tape;
+     el "aire al cortar" es el hueco que deja el que manda, para que la junta se vea a
+     propósito. Nunca quedan superpuestos.
    - Adorno (cuernos), patrón y aro de llavero se activan con su casilla; los tres son
      opcionales y por defecto vienen: adorno sí, patrón sí, aro no.
    - El aro de llavero va en el nivel 1 (su mismo grosor y color) y su agujero atraviesa
      toda la pieza. Si lo mueves lejos de la letra se le añade solo un cuello que lo une,
      para que nunca salga una rosquilla suelta.
    - En la vista 3D, las piezas que se pueden arrastrar llevan un icono ✥ encima:
-     los dos adornos y el aro. Se arrastran con el ratón (también desde el icono).
+     los adornos (el de siempre, su reflejo y los dos sueltos), el texto y el aro. Se arrastran con el ratón (también desde el icono).
 
 10) PATRONES, ADORNOS Y FUENTES (carpetas junto a app.py)
    CÓMO ESTÁN ORDENADOS: en adornos/ está la BIBLIOTECA COMÚN, que ven los cuatro diseños,
@@ -377,6 +390,10 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
    La PLACA no se dibuja: sale de engordar las letras y los adornos y fundirlo todo, que es
    lo que mantiene unidas las letras de una fuente manuscrita. Si algo queda demasiado lejos
    y el topper sale en trozos, avisa: se arregla subiendo el borde o el suavizado.
+   Cada texto puede llevar su propio CONTORNO, y con él el topper tiene TRES NIVELES: la
+   placa abajo, el contorno en medio -su color y su altura, menos que las letras- y el
+   nombre, la palabra y el número arriba. Se pone por separado para cada uno (0 = sin
+   contorno), así que puedes enmarcar solo el número si quieres.
    El PALO baja de la placa con la punta en pico. Puede ser uno o dos -con dos no se gira en
    la tarta-, y se le cambia largo, ancho y posición. No se queda pegado al borde: sube hasta
    media placa por dentro de la silueta, así que queda fundido con ella y no colgando de un

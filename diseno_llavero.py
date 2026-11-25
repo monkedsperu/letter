@@ -13,9 +13,8 @@ from shapely import affinity
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import nearest_points, unary_union
 
-from comun import (CARPETA_ADORNOS, GROSOR_MINIMO, _analizar, apartar_por_color,
-                   capas_con_chaflan,
-                   color_de_la_forma,
+from comun import (CARPETA_ADORNOS, GROSOR_MINIMO, _analizar, adornos_extra,
+                   apartar_por_color, capas_con_chaflan, color_de_la_forma,
                    extruir, grupos_adorno, repartir_patron, svg_dentro_de,
                    texto_a_poligono, texto_en_lineas)
 from parametros import MAX_LETRAS, Parametros
@@ -117,19 +116,40 @@ def _rebanar(tramos, altura: float, recorte, arriba: bool):
     return fuera
 
 
+def fondo_del_llavero(a: Parametros):
+    """La forma grande del fondo, con su altura ya puesta y apoyada en el origen: la letra
+    inicial, un dibujo de la biblioteca o nada, si se ha apagado."""
+    if not a.usar_letra:
+        return Polygon()
+    if a.tam_inicial <= 0:
+        raise ValueError("La altura de la letra debe ser mayor que 0.")
+    if a.inicial_tipo == "dibujo":
+        ruta = svg_dentro_de(CARPETA_ADORNOS, a.inicial_svg)
+        if not ruta:
+            raise ValueError(f"No encontré el dibujo de fondo '{a.inicial_svg}'.")
+        forma = unary_union([g for _, g in grupos_adorno(ruta, mm_alto=a.tam_inicial)])
+    else:
+        if not a.inicial.strip():
+            raise ValueError("Falta la letra inicial.")
+        if len(a.inicial.strip()) > MAX_LETRAS:
+            raise ValueError(f"La letra grande admite como máximo {MAX_LETRAS} caracteres.")
+        forma = texto_a_poligono(a.inicial.strip(), a.fuente_inicial, 100)
+    if forma.is_empty:
+        raise ValueError("El fondo salió vacío. Prueba con otra letra u otro dibujo.")
+    x0, y0, x1, y1 = forma.bounds
+    f = a.tam_inicial / (y1 - y0)
+    forma = affinity.scale(forma, f, f, origin=(0, 0))
+    x0, y0, _, _ = forma.bounds
+    return affinity.translate(forma, -x0, -y0)
+
+
 def _construir_llavero(a: Parametros):
     """Llavero o cartel: la letra inicial con su borde más el texto, en tres niveles."""
-    if not a.inicial.strip():
-        raise ValueError("Falta la letra inicial.")
-    if len(a.inicial.strip()) > MAX_LETRAS:
-        raise ValueError(f"La letra grande admite como máximo {MAX_LETRAS} caracteres.")
     for c in (a.color_nivel1, a.color_nivel2, a.color_nivel3, a.color_adorno):
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", c):
             raise ValueError(f"Color inválido '{c}', usa formato #RRGGBB.")
     if not 0 < a.alto_nivel1 < a.alto_nivel2 < a.alto_nivel3:
         raise ValueError("Las alturas deben cumplir: 0 < nivel 1 < nivel 2 < nivel 3.")
-    if a.tam_inicial <= 0:
-        raise ValueError("La altura de la letra debe ser mayor que 0.")
     if a.texto.strip() and a.tam_texto <= 0:
         raise ValueError("El tamaño del texto debe ser mayor que 0.")
     espiga = max(a.espiga, 0.0) if a.aparte else 0.0
@@ -143,20 +163,15 @@ def _construir_llavero(a: Parametros):
             raise ValueError("El hueco del imán y el de encaje no caben los dos en el "
                              "nivel 1: sube su altura o baja una de las dos honduras.")
 
-    # Letra inicial escalada para que su ALTURA sea exactamente tam_inicial
-    letra = texto_a_poligono(a.inicial.strip(), a.fuente_inicial, 100)
-    minx, miny, maxx, maxy = letra.bounds
-    f = a.tam_inicial / (maxy - miny)
-    letra = affinity.scale(letra, f, f, origin=(0, 0))
-    minx, miny, _, _ = letra.bounds
-    letra = affinity.translate(letra, -minx, -miny)
-    minx, miny, maxx, maxy = letra.bounds
+    # El fondo: la letra inicial a su altura exacta, un dibujo, o nada si se apagó
+    letra = fondo_del_llavero(a)
+    minx, miny, maxx, maxy = letra.bounds if not letra.is_empty else (0.0, 0.0, 0.0, 0.0)
     # Adorno (y el segundo): forma parte de la silueta, así que el borde de nivel 1 lo rodea también.
     partes1 = partes2 = []
     if a.adorno:
         partes1, partes2 = colocar_adorno(a, (minx + maxx) / 2, (miny + maxy) / 2)
     h = unary_union([g for _, g in partes1 + partes2]) if (partes1 or partes2) else Polygon()
-    if a.adorno_detras:
+    if a.adorno_detras and not letra.is_empty:
         # el adorno pasa por detrás: manda la letra y es ella la que lo corta
         base = letra
         recorte_adorno = letra.buffer(a.borde, join_style=1) if (a.cortar_adorno and a.borde > 0) else letra
@@ -165,7 +180,19 @@ def _construir_llavero(a: Parametros):
         hb = h.buffer(a.borde, join_style=1) if a.borde > 0 else h
         base = letra.difference(hb if a.cortar_adorno else h)
         recorte_adorno = Polygon()
-    silueta = letra.union(h)
+    # dos adornos más, sueltos y con su propia capa: delante tapan el fondo y detrás es
+    # él quien los corta. Entran en la silueta, así que el borde del nivel 1 los rodea
+    extra, formas_extra, recorte_extra = adornos_extra(
+        a, "", (2, 3), (minx + maxx) / 2, (miny + maxy) / 2,
+        {"base": a.color_nivel1, "letra": a.color_nivel2, "texto": a.color_nivel3,
+         "extra": a.color_adorno}, a.color_adorno, ("extra", "base", "texto"), letra)
+    if not recorte_extra.is_empty:
+        base = base.difference(recorte_extra)
+    sueltos = unary_union([g for _, _, g, _ in extra]) if extra else Polygon()
+    silueta = letra.union(h).union(sueltos)
+    if silueta.is_empty:
+        raise ValueError("No hay nada que imprimir: enciende la letra grande, un adorno "
+                         "o escribe un texto.")
     contorno = silueta.buffer(a.borde, join_style=1) if a.borde > 0 else silueta
     cminx, cminy, cmaxx, cmaxy = contorno.bounds
 
@@ -213,7 +240,8 @@ def _construir_llavero(a: Parametros):
     h1, h2, h3 = a.alto_nivel1, a.alto_nivel2, a.alto_nivel3
     centro = ((minx + maxx) / 2, (miny + maxy) / 2)
     arriba = t.union(deco)
-    cuerpo = unary_union([contorno, t1, n2, h.difference(tapa), arriba])
+    cuerpo = unary_union([contorno, t1, n2, h.difference(tapa), sueltos.difference(tapa),
+                          arriba])
     anillo, agujero = aro_llavero(a, *centro, cuerpo)
     todo = cuerpo.union(anillo)
     nivel1 = todo.difference(anillo)
@@ -231,6 +259,11 @@ def _construir_llavero(a: Parametros):
             if not recorte_adorno.is_empty:      # por detrás: la letra lo tapa
                 visible = visible.difference(recorte_adorno)
             regiones.append((nombre, visible, h1, h2, color))
+    for _, nombre, g, color in extra:
+        visible = g.difference(tapa)
+        if not recorte_adorno.is_empty:
+            visible = visible.difference(recorte_adorno)
+        regiones.append((nombre, visible, h1, h2, color))
     if not agujero.is_empty:   # el agujero del llavero atraviesa todas las capas
         regiones = [(n, r.difference(agujero), z0, z1, c) for n, r, z0, z1, c in regiones]
 
@@ -270,6 +303,7 @@ def _construir_llavero(a: Parametros):
         apartar_por_color([p for p, z in zip(niveles, arranques) if z > 0], todo.bounds[2])
 
     analisis = _analizar(niveles, todo, regiones, [c for c, _ in partes1])
+    analisis["formas_adorno"] = formas_extra
     if espiga:
         analisis["avisos"].append(
             f"Cada nivel sale suelto y apoyado en la mesa, al lado del anterior: imprímelo "

@@ -289,18 +289,38 @@
   </div>
 
   <details class="g" data-tipo="nombre" open>
-    <summary><span class="t">Letra y texto</span></summary>
-    <div class="cont">
+    <summary><span class="sw"><input id="usar_letra" type="checkbox"><i></i></span>
+      <span class="t">Letra grande</span>
+      <span class="q" tabindex="0" data-tip="La pieza grande del llavero. Puede ser una letra o un dibujo de la biblioteca. Apágala y el llavero sale solo con el texto y los adornos.">?</span></summary>
+    <div class="cont"><div id="caja-letra">
       <div class="fila">
+        <div><label>Qué va de fondo<span class="q" tabindex="0" data-tip="Una letra escrita con la fuente que elijas, o un dibujo de la biblioteca a tamaño grande.">?</span>
+          <select id="inicial_tipo">
+            <option value="letra">Una letra</option>
+            <option value="dibujo">Un dibujo</option>
+          </select></label></div>
+        <div><label>Altura (mm)<input id="tam_inicial" type="number" step="1" min="1"></label></div>
+      </div>
+      <div class="fila" id="caja-letra-letra">
         <div><label>Letras<span class="q" tabindex="0" data-tip="De 1 a 6 letras. Es la pieza grande del diseño.">?</span>
           <input id="inicial" maxlength="6" value="M"></label></div>
         <div><label>Fuente<select id="fuente_inicial"></select></label></div>
       </div>
-      <div class="fila">
-        <div><label>Altura (mm)<input id="tam_inicial" type="number" step="1" min="1"></label></div>
-        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor de la letra, en el color del nivel 1. Pon 0 para quitarlo.">?</span>
-          <input id="borde" type="number" step="0.5" min="0"></label></div>
+      <div class="fila" id="caja-letra-dibujo">
+        <div><label>Dibujo de fondo<button type="button" class="svgbtn" data-campo="inicial_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="inicial_svg"></div>
+        <div></div>
       </div>
+      <div class="fila">
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor del fondo, en el color del nivel 1. Pon 0 para quitarlo.">?</span>
+          <input id="borde" type="number" step="0.5" min="0"></label></div>
+        <div></div>
+      </div>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="nombre" open>
+    <summary><span class="t">Texto</span></summary>
+    <div class="cont">
       <label>Texto<span class="mover" tabindex="0" data-tip="Arrastra el texto en la vista 3D para colocarlo.">✥</span>
         <textarea id="texto" rows="2" placeholder="Enter para una segunda línea"></textarea></label>
       <div class="fila">
@@ -400,6 +420,78 @@
       </div>
       <label class="check"><input id="cortar_adorno" type="checkbox"> Separar con borde
         <span class="q" tabindex="0" data-tip="Deja un borde entre el adorno y la letra para que se distingan.">?</span></label>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="ad2" type="checkbox"><i></i></span>
+      <span class="t">Adorno 2<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro de la letra grande, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-ad2">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="ad2_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="ad2_svg"></div>
+        <div><label>Alto (mm)<input id="ad2_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="ad2_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="ad2_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="ad2_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="ad2_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="ad2_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="ad2_fila_c1"><label>1<select id="ad2_c1"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad2_tinta1" title="Color de esta forma"><input type="hidden" id="ad2_tinta1"></label></div>
+        <div id="ad2_fila_c2"><label>2<select id="ad2_c2"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad2_tinta2" title="Color de esta forma"><input type="hidden" id="ad2_tinta2"></label></div>
+        <div id="ad2_fila_c3"><label>3<select id="ad2_c3"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad2_tinta3" title="Color de esta forma"><input type="hidden" id="ad2_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="ad2_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="nombre">
+    <summary><span class="sw"><input id="ad3" type="checkbox"><i></i></span>
+      <span class="t">Adorno 3<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro de la letra grande, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-ad3">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="ad3_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="ad3_svg"></div>
+        <div><label>Alto (mm)<input id="ad3_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="ad3_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="ad3_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="ad3_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="ad3_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="ad3_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="ad3_fila_c1"><label>1<select id="ad3_c1"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad3_tinta1" title="Color de esta forma"><input type="hidden" id="ad3_tinta1"></label></div>
+        <div id="ad3_fila_c2"><label>2<select id="ad3_c2"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad3_tinta2" title="Color de esta forma"><input type="hidden" id="ad3_tinta2"></label></div>
+        <div id="ad3_fila_c3"><label>3<select id="ad3_c3"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="ad3_tinta3" title="Color de esta forma"><input type="hidden" id="ad3_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="ad3_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
     </div></div>
   </details>
 
@@ -755,6 +847,78 @@
   </details>
 
   <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_ad2" type="checkbox"><i></i></span>
+      <span class="t">Adorno 2<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro del apellido, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-cua-ad2">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="cua_ad2_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="cua_ad2_svg"></div>
+        <div><label>Alto (mm)<input id="cua_ad2_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="cua_ad2_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="cua_ad2_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="cua_ad2_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="cua_ad2_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="cua_ad2_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="cua_ad2_fila_c1"><label>1<select id="cua_ad2_c1"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad2_tinta1" title="Color de esta forma"><input type="hidden" id="cua_ad2_tinta1"></label></div>
+        <div id="cua_ad2_fila_c2"><label>2<select id="cua_ad2_c2"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad2_tinta2" title="Color de esta forma"><input type="hidden" id="cua_ad2_tinta2"></label></div>
+        <div id="cua_ad2_fila_c3"><label>3<select id="cua_ad2_c3"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad2_tinta3" title="Color de esta forma"><input type="hidden" id="cua_ad2_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="cua_ad2_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
+    <summary><span class="sw"><input id="cua_ad3" type="checkbox"><i></i></span>
+      <span class="t">Adorno 3<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro del apellido, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-cua-ad3">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="cua_ad3_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="cua_ad3_svg"></div>
+        <div><label>Alto (mm)<input id="cua_ad3_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="cua_ad3_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="cua_ad3_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="cua_ad3_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="cua_ad3_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="cua_ad3_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="cua_ad3_fila_c1"><label>1<select id="cua_ad3_c1"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad3_tinta1" title="Color de esta forma"><input type="hidden" id="cua_ad3_tinta1"></label></div>
+        <div id="cua_ad3_fila_c2"><label>2<select id="cua_ad3_c2"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad3_tinta2" title="Color de esta forma"><input type="hidden" id="cua_ad3_tinta2"></label></div>
+        <div id="cua_ad3_fila_c3"><label>3<select id="cua_ad3_c3"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_ad3_tinta3" title="Color de esta forma"><input type="hidden" id="cua_ad3_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="cua_ad3_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="cuadro">
     <summary><span class="sw"><input id="cua_patron" type="checkbox"><i></i></span>
       <span class="t">Patrón del apellido</span>
       <span class="q" tabindex="0" data-tip="Reparte motivos DENTRO de las letras del apellido: o ahuecados en la letra, o en relieve encima y en otro color.">?</span></summary>
@@ -930,6 +1094,78 @@
     </div></div>
   </details>
 
+  <details class="g" data-tipo="marca">
+    <summary><span class="sw"><input id="mar_ad2" type="checkbox"><i></i></span>
+      <span class="t">Adorno 2<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro de la letra grande, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-mar-ad2">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="mar_ad2_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="mar_ad2_svg"></div>
+        <div><label>Alto (mm)<input id="mar_ad2_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="mar_ad2_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="mar_ad2_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="mar_ad2_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="mar_ad2_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="mar_ad2_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="mar_ad2_fila_c1"><label>1<select id="mar_ad2_c1"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad2_tinta1" title="Color de esta forma"><input type="hidden" id="mar_ad2_tinta1"></label></div>
+        <div id="mar_ad2_fila_c2"><label>2<select id="mar_ad2_c2"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad2_tinta2" title="Color de esta forma"><input type="hidden" id="mar_ad2_tinta2"></label></div>
+        <div id="mar_ad2_fila_c3"><label>3<select id="mar_ad2_c3"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad2_tinta3" title="Color de esta forma"><input type="hidden" id="mar_ad2_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="mar_ad2_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
+    </div></div>
+  </details>
+
+  <details class="g" data-tipo="marca">
+    <summary><span class="sw"><input id="mar_ad3" type="checkbox"><i></i></span>
+      <span class="t">Adorno 3<span class="mover" tabindex="0" data-tip="Arrástralo en la vista 3D para colocarlo.">✥</span></span>
+      <span class="q" tabindex="0" data-tip="Otro dibujo de la biblioteca, suelto. Se coloca contando desde el centro de la letra grande, y la pieza crece para recogerlo.">?</span></summary>
+    <div class="cont"><div id="caja-mar-ad3">
+      <div class="fila">
+        <div><label>Dibujo<button type="button" class="svgbtn" data-campo="mar_ad3_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="mar_ad3_svg"></div>
+        <div><label>Alto (mm)<input id="mar_ad3_alto" type="number" step="1" min="4"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Izquierda / derecha (mm)<input id="mar_ad3_x" type="number" step="1"></label></div>
+        <div><label>Arriba / abajo (mm)<input id="mar_ad3_y" type="number" step="1"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Giro (°)<input id="mar_ad3_giro" type="number" step="5"></label></div>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa lo que haya debajo y detrás es eso lo que lo tapa a él. Así puedes montarlo sobre las letras sin que se peguen de mala manera.">?</span>
+          <select id="mar_ad3_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="mar_ad3_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
+      </div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="formas">
+        <div id="mar_ad3_fila_c1"><label>1<select id="mar_ad3_c1"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad3_tinta1" title="Color de esta forma"><input type="hidden" id="mar_ad3_tinta1"></label></div>
+        <div id="mar_ad3_fila_c2"><label>2<select id="mar_ad3_c2"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad3_tinta2" title="Color de esta forma"><input type="hidden" id="mar_ad3_tinta2"></label></div>
+        <div id="mar_ad3_fila_c3"><label>3<select id="mar_ad3_c3"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_ad3_tinta3" title="Color de esta forma"><input type="hidden" id="mar_ad3_tinta3"></label></div>
+      </div>
+      <button type="button" class="sec tintas-dibujo" data-pref="mar_ad3_" data-tip="Deshace los colores que hayas puesto a mano en este adorno y deja los que trae el dibujo.">↺ Colores del dibujo</button>
+    </div></div>
+  </details>
+
   <details class="g destacada" data-tipo="marca">
     <summary><span class="sw"><input id="mar_aparte" type="checkbox"><i></i></span>
       <span class="t">Imprimir cada color por separado</span>
@@ -970,6 +1206,8 @@
         <div><label>Fuente<select id="tor_fuente"></select></label></div>
       </div>
       <div class="fila">
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor del texto, en su propio nivel: la placa abajo, el contorno en medio y las letras arriba. 0 = sin contorno.">?</span>
+          <input id="tor_nombre_borde" type="number" step="0.5" min="0"></label></div>
         <div><label>Alto (mm)<input id="tor_alto_nombre" type="number" step="1" min="8"></label></div>
         <div><label>Aire entre piezas (mm)<span class="q" tabindex="0" data-tip="Hueco entre el nombre, la palabra y el número.">?</span>
           <input id="tor_hueco" type="number" step="0.5" min="0"></label></div>
@@ -987,6 +1225,12 @@
         <div><label>Color extra<span class="q" tabindex="0" data-tip="El tercer filamento, para los adornos que no lleven ni el color de la placa ni el de las letras.">?</span>
           <input id="tor_color_extra" type="color"></label></div>
       </div>
+      <div class="fila">
+        <div><label>Color del contorno<span class="q" tabindex="0" data-tip="El color del nivel de en medio: el contorno que rodea al nombre, a la palabra y al número.">?</span>
+          <input id="tor_color_borde" type="color"></label></div>
+        <div><label>Alto del contorno (mm)<span class="q" tabindex="0" data-tip="Cuánto sobresale el contorno. Menos que las letras, para que se vean los tres niveles.">?</span>
+          <input id="tor_relieve_borde" type="number" step="0.2" min="0.2"></label></div>
+      </div>
     </div></div>
   </details>
 
@@ -997,6 +1241,8 @@
     <div class="cont"><div id="caja-tor-palabra">
       <div class="fila">
         <div><label>Palabra<input id="tor_palabra" maxlength="20" placeholder="cumple"></label></div>
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor del texto, en su propio nivel: la placa abajo, el contorno en medio y las letras arriba. 0 = sin contorno.">?</span>
+          <input id="tor_palabra_borde" type="number" step="0.5" min="0"></label></div>
         <div><label>Alto (mm)<input id="tor_alto_palabra" type="number" step="1" min="4"></label></div>
       </div>
       <div class="fila">
@@ -1015,6 +1261,8 @@
     <div class="cont"><div id="caja-tor-numero">
       <div class="fila">
         <div><label>Número<input id="tor_numero" maxlength="20" placeholder="4"></label></div>
+        <div><label>Borde (mm)<span class="q" tabindex="0" data-tip="Contorno alrededor del texto, en su propio nivel: la placa abajo, el contorno en medio y las letras arriba. 0 = sin contorno.">?</span>
+          <input id="tor_numero_borde" type="number" step="0.5" min="0"></label></div>
         <div><label>Alto (mm)<input id="tor_alto_numero" type="number" step="1" min="8"></label></div>
       </div>
       <div class="fila">
@@ -1271,6 +1519,13 @@ import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
 
 const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'adorno_tinta1', 'adorno_tinta2', 'adorno_tinta3',
+                'usar_letra', 'inicial_tipo', 'inicial_svg',
+                'ad2','ad2_svg','ad2_alto','ad2_x','ad2_y','ad2_giro','ad2_detras','ad2_aire','ad2_c1','ad2_c2','ad2_c3','ad2_tinta1','ad2_tinta2','ad2_tinta3',
+                'ad3','ad3_svg','ad3_alto','ad3_x','ad3_y','ad3_giro','ad3_detras','ad3_aire','ad3_c1','ad3_c2','ad3_c3','ad3_tinta1','ad3_tinta2','ad3_tinta3',
+                'cua_ad2','cua_ad2_svg','cua_ad2_alto','cua_ad2_x','cua_ad2_y','cua_ad2_giro','cua_ad2_detras','cua_ad2_aire','cua_ad2_c1','cua_ad2_c2','cua_ad2_c3','cua_ad2_tinta1','cua_ad2_tinta2','cua_ad2_tinta3',
+                'cua_ad3','cua_ad3_svg','cua_ad3_alto','cua_ad3_x','cua_ad3_y','cua_ad3_giro','cua_ad3_detras','cua_ad3_aire','cua_ad3_c1','cua_ad3_c2','cua_ad3_c3','cua_ad3_tinta1','cua_ad3_tinta2','cua_ad3_tinta3',
+                'mar_ad2','mar_ad2_svg','mar_ad2_alto','mar_ad2_x','mar_ad2_y','mar_ad2_giro','mar_ad2_detras','mar_ad2_aire','mar_ad2_c1','mar_ad2_c2','mar_ad2_c3','mar_ad2_tinta1','mar_ad2_tinta2','mar_ad2_tinta3',
+                'mar_ad3','mar_ad3_svg','mar_ad3_alto','mar_ad3_x','mar_ad3_y','mar_ad3_giro','mar_ad3_detras','mar_ad3_aire','mar_ad3_c1','mar_ad3_c2','mar_ad3_c3','mar_ad3_tinta1','mar_ad3_tinta2','mar_ad3_tinta3',
                 'org_adorno_tinta1', 'org_adorno_tinta2', 'org_adorno_tinta3',
                 'cua_adorno_tinta1', 'cua_adorno_tinta2', 'cua_adorno_tinta3',
                 'mar_adorno_tinta1', 'mar_adorno_tinta2', 'mar_adorno_tinta3',
@@ -1327,6 +1582,8 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'tor_palabra','tor_palabra_arriba','tor_palabra_x','tor_palabra_y',
                 'tor_numero_x','tor_numero_y',
                 'tor_alto_palabra','tor_numero','tor_alto_numero','tor_hueco','tor_borde',
+                'tor_nombre_borde','tor_palabra_borde','tor_numero_borde',
+                'tor_relieve_borde','tor_color_borde',
                 'tor_grueso','tor_relieve','tor_suave','tor_color_base','tor_color_letras',
                 'tor_color_extra','tor_palo','tor_palos','tor_palo_largo','tor_palo_ancho',
                 'tor_palo_x','tor_aparte','tor_espiga','tor_holgura',
@@ -1469,14 +1726,17 @@ addEventListener('resize', ajustar); ajustar();
 // Un adorno puede venir partido en varias piezas (una por color), así que se agrupan.
 // el cuadro mueve la palabra de arriba y cada nombre con su gancho; el llavero, sus
 // adornos, el aro y el texto; el organizador coloca por campos y no se arrastra
+const SUELTO = /^Adorno ([23])(\.\d+)?$/;      // los adornos que se encienden aparte
 const esMovible = n => $('tipo').value === 'torta'
   ? (n.startsWith('Adorno') || ['Nombre', 'Palabra', 'Numero'].includes(n))
   : $('tipo').value === 'cuadro'
   ? (n === 'Titulo' || /^(Nombre|Gancho) \d+$/.test(n) || n.startsWith('Adorno'))
-  : $('tipo').value === 'marca' ? n.startsWith('Icono')
+  : $('tipo').value === 'marca' ? (n.startsWith('Icono') || SUELTO.test(n))
   : $('tipo').value === 'organizador' ? n.startsWith('Adorno')
   : (n === 'Aro' || n === 'Texto' || n.startsWith('Adorno'));
-const grupoDe = n => $('tipo').value === 'torta'
+const grupoDe = n => SUELTO.test(n) && $('tipo').value !== 'torta'
+                     ? 'ax' + SUELTO.exec(n)[1]
+                   : $('tipo').value === 'torta'
                      ? (n.startsWith('Adorno') ? 'a' + n.replace(/[^0-9.]/g, '').split('.')[0] : n)
                    : /^(?:Nombre|Gancho) (\d+)$/.test(n) ? 'n' + /(\d+)$/.exec(n)[1]
                    : n.startsWith('Icono') ? 'Icono'
@@ -1705,7 +1965,15 @@ render.domElement.addEventListener('pointerdown', e => {
 
   // qué apunta cada arrastre y qué grupo se mueve con él
   let fijar, compañero = null, signo = 1;
-  if ($('tipo').value === 'cuadro' && grupo !== 'Adorno') {
+  if (grupo.startsWith('ax')) {
+    // los adornos sueltos van en mm desde el centro, igual en todos los disenos
+    const pre = { cuadro: 'cua_', marca: 'mar_' }[$('tipo').value] || '';
+    const campo = pre + 'ad' + grupo.slice(2);
+    const x0 = +$(campo + '_x').value, y0 = +$(campo + '_y').value;
+    fijar = (dx, dy) => {
+      $(campo + '_x').value = medio(x0 + dx); $(campo + '_y').value = medio(y0 + dy);
+    };
+  } else if ($('tipo').value === 'cuadro' && grupo !== 'Adorno') {
     if (grupo === 'Titulo') {
       const x0 = +$('cua_titulo_x').value, y0 = +$('cua_sep_titulo').value;
       fijar = (dx, dy) => {
@@ -1808,11 +2076,17 @@ const CAJAS = [['usar_adorno', 'caja-adorno'], ['usar_patron', 'caja-patron'],
                ['tor_palo', 'caja-tor-palo'], ['tor_aparte', 'caja-tor-aparte'],
                ['tor_ad1', 'caja-tor-ad1'], ['tor_ad2', 'caja-tor-ad2'],
                ['tor_ad3', 'caja-tor-ad3'], ['usar_tor_nombre', 'caja-tor-nombre'],
+               ['usar_letra', 'caja-letra'],
+               ['ad2', 'caja-ad2'], ['ad3', 'caja-ad3'],
+               ['cua_ad2', 'caja-cua-ad2'], ['cua_ad3', 'caja-cua-ad3'],
+               ['mar_ad2', 'caja-mar-ad2'], ['mar_ad3', 'caja-mar-ad3'],
                ['usar_tor_palabra', 'caja-tor-palabra'],
                ['usar_tor_numero', 'caja-tor-numero']];
 function sincronizarCajas() {
   for (const [casilla, caja] of CAJAS) $(caja).hidden = !$(casilla).checked;
   $('caja-cua-encima').hidden = $('cua_patron_corta').checked;   // al revés: solo si NO corta
+  $('caja-letra-letra').hidden = $('inicial_tipo').value !== 'letra';
+  $('caja-letra-dibujo').hidden = $('inicial_tipo').value !== 'dibujo';
   $('caja-mar-ranura').hidden = $('mar_estilo').value !== 'ranura';
   $('caja-mar-calado').hidden = $('mar_estilo').value !== 'calado';
 }
@@ -1883,12 +2157,12 @@ function pintarFormasAdorno(analisis) {
       if (colores[i - 1]) tinta.value = colores[i - 1];     // el color que salió de verdad
     }
   }
-  // el topper lleva tres adornos, y cada uno cuenta sus propias formas
-  const porAdorno = (analisis && analisis.formas_adorno) || {};
-  for (let a = 1; a <= 3; a++) {
-    const suyos = porAdorno[a] || [];
+  // los adornos sueltos (topper, llavero, cuadro y marcapaginas) cuentan sus formas
+  // cada uno: el analisis manda la lista con la misma clave que llevan sus campos
+  for (const [pre, suyos] of Object.entries((analisis && analisis.formas_adorno) || {})) {
     for (let i = 1; i <= 3; i++) {
-      const fila = $('tor_ad' + a + '_fila_c' + i);
+      const fila = $(pre + '_fila_c' + i);
+      if (!fila) continue;
       fila.hidden = i > suyos.length;
       const tinta = fila.querySelector('.tinta');
       const sitio = fila.querySelector('select').value;

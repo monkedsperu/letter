@@ -9,6 +9,9 @@ MAX_LETRAS = 6
 class Parametros:
     tipo: str = "nombre"   # nombre | organizador | cuadro | marca | torta
     inicial: str = "M"
+    usar_letra: bool = True        # False = sin letra grande (solo texto y adornos)
+    inicial_tipo: str = "letra"    # letra | dibujo: de fondo va la letra o un dibujo
+    inicial_svg: str = "gato.svg"  # el dibujo del fondo, cuando inicial_tipo = "dibujo"
     texto: str = "Monkeds"
     fuente_inicial: str = "Cooper Black"
     tam_inicial: float = 80.0      # ALTURA real de la letra, en mm (8 cm)
@@ -56,6 +59,35 @@ class Parametros:
     adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
     adorno_tinta3: str = ""
     color_adorno: str = "#8a5a33"  # el color "extra", el cuarto del llavero
+    # Dos adornos más, sueltos, cada uno con su dibujo y su capa (se arrastran en el 3D)
+    ad2: bool = False               # adorno suelto 2 (apagado de fábrica)
+    ad2_svg: str = "estrella.svg"
+    ad2_alto: float = 30.0
+    ad2_x: float = 45.0             # desde el centro de la letra (mm)
+    ad2_y: float = 38.0
+    ad2_giro: float = 0.0
+    ad2_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    ad2_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    ad2_c1: str = "auto"
+    ad2_c2: str = "auto"
+    ad2_c3: str = "auto"
+    ad2_tinta1: str = ""
+    ad2_tinta2: str = ""
+    ad2_tinta3: str = ""
+    ad3: bool = False               # adorno suelto 3 (apagado de fábrica)
+    ad3_svg: str = "corazon.svg"
+    ad3_alto: float = 26.0
+    ad3_x: float = -45.0             # desde el centro de la letra (mm)
+    ad3_y: float = -34.0
+    ad3_giro: float = 0.0
+    ad3_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    ad3_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    ad3_c1: str = "auto"
+    ad3_c2: str = "auto"
+    ad3_c3: str = "auto"
+    ad3_tinta1: str = ""
+    ad3_tinta2: str = ""
+    ad3_tinta3: str = ""
     # Aro para llavero: anillo plano pegado a la letra, con el grosor del nivel 1
     aro: bool = False
     aro_diametro: float = 17.0     # diámetro exterior (mm)
@@ -174,6 +206,35 @@ class Parametros:
     cua_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
     cua_adorno_tinta3: str = ""
     cua_color_adorno: str = "#e8872b"
+    # Dos adornos más, sueltos: se miden en mm desde el centro del apellido
+    cua_ad2: bool = False               # adorno suelto 2 (apagado de fábrica)
+    cua_ad2_svg: str = "estrella.svg"
+    cua_ad2_alto: float = 30.0
+    cua_ad2_x: float = -78.0             # desde el centro del apellido (mm)
+    cua_ad2_y: float = 30.0
+    cua_ad2_giro: float = 0.0
+    cua_ad2_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    cua_ad2_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    cua_ad2_c1: str = "auto"
+    cua_ad2_c2: str = "auto"
+    cua_ad2_c3: str = "auto"
+    cua_ad2_tinta1: str = ""
+    cua_ad2_tinta2: str = ""
+    cua_ad2_tinta3: str = ""
+    cua_ad3: bool = False               # adorno suelto 3 (apagado de fábrica)
+    cua_ad3_svg: str = "corazon.svg"
+    cua_ad3_alto: float = 26.0
+    cua_ad3_x: float = 78.0             # desde el centro del apellido (mm)
+    cua_ad3_y: float = 30.0
+    cua_ad3_giro: float = 0.0
+    cua_ad3_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    cua_ad3_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    cua_ad3_c1: str = "auto"
+    cua_ad3_c2: str = "auto"
+    cua_ad3_c3: str = "auto"
+    cua_ad3_tinta1: str = ""
+    cua_ad3_tinta2: str = ""
+    cua_ad3_tinta3: str = ""
     # Patrón: motivos repartidos DENTRO del apellido, en relieve sobre las letras
     cua_patron: bool = True
     cua_patron_svg: str = "copos_y_puntos.svg"
@@ -246,6 +307,35 @@ class Parametros:
     mar_adorno_tinta2: str = ""      # vacío = el que trae el dibujo (o la paleta)
     mar_adorno_tinta3: str = ""
     mar_color_adorno: str = "#9ec77a"
+    # Dos iconos más, sueltos, alrededor de la letra grande
+    mar_ad2: bool = False               # adorno suelto 2 (apagado de fábrica)
+    mar_ad2_svg: str = "estrella.svg"
+    mar_ad2_alto: float = 14.0
+    mar_ad2_x: float = -18.0             # desde el centro de la letra grande (mm)
+    mar_ad2_y: float = 14.0
+    mar_ad2_giro: float = 0.0
+    mar_ad2_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    mar_ad2_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    mar_ad2_c1: str = "auto"
+    mar_ad2_c2: str = "auto"
+    mar_ad2_c3: str = "auto"
+    mar_ad2_tinta1: str = ""
+    mar_ad2_tinta2: str = ""
+    mar_ad2_tinta3: str = ""
+    mar_ad3: bool = False               # adorno suelto 3 (apagado de fábrica)
+    mar_ad3_svg: str = "corazon.svg"
+    mar_ad3_alto: float = 12.0
+    mar_ad3_x: float = 16.0             # desde el centro de la letra grande (mm)
+    mar_ad3_y: float = -14.0
+    mar_ad3_giro: float = 0.0
+    mar_ad3_detras: bool = True         # True = pasa por detrás y lo de abajo lo corta
+    mar_ad3_aire: float = 0.8           # hueco que deja el que manda alrededor (mm)
+    mar_ad3_c1: str = "auto"
+    mar_ad3_c2: str = "auto"
+    mar_ad3_c3: str = "auto"
+    mar_ad3_tinta1: str = ""
+    mar_ad3_tinta2: str = ""
+    mar_ad3_tinta3: str = ""
 
     # ---------------------------------------------------------- diseño 5: topper de tarta
     tor_nombre: str = "Mateo"
@@ -262,6 +352,11 @@ class Parametros:
     tor_alto_numero: float = 46.0
     tor_numero_x: float = 0.0
     tor_numero_y: float = 0.0
+    tor_nombre_borde: float = 2.5       # contorno de cada texto, en su propio nivel (mm);
+    tor_palabra_borde: float = 2.5      # 0 = sin contorno
+    tor_numero_borde: float = 2.5
+    tor_relieve_borde: float = 0.8      # cuánto sobresale el contorno (menos que las letras)
+    tor_color_borde: str = "#2b4a63"
     tor_hueco: float = 4.0              # aire entre nombre, palabra y número (mm)
     tor_borde: float = 4.0              # la placa que sobra alrededor y lo une todo
     tor_grueso: float = 3.0             # grosor de la placa

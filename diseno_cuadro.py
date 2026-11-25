@@ -11,7 +11,8 @@ from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
 
 from comun import (GROSOR_MINIMO, _analizar, _booleana, _poligonos, adorno_en_grupos,
-                   apartar_por_color, extruir, repartir_patron, texto_a_poligono)
+                   adornos_extra, apartar_por_color, extruir, repartir_patron,
+                   texto_a_poligono)
 from parametros import Parametros
 
 MAX_INTEGRANTES = 8
@@ -229,6 +230,18 @@ def construir_cuadro(a: Parametros):
         if a.cua_adorno else []
     adorno = unary_union([g for _, g in partes_adorno]) if partes_adorno else Polygon()
 
+    # ---- dos adornos más, sueltos: se miden en mm desde el centro del apellido y cada uno
+    # elige su capa, así que o los corta el apellido o lo cortan ellos a él
+    extra, formas_extra, recorte = adornos_extra(
+        a, "cua_", (2, 3), 0.0, alto_familia / 2,
+        {"placa": a.cua_color_placa, "familia": a.cua_color_familia,
+         "integrantes": a.cua_color_integrantes, "extra": a.cua_color_adorno},
+        a.cua_color_adorno, ("familia", "placa", "extra"), letras)
+    if not recorte.is_empty:
+        letras = letras.difference(recorte)
+    if extra:      # entran en la silueta: la corona los esquiva y la placa los recoge
+        adorno = unary_union([adorno] + [g for _, _, g, _ in extra])
+
     # ---- los de la casa: en fila debajo, o en corona alrededor del apellido
     fila = _fila_de_nombres(a, nombres) if nombres else []
     if fila:
@@ -358,6 +371,7 @@ def construir_cuadro(a: Parametros):
     varios = len(partes_adorno) > 1
     for i, (color, g) in enumerate(partes_adorno, 1):
         relieve.append((f"Adorno {i}" if varios else "Adorno", g, techo, color))
+    relieve += [(n, g, techo, c) for _, n, g, c in extra]
     relieve = [r for r in relieve if not r[1].is_empty]
 
     if espiga:
@@ -398,6 +412,7 @@ def construir_cuadro(a: Parametros):
     regiones = [("Placa", placa, 0.0, suelo, a.cua_color_placa)] + \
                [(n, g, suelo - espiga, z, c) for n, g, z, c in relieve]
     analisis = _analizar(niveles, placa, regiones, [c for c, _ in partes_adorno])
+    analisis["formas_adorno"] = formas_extra
     analisis["colgar"] = [[round(x, 2), round(y, 2)] for x, y in donde_colgar]
     analisis["ancho_base"] = round(ancho_familia, 2)   # a lo que se refiere el % del adorno
     if sitios:

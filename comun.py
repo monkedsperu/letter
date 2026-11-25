@@ -321,6 +321,8 @@ MAX_DARDOS = 25000     # y un tope de intentos: el reparto nunca puede eternizar
 def repartir_patron(zona, nombre: str, tam: float, separacion: float, semilla: int,
                     girar: bool):
     """Reparte al azar los motivos del SVG dentro de `zona`, enteros y sin tocarse entre sí."""
+    if zona.is_empty or zona.area <= 0:
+        return Polygon()        # sin sitio donde repartir no hay patrón, y punto
     ruta = svg_dentro_de(CARPETA_PATRONES, nombre)
     if not ruta:
         raise ValueError(f"No encontré el patrón '{nombre}' en {CARPETA_PATRONES}")
@@ -557,6 +559,44 @@ def _borde_que_une(poligono, desde: float, maximo: float = 30.0):
         else:
             bajo = medio
     return alto
+
+
+def adornos_extra(a, pre: str, numeros, cx: float, cy: float, paleta: dict,
+                  por_defecto: str, reserva=(), abajo=None):
+    """Los adornos sueltos de un diseño -los que se encienden uno a uno- ya colocados.
+
+    Cada uno se lee de los campos `{pre}ad{n}`: dibujo, alto, sitio, giro, capa y colores.
+    Devuelve ([(clave, nombre, polígono, color)], {clave: [colores de sus formas]}, recorte).
+    Con `abajo` (lo que el adorno tiene debajo, ya unido) se respeta la capa: "detrás" lo
+    corta lo de abajo, y "delante" devuelve en `recorte` lo que el adorno le quita a eso,
+    para que nunca queden pisados."""
+    puestos, por_adorno, recorte = [], {}, Polygon()
+    abajo = Polygon() if abajo is None else abajo
+    for i in numeros:
+        if not getattr(a, f"{pre}ad{i}"):
+            continue
+        alto = getattr(a, f"{pre}ad{i}_alto")
+        partes = adorno_en_grupos(
+            getattr(a, f"{pre}ad{i}_svg"), alto, getattr(a, f"{pre}ad{i}_giro"),
+            cx + getattr(a, f"{pre}ad{i}_x"), cy + getattr(a, f"{pre}ad{i}_y") - alto / 2,
+            paleta, [getattr(a, f"{pre}ad{i}_c{j}") for j in (1, 2, 3)],
+            por_defecto, reserva,
+            tuple(getattr(a, f"{pre}ad{i}_tinta{j}") for j in (1, 2, 3)))
+        aire = max(getattr(a, f"{pre}ad{i}_aire"), 0.0)
+        if partes and not abajo.is_empty:
+            if getattr(a, f"{pre}ad{i}_detras"):
+                corte = abajo.buffer(aire, join_style=1) if aire else abajo
+                partes = [(c, g.difference(corte)) for c, g in partes]
+                partes = [(c, g) for c, g in partes if not g.is_empty]
+            else:
+                dibujo = unary_union([g for _, g in partes])
+                recorte = recorte.union(dibujo.buffer(aire, join_style=1) if aire else dibujo)
+        varios = len(partes) > 1
+        for j, (color, g) in enumerate(partes, 1):
+            puestos.append((f"{pre}ad{i}", f"Adorno {i}" + (f".{j}" if varios else ""),
+                            g, color))
+        por_adorno[f"{pre}ad{i}"] = [c for c, _ in partes]
+    return puestos, por_adorno, recorte
 
 
 def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: float,

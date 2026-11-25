@@ -714,6 +714,13 @@ _l_delante, _a_delante = _areas_torta(tor_ad1_detras=False)
 assert _a_detras < _a_delante, (_a_detras, _a_delante)       # detrás, lo cortan las letras
 assert _l_delante < _l_detras, (_l_delante, _l_detras)       # delante, corta él a las letras
 
+# el contorno de cada texto es su propio nivel, entre la placa y las letras
+_con_borde = {n for n, _, _ in topper}
+assert {"Borde nombre", "Borde palabra", "Borde numero"} <= _con_borde, _con_borde
+_sin_borde = [n for n, _, _ in gen.construir_con_analisis(gen.Parametros(
+    tipo="torta", tor_nombre_borde=0, tor_palabra_borde=0, tor_numero_borde=0))[0]]
+assert not [n for n in _sin_borde if n.startswith("Borde")], _sin_borde
+
 # y el palo tiene que caer dentro del topper
 try:
     gen.construir_con_analisis(gen.Parametros(tipo="torta", tor_palo_x=300))
@@ -807,5 +814,26 @@ mal = como(ana).post("/api/preview", json={"tipo": "organizador", "org_vaso_diam
 assert mal.status_code == 400 and "vaso" in mal.get_json()["error"], mal.get_json()
 raro = como(ana).post("/api/preview", json={"tipo": "nave espacial"})
 assert raro.status_code == 400, raro.get_json()
+
+# ------------------------------- lo que comparten los cinco: adornos sueltos y capas
+# dos adornos mas en llavero, cuadro y marcapaginas, cada uno con su capa
+for _tipo, _pre, _mas in (("nombre", "", {}), ("cuadro", "cua_", {}), ("marca", "mar_", {}),
+                          ("torta", "tor_", {})):
+    _n2 = 2 if _pre else 2
+    _base = {f"{_pre}ad{_n2}": True}
+    _base.update(_mas)
+    _piezas, _datos = gen.construir_con_analisis(gen.Parametros(tipo=_tipo, **_base))
+    assert any(n.startswith(f"Adorno {_n2}") for n, _, _ in _piezas), (_tipo, _piezas)
+    assert f"{_pre}ad{_n2}" in _datos["formas_adorno"], (_tipo, _datos["formas_adorno"])
+    assert all(m.is_watertight and m.volume > 0 for _, _, m in _piezas), _tipo
+
+# la letra grande del llavero se puede apagar, o cambiarla por un dibujo
+_sin_letra = gen.construir_con_analisis(gen.Parametros(usar_letra=False))[0]
+assert [n for n, _, _ in _sin_letra], "sin letra el llavero sigue teniendo texto y adornos"
+assert all(m.is_watertight for _, _, m in _sin_letra)
+_dibujo = gen.construir_con_analisis(gen.Parametros(inicial_tipo="dibujo",
+                                                    inicial_svg="gato.svg"))[0]
+_area = lambda ps, q: sum(m.volume for n, _, m in ps if n == q)
+assert _area(_dibujo, "Nivel 2") != _area(llavero, "Nivel 2"), "el dibujo de fondo no cambio nada"
 
 print("OK: plantillas, contraseñas y los cinco diseños (llavero, organizador, cuadro, marcapáginas y topper).")
