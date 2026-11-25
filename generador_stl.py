@@ -28,12 +28,11 @@ import argparse
 import trimesh
 from shapely.errors import GEOSException
 
-from comun import (APP, AQUI, CAMA_TIPICA, CARPETA_ADORNOS, CARPETA_FUENTES,  # noqa: F401
-                   CARPETA_PATRONES, CONTACTO, MARCA, VERSION,
+from comun import (AQUI, CARPETA_ADORNOS, CARPETA_FUENTES, CARPETA_PATRONES,  # noqa: F401
                    _borde_que_une, _poligonos, adornos_disponibles, cargar_fuente,
-                   exportar_3mf, exportar_stl, exportar_stl_por_color, extruir,
-                   fuentes_instaladas, grupos_adorno, miniatura_png, patrones_disponibles,
-                   svg_a_poligono, svg_dentro_de, svgs_en, texto_a_poligono)
+                   exportar_3mf, exportar_stl, extruir, fuentes_instaladas, grupos_adorno,
+                   miniatura_png, patrones_disponibles, svg_a_poligono, svg_dentro_de,
+                   svgs_en, texto_a_poligono)
 from diseno_cuadro import construir_cuadro
 from diseno_llavero import _construir_llavero
 from diseno_marca import construir_marca
@@ -65,8 +64,7 @@ def construir(a: Parametros):
 
 def main():
     d = Parametros()
-    p = argparse.ArgumentParser(
-        description=f"{MARCA}: genera un 3MF a color con letra inicial + texto.")
+    p = argparse.ArgumentParser(description="Monkeds Letter: genera un 3MF a color con letra inicial + texto.")
     p.add_argument("--inicial", required=True, help="Letra grande: 1 o 2 letras (ej. M o MA)")
     p.add_argument("--texto", default=d.texto, help="Texto que acompaña a la inicial")
     p.add_argument("--fuente-inicial", default=d.fuente_inicial)

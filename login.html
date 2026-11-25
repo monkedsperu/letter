@@ -19,9 +19,6 @@
   button.sec:hover { background:#dfe9f7; }
   .nota { font-size:11px; color:var(--mut); line-height:1.5; margin:10px 0 0; }
   h1 { font-size:22px; margin:0 0 4px; color:var(--acc2); }
-  h1 .ver { font-size:10px; font-weight:600; color:var(--mut); background:#eef2f7;
-            border:1px solid var(--bd); border-radius:20px; padding:1px 7px; vertical-align:4px; }
-  .pide-cuenta { font-size:12px; color:var(--mut); margin:0 0 10px; }
   p.sub { margin:0 0 18px; font-size:13px; color:var(--mut); }
   label { display:block; font-size:12px; color:var(--mut); margin-top:12px; }
   input { width:100%; padding:9px 10px; margin-top:4px; border:1px solid var(--bd); border-radius:6px;
@@ -35,10 +32,8 @@
 </head>
 <body>
 <div class="caja">
-  <h1>Monkeds Letter <small class="ver">0.0.1 beta</small></h1>
+  <h1>Monkeds Letter</h1>
   <p class="sub">Entra con tu usuario para generar tus letras.</p>
-  <p class="pide-cuenta">¿No tienes cuenta? Escribe a
-     <a href="mailto:medientg@gmail.com">medientg@gmail.com</a> y te la creo.</p>
 
   <form method="post" action="/login">
     <label>Usuario<input name="usuario" autocomplete="username" autofocus required></label>
@@ -53,7 +48,7 @@
     <button type="submit" class="sec">Entrar como invitado</button>
   </form>
   <p class="nota">Como invitado puedes diseñar y ver la vista previa sin límite, pero los archivos
-     salen con el texto modificado. Pide tu cuenta en <a href="mailto:medientg@gmail.com">medientg@gmail.com</a> para generarlos tal cual.</p>
+     salen con el texto modificado. Pide una cuenta al administrador para generarlos tal cual.</p>
 
   <div id="err" class="err" hidden></div>
 </div>

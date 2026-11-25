@@ -13,11 +13,8 @@ from shapely import affinity
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import nearest_points, unary_union
 
-from comun import (CARPETA_ADORNOS, GROSOR_MINIMO, _analizar, apartar_por_color,
-                   capas_con_chaflan,
-                   color_de_la_forma,
-                   extruir, grupos_adorno, repartir_patron, svg_dentro_de,
-                   texto_a_poligono, texto_en_lineas)
+from comun import (CARPETA_ADORNOS, _analizar, extruir, grupos_adorno, repartir_patron,
+                   svg_dentro_de, texto_a_poligono, texto_en_lineas)
 from parametros import MAX_LETRAS, Parametros
 
 def colocar_adorno(a: Parametros, cx: float, cy: float):
@@ -29,16 +26,14 @@ def colocar_adorno(a: Parametros, cx: float, cy: float):
         raise ValueError(f"No encontré el adorno '{nombre}' en {CARPETA_ADORNOS}")
     if a.tam_adorno <= 0:
         raise ValueError("El tamaño del adorno debe ser mayor que 0.")
-    # Del SVG se aprovechan las formas; el color lo pone el dibujo o la paleta del llavero
-    grupos = grupos_adorno(ruta, mm_alto=a.tam_adorno)
+    # El SVG solo separa las formas; el color lo pone la paleta del llavero.
+    grupos = grupos_adorno(ruta)
     destinos = [a.adorno_c1, a.adorno_c2, a.adorno_c3]
     paleta = {"base": a.color_nivel1, "letra": a.color_nivel2,
               "texto": a.color_nivel3, "extra": a.color_adorno}
     porcolor = {}
     for i, (_, g) in enumerate(grupos):
-        color = color_de_la_forma(i, grupos, destinos, paleta, a.color_adorno,
-                                  ("extra", "base", "texto"),
-                                  (a.adorno_tinta1, a.adorno_tinta2, a.adorno_tinta3))
+        color = paleta.get(destinos[i] if i < len(destinos) else "extra", a.color_adorno)
         porcolor[color] = porcolor[color].union(g) if color in porcolor else g
     partes = list(porcolor.items())
 
@@ -104,17 +99,19 @@ def hueco_iman(a: Parametros, cx: float, cy: float):
     return Point(cx + a.iman_x, cy + a.iman_y).buffer(a.iman_diametro / 2, 64)
 
 
-def _rebanar(tramos, altura: float, recorte, arriba: bool):
-    """Parte los tramos [(región, za, zb)] a esa altura y le quita `recorte` a los de
-    arriba (o a los de abajo, si arriba=False). Sirve lo mismo para el bolsillo del imán
-    que para el hueco donde encaja la pieza de encima."""
-    fuera = []
-    for region, za, zb in tramos:
-        for a0, b0 in ((za, min(zb, altura)), (max(za, altura), zb)):
-            if b0 - a0 > 1e-4:
-                toca = (a0 >= altura - 1e-9) == arriba
-                fuera.append((region.difference(recorte) if toca else region, a0, b0))
-    return fuera
+def capas_con_chaflan(region, z0: float, z1: float, chaflan: float, pasos: int = 3):
+    """[(region, z0, z1)] de una capa. Con chaflán, el tramo de arriba se hace en escalones
+    cada vez más estrechos: a 0.2 mm de capa, impreso se ve igual que un bisel."""
+    if chaflan <= 0 or region.is_empty:
+        return [(region, z0, z1)]
+    chaflan = min(chaflan, (z1 - z0) * 0.6)
+    alto_paso = chaflan / pasos
+    tramos = [(region, z0, z1 - chaflan)]
+    for i in range(pasos):
+        encogido = region.buffer(-chaflan * (i + 1) / pasos, join_style=2)
+        if not encogido.is_empty:
+            tramos.append((encogido, z1 - chaflan + i * alto_paso, z1 - chaflan + (i + 1) * alto_paso))
+    return tramos
 
 
 def _construir_llavero(a: Parametros):
@@ -132,16 +129,6 @@ def _construir_llavero(a: Parametros):
         raise ValueError("La altura de la letra debe ser mayor que 0.")
     if a.texto.strip() and a.tam_texto <= 0:
         raise ValueError("El tamaño del texto debe ser mayor que 0.")
-    espiga = max(a.espiga, 0.0) if a.aparte else 0.0
-    holgura = min(max(a.holgura, 0.0), 1.0) if espiga else 0.0
-    if espiga:
-        capa = min(a.alto_nivel1, a.alto_nivel2 - a.alto_nivel1)
-        if espiga + holgura > capa - GROSOR_MINIMO:
-            raise ValueError(f"Un hueco de {espiga + holgura:.1f} mm no cabe en una capa de "
-                             f"{capa:.1f} mm: sube las alturas o baja la hondura del hueco.")
-        if a.iman and a.iman_hondo + espiga + holgura > a.alto_nivel1 - GROSOR_MINIMO:
-            raise ValueError("El hueco del imán y el de encaje no caben los dos en el "
-                             "nivel 1: sube su altura o baja una de las dos honduras.")
 
     # Letra inicial escalada para que su ALTURA sea exactamente tam_inicial
     letra = texto_a_poligono(a.inicial.strip(), a.fuente_inicial, 100)
@@ -236,43 +223,23 @@ def _construir_llavero(a: Parametros):
 
     # Hueco del imán: solo se quita del tramo de abajo del nivel 1, así queda un bolsillo.
     bolsillo = hueco_iman(a, *centro)
-    # Por piezas: cada nivel crece una espiga hacia abajo y al de debajo se le vacía esa
-    # silueta con holgura, así que al pegar cae solo en su sitio y no hay que alinear a ojo.
-    bolsas = {}
-    if espiga:
-        for altura in (a.alto_nivel1, a.alto_nivel2):
-            encima = [r for _, r, z0, _, _ in regiones
-                      if abs(z0 - altura) < 1e-9 and not r.is_empty]
-            if encima:
-                bolsas[altura] = unary_union(encima).buffer(holgura, join_style=1)
-
-    niveles, arranques = [], []
+    niveles = []
     for nombre, region, z0, z1, color in regiones:
-        if espiga:
-            tramos = [(region, max(z0 - espiga, 0.0), z1)]
-            if z1 in bolsas:
-                tramos = _rebanar(tramos, z1 - (espiga + holgura), bolsas[z1], True)
-        else:
-            tramos = capas_con_chaflan(region, z0, z1, a.chaflan)
+        tramos = capas_con_chaflan(region, z0, z1, a.chaflan)
         if not bolsillo.is_empty and z0 == 0.0:
-            tramos = _rebanar(tramos, a.iman_hondo, bolsillo, False)
+            # abajo del todo, el tramo con el hueco; encima, los tramos normales recortados
+            hondo = a.iman_hondo
+            recortados = [(region.difference(bolsillo), 0.0, hondo)]
+            for r, za, zb in tramos:
+                if zb > max(za, hondo):
+                    recortados.append((r, max(za, hondo), zb))
+            tramos = recortados
         mallas = []
         for r, za, zb in tramos:
             if zb - za > 1e-4:
                 mallas += extruir(r, zb - za, za)
         if mallas:
             niveles.append((nombre, color, trimesh.util.concatenate(mallas)))
-            arranques.append(z0)
     if not niveles:
         raise ValueError("No se generó geometría. Revisa los parámetros.")
-
-    if espiga:   # cada color suelto, en fila a la derecha y apoyado en la mesa
-        apartar_por_color([p for p, z in zip(niveles, arranques) if z > 0], todo.bounds[2])
-
-    analisis = _analizar(niveles, todo, regiones, [c for c, _ in partes1])
-    if espiga:
-        analisis["avisos"].append(
-            f"Cada nivel sale suelto y apoyado en la mesa, al lado del anterior: imprímelo "
-            f"con su filamento y pégalo en su hueco ({espiga:.1f} mm de hondura y "
-            f"{holgura:.1f} mm de holgura).")
-    return niveles, analisis
+    return niveles, _analizar(niveles, todo, regiones, len(partes1))

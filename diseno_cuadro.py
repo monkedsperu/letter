@@ -4,14 +4,13 @@ casa alrededor, un gancho bajo cada uno y la placa recortada con la forma del co
 import math
 import re
 
-import numpy as np
 import trimesh
 from shapely import affinity
 from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
 
-from comun import (GROSOR_MINIMO, _analizar, _booleana, _poligonos, adorno_en_grupos,
-                   apartar_por_color, extruir, repartir_patron, texto_a_poligono)
+from comun import (HUECO_APARTE, _analizar, _booleana, _poligonos, adorno_en_grupos,
+                   extruir, repartir_patron, texto_a_poligono, GROSOR_MINIMO)
 from parametros import Parametros
 
 MAX_INTEGRANTES = 8
@@ -98,64 +97,30 @@ def _desplazamientos(texto: str, cuantos: int):
     return (movidos + [(0.0, 0.0)] * cuantos)[:cuantos]
 
 
-def _tubo(camino, radio: float):
-    """Un tubo redondo que pasa por todos los puntos: un cilindro entre cada dos y una bola
-    en cada codo. Barriendo el perfil de una vez el arranque salía retorcido, como si lo
-    hubieran estirado; así cada tramo es un cilindro de verdad."""
-    piezas = []
-    for a, b in zip(camino[:-1], camino[1:]):
-        v = np.array(b, dtype=float) - np.array(a, dtype=float)
-        largo = float(np.linalg.norm(v))
-        if largo < 1e-9:
-            continue
-        cilindro = trimesh.creation.cylinder(radius=radio, height=largo, sections=24)
-        cilindro.apply_transform(trimesh.geometry.align_vectors([0, 0, 1], v / largo))
-        cilindro.apply_translation((np.array(a) + np.array(b)) / 2)
-        piezas.append(cilindro)
-    for codo in camino[1:]:
-        bola = trimesh.creation.icosphere(subdivisions=2, radius=radio)
-        bola.apply_translation(codo)
-        piezas.append(bola)
-    return _booleana(trimesh.boolean.union, piezas, "formar el gancho")
-
-
-def hondura_del_gancho(espiga: float, grueso_placa: float, holgura: float) -> float:
-    """Lo que se clava el gancho en la placa. Como es el único que carga peso -las llaves
-    tiran de él hacia abajo- entra más hondo que las letras: todo lo que deje la placa sin
-    quedarse sin suelo."""
-    if espiga <= 0:
-        return 0.0
-    return max(espiga, min(espiga * 2.5, grueso_placa - GROSOR_MINIMO - holgura))
-
-
-def _gancho(cx: float, cy: float, z0: float, largo: float, grueso: float, curva: float,
+def _pincho(cx: float, cy: float, z0: float, largo: float, grueso: float, angulo: float,
             espiga: float = 0.0, holgura: float = 0.0):
-    """El gancho de las llaves: sale de la placa en perpendicular y se arquea hacia arriba
-    lo que diga `curva`, con la punta redondeada para que la llave no se escape ni arañe.
-    Devuelve (gancho, hueco); el hueco solo existe si va suelto, y es recto porque el gancho
-    entra derecho: un taladro limpio en la placa y nada que alinear al pegarlo. Como aguanta
-    el peso de las llaves, su espiga entra más honda que la del resto de piezas."""
+    """El gancho de las llaves -un palo con la punta redondeada para que la llave no se
+    escape ni arañe- y, si va suelto, el hueco inclinado donde se clava.
+    Clavado en la placa sale ya inclinado. Suelto sale recto y de pie, porque la inclinación
+    la da el hueco: así se imprime sin soportes y al pegarlo cae solo en su ángulo."""
     radio = max(grueso, 1.0) / 2
-    arco = math.radians(min(max(curva, 30.0), 200.0))
-    recto = max(largo * 0.35, radio)            # el tramo que sale derecho antes de curvarse
-    r_curva = max(largo - recto, radio * 1.2)   # lo que queda, en radio de la curva
-    # el camino, en el plano YZ: primero hacia fuera (+Z) y luego girando hacia arriba (+Y)
-    puntos = [(0.0, 0.0, -espiga), (0.0, 0.0, recto)]
-    pasos = max(8, int(arco / math.radians(10)))
-    for i in range(1, pasos + 1):
-        t = arco * i / pasos
-        puntos.append((0.0, r_curva * (1 - math.cos(t)), recto + r_curva * math.sin(t)))
-    gancho = _tubo(puntos, radio)
-
-    hueco = None
-    if espiga:
-        hondo = espiga + holgura
-        hueco = trimesh.creation.cylinder(radius=radio + holgura, height=hondo + 1, sections=24)
-        hueco.apply_translation([0, 0, (1 - hondo) / 2])   # 1 mm de más fuera, para cortar bien
-        hueco.apply_translation([cx, cy, z0])
-        # suelto se imprime de lado: la C es plana y tumbada no tiene un solo voladizo
-        gancho.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, (0, 1, 0)))
+    palo = trimesh.creation.cylinder(radius=radio, height=largo + espiga, sections=24)
+    palo.apply_translation([0, 0, (largo - espiga) / 2])
+    punta = trimesh.creation.icosphere(subdivisions=2, radius=radio)
+    punta.apply_translation([0, 0, largo])
+    gancho = _booleana(trimesh.boolean.union, [palo, punta], "formar el gancho")
+    tumbar = trimesh.transformations.rotation_matrix(
+        -math.radians(min(max(angulo, 0), 60)), (1, 0, 0))
+    if not espiga:
+        gancho.apply_transform(tumbar)
+        gancho.apply_translation([cx, cy, z0])
+        return gancho, None
     gancho.apply_translation([cx, cy, z0])
+    hondo = espiga + holgura
+    hueco = trimesh.creation.cylinder(radius=radio + holgura, height=hondo + 1, sections=24)
+    hueco.apply_translation([0, 0, (1 - hondo) / 2])     # 1 mm de más por fuera, para cortar
+    hueco.apply_transform(tumbar)
+    hueco.apply_translation([cx, cy, z0])
     return gancho, hueco
 
 
@@ -224,9 +189,7 @@ def construir_cuadro(a: Parametros):
         {"placa": a.cua_color_placa, "familia": a.cua_color_familia,
          "integrantes": a.cua_color_integrantes, "extra": a.cua_color_adorno},
         [a.cua_adorno_c1, a.cua_adorno_c2, a.cua_adorno_c3],
-        a.cua_color_adorno, ("familia", "placa", "extra"),
-        (a.cua_adorno_tinta1, a.cua_adorno_tinta2, a.cua_adorno_tinta3)) \
-        if a.cua_adorno else []
+        a.cua_color_adorno) if a.cua_adorno else []
     adorno = unary_union([g for _, g in partes_adorno]) if partes_adorno else Polygon()
 
     # ---- los de la casa: en fila debajo, o en corona alrededor del apellido
@@ -372,9 +335,8 @@ def construir_cuadro(a: Parametros):
     # ---- los ganchos, y el hueco inclinado que le abren a la placa si van sueltos
     pinchos, huecos = [], []
     for x, y in sitios:
-        gancho, hueco = _gancho(x, y, suelo if espiga else suelo - 0.6, a.cua_gancho_largo,
-                                a.cua_gancho_grueso, a.cua_gancho_curva,
-                                hondura_del_gancho(espiga, a.cua_placa, holgura), holgura)
+        gancho, hueco = _pincho(x, y, suelo if espiga else suelo - 0.6, a.cua_gancho_largo,
+                                a.cua_gancho_grueso, a.cua_gancho_angulo, espiga, holgura)
         pinchos.append(gancho)      # uno por nombre, para que le siga cuando lo arrastran
         if hueco is not None:
             huecos.append(hueco)
@@ -392,21 +354,23 @@ def construir_cuadro(a: Parametros):
     if len(niveles) < 2:
         raise ValueError("No se generó geometría. Revisa los parámetros.")
 
-    if espiga:      # cada color en fila al lado de la placa, apoyado en la mesa
-        apartar_por_color([p for p in niveles if p[0] != "Placa"], placa.bounds[2])
+    if espiga:      # cada pieza al lado de la placa y apoyada en la mesa, lista de imprimir
+        sueltas = [m for n, _, m in niveles if n != "Placa"]
+        dy = placa.bounds[1] - HUECO_APARTE - max(m.bounds[1][1] for m in sueltas)
+        dz = -min(m.bounds[0][2] for m in sueltas)
+        for m in sueltas:
+            m.apply_translation([0, dy, dz])
     # la huella que se mide es la de la placa: sueltas, las piezas se imprimen de una en una
     regiones = [("Placa", placa, 0.0, suelo, a.cua_color_placa)] + \
                [(n, g, suelo - espiga, z, c) for n, g, z, c in relieve]
-    analisis = _analizar(niveles, placa, regiones, [c for c, _ in partes_adorno])
+    analisis = _analizar(niveles, placa, regiones, len(partes_adorno))
     analisis["colgar"] = [[round(x, 2), round(y, 2)] for x, y in donde_colgar]
-    analisis["ancho_base"] = round(ancho_familia, 2)   # a lo que se refiere el % del adorno
     if sitios:
         analisis["avisos"].append(
-            "Los ganchos salen sueltos y tumbados de lado: la C es plana, así que se "
-            "imprimen sin un solo soporte y luego se clavan en su agujero." if espiga else
-            "Los ganchos se curvan hacia arriba: imprimiendo el cuadro de una pieza "
-            "necesitan soportes. Con \"imprimir cada color por separado\" salen tumbados "
-            "y no hacen falta.")
+            "Los ganchos salen rectos y de pie: se imprimen sin soportes y al pegarlos el "
+            "hueco inclinado les da el ángulo." if espiga else
+            "Los ganchos salen hacia fuera: imprime el cuadro tumbado, con la cara buena "
+            "hacia arriba, y no hacen falta soportes.")
     if espiga:
         analisis["avisos"].append(
             f"Cada color sale suelto y apoyado en la mesa, al lado de la placa: imprímelo con "

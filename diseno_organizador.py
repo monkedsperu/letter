@@ -10,9 +10,9 @@ from shapely import affinity
 from shapely.geometry import Polygon, box
 from shapely.ops import transform as shapely_transform, unary_union
 
-from comun import (APOYO, HUECO_APARTE, HUECO_MINIMO, SOBRA, _analizar, _booleana,
-                   _borde_que_une, _circulo, _extruido, _poligonos, _tumbado,
-                   adorno_en_grupos, apartar_por_color, texto_a_poligono)
+from comun import (APOYO, HUECO_APARTE, HUECO_MINIMO, SOBRA, _analizar,
+                   _booleana, _borde_que_une, _circulo, _extruido, _poligonos, _tumbado,
+                   adorno_en_grupos, texto_a_poligono)
 from parametros import Parametros
 
 MAX_LETRAS_ORG = 20
@@ -90,28 +90,23 @@ def _cerrar_el_cuerpo(cuerpo, anadidos, cortes):
 
 
 def _tumbar_las_letras(letras, cuerpo):
-    """Para imprimirlas aparte: de cara arriba, apoyadas en la mesa y al lado del cuerpo,
-    y cada color en su propio sitio, que es lo que se imprime por separado."""
+    """Para imprimirlas aparte: de cara arriba, apoyadas en la mesa y al lado del cuerpo."""
     tumbar = trimesh.transformations.rotation_matrix(-math.pi / 2, (1, 0, 0))
     for _, _, _, m in letras:
         m.apply_transform(tumbar)
-    # al tumbarlas quedan delante del cuerpo y mirando abajo: se bajan y se apartan
+    # al tumbarlas, la espiga queda mirando abajo: hay que apoyarlas y apartarlas
     dy = cuerpo.bounds[0][1] - HUECO_APARTE - max(m.bounds[1][1] for _, _, _, m in letras)
+    dz = -min(m.bounds[0][2] for _, _, _, m in letras)
     for _, _, _, m in letras:
-        m.apply_translation([0, dy, 0])
-    apartar_por_color([(n, c, m) for n, c, _, m in letras],
-                      cuerpo.bounds[0][0] - HUECO_APARTE)
+        m.apply_translation([0, dy, dz])
 
 
 def _avisos_del_organizador(a: Parametros, analisis, cuerpo, puesto, visible, borde, cima, ancho):
     """Lo que conviene saber antes de imprimir. Nada de esto impide generar la pieza."""
     avisos = analisis["avisos"]
     if a.org_aparte:
-        avisos.append(f"Cada color sale suelto y tumbado al lado del cuerpo: imprímelo con "
-                      f"su filamento y pégalo en su hueco "
-                      f"({max(a.org_hueco, HUECO_MINIMO):.1f} mm de hondura y "
-                      f"{min(max(a.org_holgura, 0.0), max(a.org_margen, 1.0) / 2):.1f} mm "
-                      "de holgura).")
+        avisos.append("El nombre sale aparte, tumbado al lado del cuerpo: se imprime sin "
+                      "soportes y luego se pega.")
         sueltas = len(_poligonos(visible))
         if sueltas > 1:
             une = _borde_que_une(puesto, borde)
@@ -167,26 +162,19 @@ def construir_organizador(a: Parametros):
         if falta > 0:
             nombre = affinity.translate(nombre, 0, falta)
 
-    # El adorno va en la cara como una letra más: comparte relieve y entra en el mismo hueco,
-    # pero su borde es cosa suya (por defecto no lleva: el del texto no tiene por qué
-    # rodearlo). Se coloca tras mover el nombre, porque su altura se mide desde la mesa y no
-    # desde las letras.
+    # El adorno va en la cara como una letra más: comparte relieve, lo rodea el mismo borde y
+    # entra en el hueco con el resto. Se coloca tras mover el nombre, porque su altura se mide
+    # desde la mesa y no desde las letras.
     partes_adorno = adorno_en_grupos(
         a.org_adorno_svg, a.org_adorno_alto, a.org_adorno_giro,
         x0 + ancho * a.org_adorno_x / 100.0, a.org_adorno_y,
         {"cuerpo": a.org_color_cuerpo, "nombre": a.org_color_nombre,
          "borde": a.org_color_borde, "extra": a.org_color_adorno},
         [a.org_adorno_c1, a.org_adorno_c2, a.org_adorno_c3],
-        a.org_color_adorno, ("extra", "cuerpo", "nombre"),
-        (a.org_adorno_tinta1, a.org_adorno_tinta2, a.org_adorno_tinta3)) \
-        if a.org_adorno else []
+        a.org_color_adorno) if a.org_adorno else []
     adorno = unary_union([g for _, g in partes_adorno]) if partes_adorno else Polygon()
     puesto = nombre.union(adorno) if not adorno.is_empty else nombre
-    borde_adorno = max(a.org_adorno_borde, 0.0)
-    visible = engordar(nombre)
-    if not adorno.is_empty:
-        visible = visible.union(adorno.buffer(borde_adorno, join_style=1)
-                                if borde_adorno else adorno)
+    visible = engordar(puesto)
     cima_cara = visible.bounds[3]
 
     # ---- silueta: solo la ranura del móvil pide repisa, porque necesita cuerpo donde
@@ -308,7 +296,7 @@ def construir_organizador(a: Parametros):
     letras = [en_relieve("Nombre", a.org_color_nombre, nombre)]
     for i, (color, g) in enumerate(partes_adorno, 1):
         letras.append(en_relieve(f"Adorno {i}" if len(partes_adorno) > 1 else "Adorno", color, g))
-    if borde_ancho or borde_adorno:
+    if borde_ancho:
         letras.append(en_relieve("Borde", a.org_color_borde, visible.difference(puesto)))
     if a.org_aparte:
         _tumbar_las_letras(letras, cuerpo)
@@ -318,8 +306,7 @@ def construir_organizador(a: Parametros):
         [m for _, _, m in niveles]).bounds.tolist()
     analisis = _analizar(niveles, box(tx0, ty0, tx1, ty1),
                          [("Cuerpo", silueta)] + [(n, g) for n, _, g, _ in letras],
-                         [c for c, _ in partes_adorno])
+                         len(partes_adorno))
     analisis["avisos"] += avisos
     _avisos_del_organizador(a, analisis, cuerpo, puesto, visible, borde_ancho, cima_cara, ancho)
-    analisis["ancho_base"] = round(ancho, 2)      # a lo que se refiere el % del adorno
     return niveles, analisis

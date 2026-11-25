@@ -85,22 +85,11 @@
   button.ico:hover { background:var(--campo); }
   .nota { font-size:11px; color:var(--mut); line-height:1.45; margin:8px 0 0; }
 
-  /* modelos: un botón cuadrado por diseño */
-  .modelos { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin:0 0 10px; }
-  .modelos button { display:flex; flex-direction:column; align-items:center; gap:3px;
-                    padding:9px 2px 7px; font-size:9.5px; line-height:1.2; text-align:center;
-                    border:1px solid var(--bd); border-radius:10px; background:var(--suave);
-                    color:var(--acc2); cursor:pointer; }
-  .modelos button .ic { font-size:19px; line-height:1; }
-  .modelos button:hover { background:var(--campo); }
-  .modelos button.sel { background:#eef4ff; border-color:#3069b8; color:#1d4a8a;
-                        font-weight:600; box-shadow:0 0 0 1px #3069b8 inset; }
-
-  /* configuraciones guardadas */
-  .guardadas { margin:0 0 12px; font-size:11.5px; }
-  .guardadas select { margin-top:3px; font-size:13px; }
-  .guardadas .botones { display:flex; gap:6px; margin-top:6px; }
-  .guardadas .botones button { flex:1; }
+  /* tipo de diseño y plantillas */
+  .tipo { margin:0 0 9px; font-size:11.5px; }
+  .tipo select { font-weight:600; }
+  .plantillas { display:flex; gap:5px; align-items:center; margin:0 0 12px; }
+  .plantillas select { margin-top:0; font-size:13px; }
 
   /* capas: una fila por nivel */
   .capas { display:grid; grid-template-columns:1fr 64px 42px; gap:6px 8px; align-items:center; margin-top:8px; }
@@ -109,45 +98,8 @@
   .capas .n { display:flex; align-items:center; font-size:11.5px; color:var(--txt); }
   .capas input { margin-top:0; text-align:center; }
 
-  /* elegir dibujo: un botón con la miniatura, y la biblioteca en un modal */
-  .tinta { width:30px; height:24px; min-width:30px; padding:1px; margin-top:0; margin-left:5px;
-           border:1px solid var(--bd); border-radius:5px; background:#fff; cursor:pointer; }
-  .formas { display:grid; gap:5px; margin-top:4px; }
-  .formas > div > label { display:flex; align-items:center; gap:6px; font-size:11.5px; }
-  label:has(.tinta) { display:flex; align-items:center; gap:3px; }
-  label:has(.tinta) select { margin-top:0; flex:1; min-width:0; }
-  .tintas-dibujo { margin-top:8px; }
-  .svgbtn { display:flex; align-items:center; gap:8px; width:100%; margin-top:3px; padding:5px 8px;
-            background:var(--campo); border:1px solid var(--bd); border-radius:8px; cursor:pointer;
-            text-align:left; }
-  .svgbtn:hover { border-color:var(--acc); background:#fff; }
-  .svgbtn img { width:34px; height:34px; object-fit:contain; background:#fff; border-radius:5px;
-                border:1px solid var(--bd); flex:none; }
-  .svgbtn .nom { flex:1; font-size:12px; color:var(--txt); overflow:hidden; text-overflow:ellipsis;
-                 white-space:nowrap; }
-  .svgbtn::after { content:"▾"; color:var(--mut); font-size:10px; }
-  #galeria { position:fixed; inset:0; background:rgba(16,26,38,.45); display:flex;
-             align-items:center; justify-content:center; z-index:60; padding:16px; }
-  #galeria .caja { background:var(--panel); border-radius:14px; border:1px solid var(--bd);
-                   width:min(780px, 100%); max-height:86vh; display:flex; flex-direction:column;
-                   box-shadow:0 18px 50px rgba(16,26,38,.3); }
-  #galeria .cab { display:flex; align-items:center; gap:10px; padding:12px 14px;
-                  border-bottom:1px solid var(--bd); }
-  #galeria .cab h3 { margin:0; font-size:15px; color:var(--acc2); flex:none; }
-  #galeria .cab input { margin:0; flex:1; }
-  #galeria-lista { display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr));
-                   gap:10px; padding:14px; overflow:auto; }
-  #galeria-lista .tarjeta { background:#fff; border:1px solid var(--bd); border-radius:10px;
-                            padding:8px 6px 6px; cursor:pointer; display:flex;
-                            flex-direction:column; align-items:center; gap:6px; }
-  #galeria-lista .tarjeta:hover { border-color:var(--acc); }
-  #galeria-lista .tarjeta.sel { border-color:#3069b8; box-shadow:0 0 0 2px #cfe0f7 inset; }
-  #galeria-lista .tarjeta img { width:100%; height:62px; object-fit:contain; }
-  #galeria-lista .tarjeta span { font-size:10.5px; color:var(--mut); text-align:center;
-                                 line-height:1.25; word-break:break-word; }
-  #galeria .grupo { grid-column:1/-1; font-size:10.5px; text-transform:uppercase;
-                    letter-spacing:.5px; color:var(--mut); margin:2px 0 -4px; }
-  #galeria .pie { padding:10px 14px; border-top:1px solid var(--bd); }
+  .svgmini { width:100%; height:44px; object-fit:contain; background:#fff; border:1px solid var(--bd);
+             border-radius:6px; padding:2px; margin-top:3px; }
   .acciones { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
   .acciones button { margin-top:0; font-size:13px; padding:8px; }
 
@@ -198,15 +150,8 @@
 
   /* ---------- visor */
   #centrar { position:absolute; right:12px; bottom:10px; width:auto; padding:5px 10px; font-size:12px; }
-  #info { position:absolute; left:12px; bottom:10px; display:flex; align-items:center; gap:4px;
-          font-size:12px; color:var(--mut); background:var(--panel); padding:5px 10px;
-          border-radius:7px; border:1px solid var(--bd); }
-  #info b { font-size:15px; color:var(--acc2); font-variant-numeric:tabular-nums; }
-  #info.nocabe { border-color:#c0392b; color:#c0392b; background:#fff5f4; }
-  #info.nocabe b { color:#c0392b; }
-  header .ver { font-size:10px; font-weight:600; color:var(--mut); background:var(--suave);
-                border:1px solid var(--bd); border-radius:20px; padding:1px 7px; margin-left:6px;
-                vertical-align:2px; }
+  #info { position:absolute; left:12px; bottom:10px; display:flex; align-items:center; font-size:12px;
+          color:var(--mut); background:var(--panel); padding:4px 8px; border-radius:6px; border:1px solid var(--bd); }
   /* botón y fondo del panel: solo se usan en pantallas estrechas */
   #btn-panel, #fondo-panel, #cerrar-panel { display:none; }
   @media (max-width: 820px) {
@@ -240,7 +185,7 @@
 </head>
 <body>
 <header>
-  <p class="marca">Monkeds Letter<span class="ver" id="ver">beta</span></p>
+  <p class="marca">Monkeds Letter</p>
   <button id="btn-panel" aria-expanded="false">☰ Opciones</button>
   <nav>
     <a href="/" class="activo">Generador</a>
@@ -267,24 +212,23 @@
 <aside>
   <button id="cerrar-panel">✕ Ver el modelo</button>
 
-  <div class="modelos" id="modelos" role="group" aria-label="Qué quieres hacer">
-    <button type="button" data-valor="nombre" data-tip="Letra inicial con borde y texto, en tres niveles de relieve."><span class="ic">🔑</span>Llavero</button>
-    <button type="button" data-valor="organizador" data-tip="Cuerpo con la forma del nombre, con portamóvil, vaso y bandeja."><span class="ic">✏️</span>Organizador</button>
-    <button type="button" data-valor="cuadro" data-tip="Placa de pared con el apellido y un gancho por cada nombre."><span class="ic">🏠</span>Llaves</button>
-    <button type="button" data-valor="marca" data-tip="Lámina para el libro con la letra grande, el nombre y un icono."><span class="ic">🔖</span>Marcapáginas</button>
-  </div>
-  <input type="hidden" id="tipo" value="nombre">
+  <label class="tipo">Diseño
+    <select id="tipo">
+      <option value="nombre">Llavero / cartel con inicial</option>
+      <option value="organizador">Organizador de escritorio</option>
+      <option value="cuadro">Cuadro para las llaves</option>
+      <option value="marca">Marcapáginas</option>
+    </select>
+  </label>
 
-  <div class="guardadas" id="caja-plantillas" hidden>
-    <label>Configuración guardada
-      <select id="plantilla" aria-label="Configuraciones guardadas"></select>
-    </label>
-    <div class="botones">
-      <button id="guardar-plantilla" class="sec"
-              data-tip="Guarda todos los valores de ahora con el nombre que le pongas.">💾 Guardar esta…</button>
-      <button id="borrar-plantilla" class="sec" hidden
-              data-tip="Borra la configuración elegida. Solo puedes borrar las tuyas.">🗑 Borrar</button>
-    </div>
+  <div class="plantillas" id="caja-plantillas" hidden>
+    <select id="plantilla" aria-label="Plantillas"></select>
+    <button id="usar-plantilla" class="ico" aria-label="Cargar plantilla"
+            data-tip="Carga la plantilla elegida en el editor.">↧</button>
+    <button id="guardar-plantilla" class="ico" aria-label="Guardar plantilla"
+            data-tip="Guarda el diseño actual como plantilla tuya.">＋</button>
+    <button id="borrar-plantilla" class="ico" aria-label="Borrar plantilla" hidden
+            data-tip="Borra la plantilla elegida. Solo puedes borrar las tuyas.">✕</button>
   </div>
 
   <details class="g" data-tipo="nombre" open>
@@ -357,20 +301,19 @@
   <details class="g" data-tipo="nombre">
     <summary><span class="sw"><input id="usar_adorno" type="checkbox"><i></i></span>
       <span class="t">Adorno<span class="mover" tabindex="0" data-tip="Arrastra el adorno en la vista 3D para colocarlo.">✥</span></span>
-      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca, a la altura del nivel 2 y con el borde del nivel 1. Del dibujo se aprovechan hasta tres formas -los tonos casi iguales se juntan en uno- y el color de cada una lo decides tú.">?</span></summary>
+      <span class="q" tabindex="0" data-tip="Va a la altura del nivel 2, con el borde del nivel 1. Del SVG solo se usan las formas: el negro se descarta, los tonos casi iguales se juntan y quedan 3 como mucho. El color lo eliges tú, para no pasar de 4 filamentos.">?</span></summary>
     <div class="cont"><div id="caja-adorno">
       <div class="fila">
-        <div><label>Dibujo del adorno<button type="button" class="svgbtn" data-campo="adorno" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="adorno"></div>
+        <div><label>Forma (SVG)<select id="adorno"></select><img id="vista_adorno" class="svgmini" alt=""></label></div>
         <div><label>Color extra<span class="q" tabindex="0" data-tip="El 4º filamento, solo para el adorno.">?</span>
           <input id="color_adorno" type="color"></label></div>
       </div>
-      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
-      <div class="formas">
-        <div id="fila_c1"><label>1<select id="adorno_c1"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="adorno_tinta1" title="Color de esta forma"><input type="hidden" id="adorno_tinta1"></label></div>
-        <div id="fila_c2"><label>2<select id="adorno_c2"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="adorno_tinta2" title="Color de esta forma"><input type="hidden" id="adorno_tinta2"></label></div>
-        <div id="fila_c3"><label>3<select id="adorno_c3"><option value="auto">Automático</option><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="adorno_tinta3" title="Color de esta forma"><input type="hidden" id="adorno_tinta3"></label></div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Solo aparecen tantos selectores como formas tenga de verdad el SVG elegido.">?</span></label>
+      <div class="fila3">
+        <div id="fila_c1"><label>1<select id="adorno_c1"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
+        <div id="fila_c2"><label>2<select id="adorno_c2"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
+        <div id="fila_c3"><label>3<select id="adorno_c3"><option value="base">Base</option><option value="letra">Letra</option><option value="texto">Texto</option><option value="extra">Extra</option></select></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Tamaño (mm)<input id="tam_adorno" type="number" step="1" min="1"></label></div>
         <div><label>Giro (°)<input id="giro_adorno" type="number" step="5"></label></div>
@@ -405,9 +348,9 @@
   <details class="g" data-tipo="nombre">
     <summary><span class="sw"><input id="usar_patron" type="checkbox"><i></i></span>
       <span class="t">Patrón</span>
-      <span class="q" tabindex="0" data-tip="Reparte motivos al azar por la letra, a la altura del nivel 3. Cada figura suelta del dibujo es un motivo.">?</span></summary>
+      <span class="q" tabindex="0" data-tip="Reparte motivos al azar por la letra, a la altura del nivel 3. Cada figura separada del SVG es un motivo.">?</span></summary>
     <div class="cont"><div id="caja-patron">
-      <label>Motivo del patrón<button type="button" class="svgbtn" data-campo="patron" data-clase="patron"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="patron">
+      <label>Motivo (SVG)<select id="patron"></select><img id="vista_patron" class="svgmini" alt=""></label>
       <div class="fila">
         <div><label>Tamaño (mm)<input id="tam_patron" type="number" step="0.5" min="1"></label></div>
         <div><label>Separación (mm)<input id="separacion_patron" type="number" step="0.5" min="0"></label></div>
@@ -422,10 +365,8 @@
         <span class="q" tabindex="0" data-tip="Gira cada motivo al azar. Desactívalo si el motivo tiene arriba y abajo, como un arbolito.">?</span></label>
       <div class="acciones">
         <button id="otro-reparto" class="sec">🎲 Otro reparto</button>
-        <button id="subir-patron" class="sec solo-admin" hidden>Subir un motivo…</button>
+        <button id="subir-patron" class="sec solo-admin" hidden>Subir SVG…</button>
       </div>
-      <p class="pista nada-admin" hidden>¿Quieres otro motivo? Escríbeme a
-        <a class="correo" href="#"></a> con el dibujo: lo dejo listo para que imprima bien.</p>
       <input id="archivo-svg" type="file" accept=".svg,image/svg+xml" hidden>
     </div></div>
   </details>
@@ -485,6 +426,14 @@
           <input id="org_borde" type="number" step="0.5" min="0"></label></div>
         <div><label>Color del borde<input id="org_color_borde" type="color"></label></div>
       </div>
+      <label class="check"><input id="org_aparte" type="checkbox"> Imprimir el nombre aparte
+        <span class="q" tabindex="0" data-tip="En vez de pegado a la cara del cuerpo, el nombre sale tumbado a su lado con la cara buena hacia arriba: se imprime sin soportes y luego lo pegas. Encaja en un hueco del cuerpo, así que no hay que alinearlo a ojo. Si sale en varios trozos, ponle un borde para que quede de una pieza.">?</span></label>
+      <div id="caja-aparte" class="fila">
+        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura de la caja que se abre en el cuerpo para que encaje el nombre. El nombre crece esa misma medida por detrás, así que lo que sobresale no cambia. Mínimo 4 mm: con menos no se aprecia en la vista 3D y sujeta poco.">?</span>
+          <input id="org_hueco" type="number" step="0.5" min="4"></label></div>
+        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor del nombre para que entre en su hueco sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
+          <input id="org_holgura" type="number" step="0.1" min="0"></label></div>
+      </div>
     </div>
   </details>
 
@@ -519,24 +468,21 @@
   <details class="g" data-tipo="organizador">
     <summary><span class="sw"><input id="org_adorno" type="checkbox"><i></i></span>
       <span class="t">Adorno</span>
-      <span class="q" tabindex="0" data-tip="Un dibujo puesto en la cara, al lado del nombre: comparte relieve con él y entra en el mismo hueco al imprimirlo aparte, pero su borde va por su cuenta -por defecto no lleva-. El cuerpo crece solo para taparlo.">?</span></summary>
+      <span class="q" tabindex="0" data-tip="Un dibujo SVG puesto en la cara, al lado del nombre: comparte relieve con él, lo rodea el mismo borde y entra en el mismo hueco al imprimirlo aparte. El cuerpo crece solo para taparlo.">?</span></summary>
     <div class="cont"><div id="caja-org-adorno">
       <div class="fila">
-        <div><label>Dibujo del adorno<button type="button" class="svgbtn" data-campo="org_adorno_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="org_adorno_svg"></div>
+        <div><label>Dibujo (SVG)<select id="org_adorno_svg"></select><img id="vista_org_adorno" class="svgmini" alt=""></label></div>
         <div><label>Color extra<span class="q" tabindex="0" data-tip="El 4º filamento, por si alguna forma del adorno no lleva ninguno de los otros tres colores.">?</span>
           <input id="org_color_adorno" type="color"></label></div>
       </div>
-      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
-      <div class="formas">
-        <div id="org_fila_c1"><label>1<select id="org_adorno_c1"><option value="auto">Automático</option><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="org_adorno_tinta1" title="Color de esta forma"><input type="hidden" id="org_adorno_tinta1"></label></div>
-        <div id="org_fila_c2"><label>2<select id="org_adorno_c2"><option value="auto">Automático</option><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="org_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="org_adorno_tinta2"></label></div>
-        <div id="org_fila_c3"><label>3<select id="org_adorno_c3"><option value="auto">Automático</option><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="org_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="org_adorno_tinta3"></label></div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Del SVG solo se aprovechan las formas: el color lo pones tú con la paleta de la pieza, así nunca se pasa de 4 filamentos. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="fila3">
+        <div id="org_fila_c1"><label>1<select id="org_adorno_c1"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="org_fila_c2"><label>2<select id="org_adorno_c2"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="org_fila_c3"><label>3<select id="org_adorno_c3"><option value="cuerpo">Cuerpo</option><option value="nombre">Nombre</option><option value="borde">Borde</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="org_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="org_adorno_alto" type="number" step="1" min="5"></label></div>
-        <div><label>Su borde (mm)<span class="q" tabindex="0" data-tip="El borde del adorno va por su cuenta: aunque el texto lleve borde, el adorno no tiene por qué llevarlo. 0 = sin borde, que es lo normal.">?</span>
-          <input id="org_adorno_borde" type="number" step="0.5" min="0"></label></div>
         <div><label>Giro (°)<input id="org_adorno_giro" type="number" step="5"></label></div>
       </div>
       <div class="fila">
@@ -605,21 +551,6 @@
           <input id="org_bandeja_alto" type="number" step="1" min="0"></label></div>
         <div><label>Hondo (mm)<span class="q" tabindex="0" data-tip="Lo que baja el hueco desde el borde. Menos que el alto, si no la bandeja se queda sin fondo.">?</span>
           <input id="org_bandeja_hondo" type="number" step="1" min="2"></label></div>
-      </div>
-    </div></div>
-  </details>
-
-  <details class="g destacada" data-tipo="organizador">
-    <summary><span class="sw"><input id="org_aparte" type="checkbox"><i></i></span>
-      <span class="t">Imprimir cada color por separado</span>
-      <span class="q" tabindex="0" data-tip="Para imprimir sin AMS: el nombre, su borde y el adorno salen tumbados al lado del cuerpo, con la cara buena hacia arriba, y se imprimen sin soportes. Encajan en un hueco del cuerpo, así que no hay que alinear a ojo. Si el nombre sale en varios trozos, ponle borde para que quede de una pieza.">?</span></summary>
-    <div class="cont"><div id="caja-aparte">
-      <p class="pista">Imprime cada pieza con su filamento y pégala en su hueco: encajan solas.</p>
-      <div class="fila">
-        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura de la caja que se abre en el cuerpo para que encaje el nombre. El nombre crece esa misma medida por detrás, así que lo que sobresale no cambia. Mínimo 4 mm: con menos no se aprecia en la vista 3D y sujeta poco.">?</span>
-          <input id="org_hueco" type="number" step="0.5" min="4"></label></div>
-        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor del nombre para que entre en su hueco sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
-          <input id="org_holgura" type="number" step="0.1" min="0"></label></div>
       </div>
     </div></div>
   </details>
@@ -715,8 +646,7 @@
         <div><label>Grueso (mm)<input id="cua_gancho_grueso" type="number" step="0.5" min="2"></label></div>
       </div>
       <div class="fila">
-        <div><label>Arqueo (°)<span class="q" tabindex="0" data-tip="Cuánto se arquea el gancho hacia arriba: 30° casi recto, 60° un arco suave (lo normal) y 150° una C cerrada que no suelta nada.">?</span>
-          <input id="cua_gancho_curva" type="number" step="10" min="30" max="200"></label></div>
+        <div><label>Inclinación (°)<input id="cua_gancho_angulo" type="number" step="5" min="0" max="60"></label></div>
         <div><label>Bajada (mm)<span class="q" tabindex="0" data-tip="Cuánto baja el gancho respecto al pie de su nombre.">?</span>
           <input id="cua_gancho_baja" type="number" step="1" min="0"></label></div>
       </div>
@@ -727,19 +657,18 @@
   <details class="g" data-tipo="cuadro">
     <summary><span class="sw"><input id="cua_adorno" type="checkbox"><i></i></span>
       <span class="t">Adorno</span>
-      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca, al lado o encima del apellido. Se aprovechan hasta tres de sus formas y el color de cada una lo decides tú.">?</span></summary>
+      <span class="q" tabindex="0" data-tip="Un SVG de la carpeta de adornos, al lado o encima del apellido. Del dibujo solo se aprovechan las formas: el color lo pones tú.">?</span></summary>
     <div class="cont"><div id="caja-cua-adorno">
       <div class="fila">
-        <div><label>Dibujo del adorno<button type="button" class="svgbtn" data-campo="cua_adorno_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="cua_adorno_svg"></div>
+        <div><label>Dibujo (SVG)<select id="cua_adorno_svg"></select><img id="vista_cua_adorno" class="svgmini" alt=""></label></div>
         <div><label>Color extra<input id="cua_color_adorno" type="color"></label></div>
       </div>
-      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
-      <div class="formas">
-        <div id="cua_fila_c1"><label>1<select id="cua_adorno_c1"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_adorno_tinta1" title="Color de esta forma"><input type="hidden" id="cua_adorno_tinta1"></label></div>
-        <div id="cua_fila_c2"><label>2<select id="cua_adorno_c2"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="cua_adorno_tinta2"></label></div>
-        <div id="cua_fila_c3"><label>3<select id="cua_adorno_c3"><option value="auto">Automático</option><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="cua_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="cua_adorno_tinta3"></label></div>
+      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Solo aparecen tantos selectores como formas tenga el dibujo.">?</span></label>
+      <div class="fila3">
+        <div id="cua_fila_c1"><label>1<select id="cua_adorno_c1"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="cua_fila_c2"><label>2<select id="cua_adorno_c2"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="cua_fila_c3"><label>3<select id="cua_adorno_c3"><option value="placa">Placa</option><option value="familia">Apellido</option><option value="integrantes">Nombres</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="cua_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="cua_adorno_alto" type="number" step="1" min="5"></label></div>
         <div><label>Giro (°)<input id="cua_adorno_giro" type="number" step="5"></label></div>
@@ -758,7 +687,7 @@
       <span class="t">Patrón del apellido</span>
       <span class="q" tabindex="0" data-tip="Reparte motivos DENTRO de las letras del apellido: o ahuecados en la letra, o en relieve encima y en otro color.">?</span></summary>
     <div class="cont"><div id="caja-cua-patron">
-      <label>Motivo del patrón<button type="button" class="svgbtn" data-campo="cua_patron_svg" data-clase="patron"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="cua_patron_svg">
+      <label>Motivo (SVG)<select id="cua_patron_svg"></select><img id="vista_cua_patron" class="svgmini" alt=""></label>
       <div class="fila">
         <div><label>Tamaño (mm)<input id="cua_tam_patron" type="number" step="0.5" min="1"></label></div>
         <div><label>Separación (mm)<input id="cua_separacion_patron" type="number" step="0.5" min="0"></label></div>
@@ -776,21 +705,6 @@
       </div>
       <label class="check"><input id="cua_girar_patron" type="checkbox"> Girar los motivos al azar</label>
       <button id="cua-otro-reparto" class="sec">🎲 Otro reparto</button>
-    </div></div>
-  </details>
-
-  <details class="g destacada" data-tipo="nombre">
-    <summary><span class="sw"><input id="aparte" type="checkbox"><i></i></span>
-      <span class="t">Imprimir cada color por separado</span>
-      <span class="q" tabindex="0" data-tip="Para imprimir sin AMS: cada nivel sale suelto y al lado del anterior, apoyado en la mesa. Al de debajo se le vacía el hueco de la pieza y a la pieza le crece una espiga por detrás, así que al pegar cae sola en su sitio.">?</span></summary>
-    <div class="cont"><div id="caja-aparte-llavero">
-      <p class="pista">Imprime cada pieza con su filamento y pégala en su hueco: encajan solas.</p>
-      <div class="fila">
-        <div><label>Hueco (mm)<span class="q" tabindex="0" data-tip="Hondura del hueco y de la espiga. Tiene que caber en la capa de debajo.">?</span>
-          <input id="espiga" type="number" step="0.2" min="0.4"></label></div>
-        <div><label>Holgura (mm)<span class="q" tabindex="0" data-tip="Aire alrededor de cada pieza para que entre sin forzar. De 0,2 a 0,4 mm va bien en casi cualquier impresora.">?</span>
-          <input id="holgura" type="number" step="0.05" min="0" max="1"></label></div>
-      </div>
     </div></div>
   </details>
 
@@ -855,56 +769,24 @@
         <div><label>Suavizado (mm)<span class="q" tabindex="0" data-tip="Funde el contorno en una sola forma y redondea las esquinas.">?</span>
           <input id="mar_suave" type="number" step="0.5" min="0"></label></div>
       </div>
-      <label>Estilo de la lámina<span class="q" tabindex="0" data-tip="Sólida: la tira entera. Con ranura: le abre un ojal largo por el medio, el marcapáginas clásico. Calada: la agujerea con un motivo repartido, como el patrón del apellido en el cuadro de las llaves.">?</span>
-        <select id="mar_estilo">
-          <option value="solido">Sólida</option>
-          <option value="ranura">Con ranura</option>
-          <option value="calado">Calada con un motivo</option>
-        </select></label>
-      <div id="caja-mar-ranura" hidden>
-        <div class="fila">
-          <div><label>Ancho de la lengüeta (mm)<span class="q" tabindex="0" data-tip="La tira central: cuelga de arriba y acaba suelta, y es la que se mete entre las páginas para que el marcapáginas se agarre al libro.">?</span>
-            <input id="mar_ranura_centro" type="number" step="1" min="3"></label></div>
-          <div><label>Hueco a su alrededor (mm)<span class="q" tabindex="0" data-tip="La ranura que rodea la lengüeta y le da la vuelta por abajo. Por ahí entra la hoja.">?</span>
-            <input id="mar_ranura_ancho" type="number" step="0.5" min="0.8"></label></div>
-        </div>
-      </div>
-      <div id="caja-mar-calado" hidden>
-        <label>Motivo del calado<button type="button" class="svgbtn" data-campo="mar_patron_svg" data-clase="patron"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="mar_patron_svg">
-        <div class="fila">
-          <div><label>Tamaño (mm)<input id="mar_tam_patron" type="number" step="0.5" min="2"></label></div>
-          <div><label>Separación (mm)<input id="mar_separacion_patron" type="number" step="0.5" min="0"></label></div>
-        </div>
-        <div class="fila">
-          <div><label>Semilla<input id="mar_semilla" type="number" step="1"></label></div>
-          <div><button id="mar-otro-reparto" class="sec">🎲 Otro reparto</button></div>
-        </div>
-      </div>
-      <label class="check"><input id="mar_tope" type="checkbox"> Tope para que no se cuele
-        <span class="q" tabindex="0" data-tip="Un murito cruzado justo debajo del nombre: apoya en el canto del libro y evita que el marcapáginas se deslice entre las hojas hasta perderse.">?</span></label>
-      <div id="caja-mar-tope" class="fila">
-        <div><label>Alto del tope (mm)<input id="mar_tope_alto" type="number" step="0.5" min="1"></label></div>
-        <div><label>Su grueso (mm)<input id="mar_tope_grueso" type="number" step="0.5" min="1"></label></div>
-      </div>
     </div>
   </details>
 
   <details class="g" data-tipo="marca">
     <summary><span class="sw"><input id="mar_adorno" type="checkbox"><i></i></span>
       <span class="t">Icono de arriba</span>
-      <span class="q" tabindex="0" data-tip="Un dibujo de la biblioteca, encima del nombre. De cada uno se aprovechan hasta tres formas y eliges el color de cada una: el suyo propio o uno de la pieza.">?</span></summary>
+      <span class="q" tabindex="0" data-tip="Un SVG de la carpeta adornos, encima del nombre. De cada dibujo se aprovechan hasta tres formas y eliges el color de cada una: el suyo propio o uno de la pieza.">?</span></summary>
     <div class="cont"><div id="caja-mar-adorno">
       <div class="fila">
-        <div><label>Dibujo del icono<button type="button" class="svgbtn" data-campo="mar_adorno_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="mar_adorno_svg"></div>
+        <div><label>Dibujo (SVG)<select id="mar_adorno_svg"></select><img id="vista_mar_adorno" class="svgmini" alt=""></label></div>
         <div><label>Color extra<input id="mar_color_adorno" type="color"></label></div>
       </div>
-      <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
-      <div class="formas">
-        <div id="mar_fila_c1"><label>1<select id="mar_adorno_c1"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_adorno_tinta1" title="Color de esta forma"><input type="hidden" id="mar_adorno_tinta1"></label></div>
-        <div id="mar_fila_c2"><label>2<select id="mar_adorno_c2"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_adorno_tinta2" title="Color de esta forma"><input type="hidden" id="mar_adorno_tinta2"></label></div>
-        <div id="mar_fila_c3"><label>3<select id="mar_adorno_c3"><option value="auto">Automático</option><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select><input class="tinta" type="color" data-campo="mar_adorno_tinta3" title="Color de esta forma"><input type="hidden" id="mar_adorno_tinta3"></label></div>
+      <p class="pista">Color de cada forma del dibujo:</p>
+      <div class="fila">
+        <div id="mar_fila_c1"><label>1<select id="mar_adorno_c1"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="mar_fila_c2"><label>2<select id="mar_adorno_c2"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
+        <div id="mar_fila_c3"><label>3<select id="mar_adorno_c3"><option value="inicial">Letra grande</option><option value="texto">Nombre</option><option value="cuerpo">Lámina</option><option value="extra">Extra</option><option value="svg">Del dibujo</option></select></label></div>
       </div>
-      <button type="button" class="sec tintas-dibujo" data-pref="mar_" data-tip="Deshace los colores que hayas puesto a mano y deja los que trae el dibujo (o los de la paleta, si el dibujo no manda).">↺ Colores del dibujo</button>
       <div class="fila">
         <div><label>Alto (mm)<input id="mar_adorno_alto" type="number" step="1" min="5"></label></div>
         <div><label>Giro (°)<input id="mar_adorno_giro" type="number" step="5"></label></div>
@@ -914,15 +796,6 @@
       <div class="fila">
         <div><label>Izquierda / derecha (mm)<input id="mar_adorno_x" type="number" step="1"></label></div>
         <div><label>Arriba / abajo (mm)<input id="mar_adorno_y" type="number" step="1"></label></div>
-      </div>
-      <div class="fila">
-        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el icono tapa las letras y detrás son ellas las que lo tapan a él. Así puedes montarlo sobre la letra sin que se peguen de mala manera.">?</span>
-          <select id="mar_adorno_detras">
-            <option value="false">Delante</option>
-            <option value="true">Detrás</option>
-          </select></label></div>
-        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
-          <input id="mar_adorno_aire" type="number" step="0.2" min="0"></label></div>
       </div>
     </div></div>
   </details>
@@ -982,16 +855,12 @@
   <div id="resultado" hidden>
     <p class="listo">Archivos listos ✔</p>
     <div class="acciones">
-      <a id="baja-3mf" class="descarga"
-         data-tip="Un objeto por filamento con su color. Es lo que entienden Bambu Studio y Orca.">3MF a color</a>
-      <a id="baja-stl" class="descarga"
-         data-tip="Una sola malla, sin colores. Para imprimir de un color o retocar en otro programa.">STL de una pieza</a>
-      <a id="baja-zip" class="descarga"
-         data-tip="Un STL por filamento, todos en las mismas coordenadas, y un leeme con los pasos. Para Snapmaker Luban y cualquier programa que no lea los colores del 3MF: cargas los STL uno a uno y le asignas su extrusor a cada objeto.">Un STL por color (ZIP)</a>
+      <a id="baja-3mf" class="descarga">Descargar 3MF</a>
+      <a id="baja-stl" class="descarga">Descargar STL</a>
     </div>
     <p id="aviso-invitado" class="aviso-inv" hidden><b>⚠</b><span>El texto sale modificado
-       (<i id="texto-invitado"></i>). Escribe a <a id="correo-invitado" href="#"></a>
-       para tener cuenta y generarlos tal cual.</span></p>
+       (<i id="texto-invitado"></i>). Contacta al administrador para generar textos sin
+       modificaciones.</span></p>
     <p class="nota">Quedan guardados en <a href="/generaciones">Mis generaciones</a>: puedes volver a
        bajarlos cuando quieras sin gastar otra generación.</p>
   </div>
@@ -1009,22 +878,10 @@
 
 <main>
   <div id="visor"></div>
-  <div id="info"><span id="medidas">…</span><span id="cama-nota"></span>
-    <span class="q" tabindex="0" data-tip="Medidas de TODO lo que se va a imprimir: ancho × fondo × alto. El cuadriculado es una cama de impresora, con celdas de 10 mm, para que veas el tamaño de un vistazo. Arrastra para girar · rueda para zoom · clic derecho para mover la vista · doble clic para centrar · arrastra las piezas con ✥ para colocarlas">?</span></div>
+  <div id="info"><span id="medidas">…</span>
+    <span class="q" tabindex="0" data-tip="Medidas de todo el diseño: ancho × fondo × alto. Arrastra para girar · rueda para zoom · clic derecho para mover la vista · doble clic para centrar · arrastra las piezas con ✥ para colocarlas">?</span></div>
   <button id="centrar" class="sec">Centrar vista</button>
 </main>
-</div>
-
-<div id="galeria" hidden>
-  <div class="caja">
-    <div class="cab">
-      <h3 id="galeria-titulo">Dibujos</h3>
-      <input id="galeria-buscar" type="search" placeholder="Buscar por nombre…" autocomplete="off">
-      <button id="galeria-cerrar" class="ico" aria-label="Cerrar">✕</button>
-    </div>
-    <div id="galeria-lista"></div>
-    <p class="nota pie" id="galeria-pie"></p>
-  </div>
 </div>
 
 <div id="modal" hidden>
@@ -1044,11 +901,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { ThreeMFLoader } from 'three/addons/loaders/3MFLoader.js';
 
-const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
-                'adorno_tinta1', 'adorno_tinta2', 'adorno_tinta3',
-                'org_adorno_tinta1', 'org_adorno_tinta2', 'org_adorno_tinta3',
-                'cua_adorno_tinta1', 'cua_adorno_tinta2', 'cua_adorno_tinta3',
-                'mar_adorno_tinta1', 'mar_adorno_tinta2', 'mar_adorno_tinta3',
+const CAMPOS = ['tipo',
                 'inicial','fuente_inicial','tam_inicial','borde',
                 'texto','fuente_texto','tam_texto','borde_texto1','borde_texto2','giro_texto','posicion','separacion',
                 'alto_nivel1','color_nivel1','alto_nivel2','color_nivel2','alto_nivel3','color_nivel3','cortar_letra',
@@ -1064,7 +917,7 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'org_borde','org_color_borde','org_aparte','org_hueco','org_holgura',
                 'org_fondo','org_margen','org_suave','org_base','org_pared','org_canto','org_canto_pasos',
                 'org_adorno','org_adorno_svg','org_adorno_alto','org_adorno_x','org_adorno_y',
-                'org_adorno_giro','org_color_adorno','org_adorno_borde',
+                'org_adorno_giro','org_color_adorno',
                 'org_adorno_c1','org_adorno_c2','org_adorno_c3',
                 'org_movil','org_movil_x','org_movil_ancho','org_movil_grueso','org_movil_suelo','org_movil_angulo',
                 'org_vaso','org_vaso_x','org_vaso_diametro','org_vaso_alto','org_vaso_hondo',
@@ -1083,20 +936,15 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'cua_separacion_patron','cua_margen_patron','cua_semilla','cua_girar_patron',
                 'cua_patron_corta','cua_patron_relieve','cua_color_patron',
                 'cua_ganchos','cua_gancho_largo',
-                'cua_gancho_grueso','cua_gancho_curva','cua_gancho_baja','cua_color_gancho',
+                'cua_gancho_grueso','cua_gancho_angulo','cua_gancho_baja','cua_color_gancho',
                 'cua_colgar','cua_colgar_diametro','cua_aparte','cua_espiga',
                 'cua_holgura',
                 'mar_inicial','mar_fuente_inicial','mar_alto_inicial','mar_inicial_y',
                 'mar_color_inicial','mar_hueco','mar_texto','mar_fuente','mar_alto_texto',
                 'mar_texto_y','mar_largo','mar_ancho','mar_grueso','mar_relieve',
-                'mar_margen','mar_suave','mar_estilo','mar_ranura_ancho','mar_ranura_centro',
-                'mar_patron_svg',
-                'mar_tam_patron','mar_separacion_patron','mar_semilla','mar_tope',
-                'mar_tope_alto','mar_tope_grueso',
-                'mar_color_cuerpo','mar_color_texto','mar_adorno',
+                'mar_margen','mar_suave','mar_color_cuerpo','mar_color_texto','mar_adorno',
                 'mar_adorno_svg','mar_adorno_alto','mar_adorno_x','mar_adorno_y',
-                'mar_adorno_giro','mar_adorno_detras','mar_adorno_aire',
-                'mar_adorno_c1','mar_adorno_c2','mar_adorno_c3',
+                'mar_adorno_giro','mar_adorno_c1','mar_adorno_c2','mar_adorno_c3',
                 'mar_color_adorno','mar_aparte','mar_espiga','mar_holgura'];
 const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
@@ -1117,103 +965,9 @@ controles.zoomToCursor = true; controles.enableDamping = true; controles.damping
 controles.minDistance = 5; controles.maxDistance = 2000;
 escena.add(new THREE.HemisphereLight(0xffffff, 0x888888, 1.1));
 const luz = new THREE.DirectionalLight(0xffffff, 1.4); luz.position.set(1, -1.5, 2); escena.add(luz);
-// ---------- la cama de la impresora y las medidas, dibujadas en la propia escena
-// Carteles que no cambian de tamaño al acercar o alejar: se dibujan en un canvas y van
-// como sprites sin atenuación, así se leen igual de lejos que de cerca.
-// `alto` es lo que ocupa el cartel de alto en la pantalla: 0.03 = el 3 % del visor, y no
-// cambia al acercar ni al alejar. Aquí se toca el tamaño de las letras del visor.
-const LETRA_MEDIDAS = 0.020;   // los números de la pieza (ancho, fondo, alto)
-const LETRA_REGLA = 0.015;     // los de la regla de la cama
-
-function cartel(texto, tinta = '#14467f', fondo = 'rgba(255,255,255,.92)',
-                alto = LETRA_MEDIDAS) {
-  const c = document.createElement('canvas');
-  const g = c.getContext('2d');
-  const tipo = 'bold 52px system-ui, -apple-system, sans-serif';
-  g.font = tipo;
-  c.width = Math.ceil(g.measureText(texto).width) + 34;
-  c.height = 78;
-  const d = c.getContext('2d');
-  d.font = tipo; d.textAlign = 'center'; d.textBaseline = 'middle';
-  d.fillStyle = fondo; d.strokeStyle = 'rgba(20,70,127,.25)'; d.lineWidth = 2;
-  d.beginPath(); d.roundRect(2, 2, c.width - 4, c.height - 4, 16); d.fill(); d.stroke();
-  d.fillStyle = tinta; d.fillText(texto, c.width / 2, c.height / 2 + 2);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: new THREE.CanvasTexture(c), sizeAttenuation: false, depthTest: false,
-    transparent: true }));
-  sp.scale.set(alto * c.width / c.height, alto, 1);
-  sp.renderOrder = 20;
-  return sp;
-}
-
-let camaMm = 250;
-const cama = new THREE.Group();
-escena.add(cama);
-function dibujarCama() {
-  cama.clear();
-  const m = camaMm / 2;
-  // la bandeja: un gris tenue para que la escena no se vea vacía
-  const bandeja = new THREE.Mesh(
-    new THREE.PlaneGeometry(camaMm, camaMm),
-    new THREE.MeshBasicMaterial({ color: 0xc6cfd8 }));
-  bandeja.position.z = -0.12;
-  cama.add(bandeja);
-  // reglilla: un cuadrito por centímetro y líneas más marcadas cada 5
-  const fina = new THREE.GridHelper(camaMm, Math.round(camaMm / 10), 0xdbe2e9, 0xdbe2e9);
-  const gorda = new THREE.GridHelper(camaMm, Math.round(camaMm / 50), 0x8e9aa7, 0x8e9aa7);
-  for (const r of [fina, gorda]) {
-    r.rotation.x = Math.PI / 2;
-    r.material.transparent = true;
-    cama.add(r);
-  }
-  fina.material.opacity = .75;
-  gorda.position.z = 0.01;
-  // el borde de la bandeja
-  const borde = [[-m, -m], [m, -m], [m, m], [-m, m], [-m, -m]]
-    .map(([x, y]) => new THREE.Vector3(x, y, 0.02));
-  cama.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(borde),
-                          new THREE.LineBasicMaterial({ color: 0x6f7b88 })));
-  // los números de la regla, en las esquinas y cada 5 cm por los dos bordes de delante
-  const gris = ['#5a6673', 'rgba(255,255,255,.85)', LETRA_REGLA];
-  for (let d = 0; d <= camaMm; d += 50) {
-    const abajo = cartel(String(d), ...gris);
-    abajo.position.set(-m + d, -m - 7, 0.4);
-    cama.add(abajo);
-    if (d) {                       // el 0 va una sola vez, en la esquina de origen
-      const lado = cartel(String(d), ...gris);
-      lado.position.set(-m - 7, -m + d, 0.4);
-      cama.add(lado);
-    }
-  }
-  const titulo = cartel(`cama ${camaMm} × ${camaMm} mm`, '#5a6673',
-                        'rgba(255,255,255,.85)', LETRA_REGLA);
-  titulo.position.set(0, m + 8, 0.4);
-  cama.add(titulo);
-}
-dibujarCama();
-
-// ---------- la caja de medidas de la pieza, con el número escrito en cada arista
-const medidasVista = new THREE.Group();
-escena.add(medidasVista);
-function ponerCaja(caja) {
-  medidasVista.traverse(o => {        // fuera las texturas de los carteles anteriores
-    if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); }
-  });
-  medidasVista.clear();
-  const caj = new THREE.Box3Helper(caja, 0x3069b8);
-  caj.material.transparent = true; caj.material.opacity = .45;
-  medidasVista.add(caj);
-  const a = caja.min, b = caja.max;
-  const mm = v => `${v.toFixed(1)} mm`;
-  const ancho = cartel(mm(b.x - a.x));
-  ancho.position.set((a.x + b.x) / 2, a.y, a.z);              // arista de delante
-  const fondo = cartel(mm(b.y - a.y));
-  fondo.position.set(b.x, (a.y + b.y) / 2, a.z);              // arista de la derecha
-  const alto = cartel(mm(b.z - a.z));
-  alto.position.set(b.x, a.y, (a.z + b.z) / 2);               // arista vertical
-  medidasVista.add(ancho, fondo, alto);
-}
-
+const rejilla = new THREE.GridHelper(300, 30, 0x888888, 0xbbbbbb);
+rejilla.rotation.x = Math.PI / 2; rejilla.material.opacity = .35; rejilla.material.transparent = true;
+escena.add(rejilla);
 let malla = null, encuadrado = false;
 
 function ajustar() {
@@ -1228,14 +982,13 @@ addEventListener('resize', ajustar); ajustar();
 // el cuadro mueve la palabra de arriba y cada nombre con su gancho; el llavero, sus
 // adornos, el aro y el texto; el organizador coloca por campos y no se arrastra
 const esMovible = n => $('tipo').value === 'cuadro'
-  ? (n === 'Titulo' || /^(Nombre|Gancho) \d+$/.test(n) || n.startsWith('Adorno'))
+  ? (n === 'Titulo' || /^(Nombre|Gancho) \d+$/.test(n))
   : $('tipo').value === 'marca' ? n.startsWith('Icono')
-  : $('tipo').value === 'organizador' ? n.startsWith('Adorno')
+  : $('tipo').value === 'organizador' ? false
   : (n === 'Aro' || n === 'Texto' || n.startsWith('Adorno'));
 const grupoDe = n => /^(?:Nombre|Gancho) (\d+)$/.test(n) ? 'n' + /(\d+)$/.exec(n)[1]
                    : n.startsWith('Icono') ? 'Icono'
                    : (n === 'Aro' || n === 'Texto' || n === 'Titulo') ? n
-                   : $('tipo').value !== 'nombre' ? 'Adorno'     // los demás tienen uno solo
                    : n.startsWith('Adorno derecho') ? 'der' : 'izq';
 
 // lo arrastrado de cada nombre del cuadro, como pares [dx, dy] (campo oculto cua_pos)
@@ -1296,14 +1049,7 @@ function mostrar(buffer) {
   ponerIconos();
   if (!encuadrado) { centrarVista(); encuadrado = true; }
   const medidas = `${tam.x.toFixed(1)} × ${tam.y.toFixed(1)} × ${tam.z.toFixed(1)} mm`;
-  $('medidas').innerHTML = `<b>${tam.x.toFixed(1)}</b> × <b>${tam.y.toFixed(1)}</b>`
-                         + ` × <b>${tam.z.toFixed(1)}</b> mm`;
-  const cabe = tam.x <= camaMm && tam.y <= camaMm;
-  $('info').classList.toggle('nocabe', !cabe);
-  $('cama-nota').textContent = cabe ? `· ancho × fondo × alto · cama ${camaMm} × ${camaMm}`
-                                    : `· NO cabe en la cama de ${camaMm} × ${camaMm} mm`;
-  cama.position.set(c.x, c.y, -0.05);      // la cama, centrada bajo la pieza
-  ponerCaja(caja);
+  $('medidas').textContent = medidas;
   $('tamano').innerHTML = `<b>${medidas}</b> ancho × fondo × alto`;
 }
 
@@ -1374,25 +1120,20 @@ for (const c of interruptores) {
 const abrirSecciones = () => interruptores.forEach(c => { c.closest('details').open = c.checked; });
 
 // ---------- tipo de diseño: cada sección propia lleva data-tipo. Para añadir otro diseño,
-// basta un botón más en #modelos, sus secciones marcadas con ese valor y su rama en el servidor.
+// basta una opción más en #tipo, sus secciones marcadas con ese valor y su rama en el servidor.
 function sincronizarTipo() {
   const t = $('tipo').value;
   document.querySelectorAll('[data-tipo]').forEach(el => {
     el.hidden = !el.dataset.tipo.split(' ').includes(t);
   });
-  for (const b of $('modelos').children) b.classList.toggle('sel', b.dataset.valor === t);
 }
-for (const b of $('modelos').children) b.onclick = () => {
-  if ($('tipo').value === b.dataset.valor) return;
-  $('tipo').value = b.dataset.valor;
-  generacion = null;            // los archivos de antes ya no valen para este modelo
-  sincronizarTipo();
-  encuadrado = false;
-  generar();
-};
+$('tipo').addEventListener('change', () => { sincronizarTipo(); encuadrado = false; });
 
 // ---------- patrón
-
+function listarPatrones(lista, elegido) {
+  // sin opción "(ninguno)": quien manda es la casilla "Repartir un patrón"
+  $('patron').innerHTML = lista.map(n => `<option${n === elegido ? ' selected' : ''}>${n}</option>`).join('');
+}
 $('otro-reparto').onclick = () => { $('semilla').value = Math.floor(Math.random() * 100000); generar(); };
 $('subir-patron').onclick = () => $('archivo-svg').click();
 $('archivo-svg').onchange = async e => {
@@ -1403,10 +1144,7 @@ $('archivo-svg').onchange = async e => {
     const r = await fetch('/api/patron', { method: 'POST', body: JSON.stringify({ nombre: f.name, svg: await f.text() }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'Error al subir');
-    cfg.patrones = d.patrones;      // la biblioteca se entera del que acaba de subir
-    $('patron').value = d.nombre;
-    pintarMiniSvg();
-    generar();
+    listarPatrones(d.patrones, d.nombre); generar();
   } catch (err) { msg.className = 'err'; msg.textContent = err.message; }
 };
 const libre = () => $('segundo_adorno').value === 'libre';
@@ -1430,13 +1168,6 @@ function puntoEnPlano(z) {
   const p = new THREE.Vector3();
   return rayo.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 0, 1), -z), p);
 }
-// el organizador lleva el adorno en una cara vertical: allí se arrastra por el plano de
-// esa cara, no por el suelo
-function puntoEnPlanoVertical(y) {
-  const p = new THREE.Vector3();
-  return rayo.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -y), p);
-}
-const deLado = () => $('tipo').value === 'organizador';
 function piezasMovibles() {
   const r = [];
   if (malla) malla.traverse(o => { if (o.isMesh && esMovible(o.name)) r.push(o); });
@@ -1459,7 +1190,7 @@ render.domElement.addEventListener('pointerdown', e => {
 
   // qué apunta cada arrastre y qué grupo se mueve con él
   let fijar, compañero = null, signo = 1;
-  if ($('tipo').value === 'cuadro' && grupo !== 'Adorno') {
+  if ($('tipo').value === 'cuadro') {
     if (grupo === 'Titulo') {
       const x0 = +$('cua_titulo_x').value, y0 = +$('cua_sep_titulo').value;
       fijar = (dx, dy) => {
@@ -1473,15 +1204,6 @@ render.domElement.addEventListener('pointerdown', e => {
         $('cua_pos').value = puestos.map(p => p.join(',')).join(';');
       };
     }
-  } else if ($('tipo').value === 'organizador' || grupo === 'Adorno') {
-    // el adorno del organizador y el del cuadro se colocan en % del ancho del nombre
-    const pre = $('tipo').value === 'organizador' ? 'org_' : 'cua_';
-    const ancho = (analisis && analisis.ancho_base) || 100;
-    const x0 = +$(pre + 'adorno_x').value, y0 = +$(pre + 'adorno_y').value;
-    fijar = (dx, dy) => {
-      $(pre + 'adorno_x').value = medio(x0 + dx / ancho * 100);
-      $(pre + 'adorno_y').value = medio(y0 + dy);
-    };
   } else if ($('tipo').value === 'marca') {
     const x0 = +$('mar_adorno_x').value, y0 = +$('mar_adorno_y').value;
     fijar = (dx, dy) => {
@@ -1515,23 +1237,19 @@ render.domElement.addEventListener('pointerdown', e => {
   for (const o of delGrupo) caja.union(new THREE.Box3().setFromObject(o));
   const c = new THREE.Vector3();
   caja.getCenter(c);
-  const ini = deLado() ? puntoEnPlanoVertical(c.y) : puntoEnPlano(c.z);
+  const ini = puntoEnPlano(c.z);
   if (!ini) return;
-  arrastre = { lado: deLado(), z: c.z, y: c.y, ini, fijar, signo, partes };
+  arrastre = { z: c.z, ini, fijar, signo, partes };
 }, true);
 
 render.domElement.addEventListener('pointermove', e => {
   if (!arrastre) return;
   apuntar(e);
-  const p = arrastre.lado ? puntoEnPlanoVertical(arrastre.y) : puntoEnPlano(arrastre.z);
+  const p = puntoEnPlano(arrastre.z);
   if (!p) return;
-  const dx = p.x - arrastre.ini.x;
-  const dv = arrastre.lado ? p.z - arrastre.ini.z : p.y - arrastre.ini.y;
-  for (const { obj, base, s } of arrastre.partes) {
-    if (arrastre.lado) obj.position.set(base.x + s * dx, base.y, base.z + dv);
-    else obj.position.set(base.x + s * dx, base.y + dv, base.z);
-  }
-  arrastre.fijar(arrastre.signo * dx, dv);
+  const dx = p.x - arrastre.ini.x, dy = p.y - arrastre.ini.y;
+  for (const { obj, base, s } of arrastre.partes) obj.position.set(base.x + s * dx, base.y + dy, base.z);
+  arrastre.fijar(arrastre.signo * dx, dy);
 });
 function soltar() {
   if (!arrastre) return;
@@ -1548,13 +1266,10 @@ const CAJAS = [['usar_adorno', 'caja-adorno'], ['usar_patron', 'caja-patron'],
                ['cua_adorno', 'caja-cua-adorno'], ['cua_patron', 'caja-cua-patron'],
                ['cua_ganchos', 'caja-cua-ganchos'], ['cua_aparte', 'caja-cua-aparte'],
                ['cua_colgar', 'caja-cua-colgar'], ['mar_adorno', 'caja-mar-adorno'],
-               ['mar_aparte', 'caja-mar-aparte'],
-               ['aparte', 'caja-aparte-llavero'], ['mar_tope', 'caja-mar-tope']];
+               ['mar_aparte', 'caja-mar-aparte']];
 function sincronizarCajas() {
   for (const [casilla, caja] of CAJAS) $(caja).hidden = !$(casilla).checked;
   $('caja-cua-encima').hidden = $('cua_patron_corta').checked;   // al revés: solo si NO corta
-  $('caja-mar-ranura').hidden = $('mar_estilo').value !== 'ranura';
-  $('caja-mar-calado').hidden = $('mar_estilo').value !== 'calado';
 }
 
 function leer() {
@@ -1603,33 +1318,15 @@ function pintarAvisos(analisis) {
     .map(a => `<div><b>⚠</b><span>${esc(a)}</span></div>`).join('');
 }
 
-// solo se enseñan tantos selectores como formas tenga de verdad el dibujo elegido
+// solo se enseñan tantos selectores como formas tenga de verdad el SVG elegido
 function pintarFormasAdorno(analisis) {
-  const cuantas = (analisis && analisis.grupos_adorno) || 0;
-  const colores = (analisis && analisis.colores_adorno) || [];
+  const n = (analisis && analisis.grupos_adorno) || 0;
   for (let i = 1; i <= 3; i++) {
     for (const p of ['fila_c', 'org_fila_c', 'cua_fila_c', 'mar_fila_c']) {
-      const fila = $(p + i);
-      fila.hidden = i > cuantas;
-      const tinta = fila.querySelector('.tinta');
-      const sitio = fila.querySelector('select').value;
-      // la tinta solo pinta cuando manda el dibujo; con un sitio de la paleta, manda ella
-      tinta.hidden = !(sitio === 'auto' || sitio === 'svg');
-      if (colores[i - 1]) tinta.value = colores[i - 1];     // el color que salió de verdad
+      $(p + i).hidden = i > n;
     }
   }
 }
-
-// cambiar una tinta a mano: se guarda aparte, así un campo vacío sigue queriendo decir
-// "el color que traiga el dibujo"
-document.querySelectorAll('.tinta').forEach(t => t.addEventListener('change', () => {
-  $(t.dataset.campo).value = t.value;
-  generar();
-}));
-document.querySelectorAll('.tintas-dibujo').forEach(b => b.addEventListener('click', () => {
-  for (let i = 1; i <= 3; i++) $(b.dataset.pref + 'adorno_tinta' + i).value = '';
-  generar();
-}));
 
 function pintarFilamentos(analisis) {
   const c = analisis && analisis.colores;
@@ -1663,10 +1360,6 @@ async function generar() {
   }
 }
 
-$('mar-otro-reparto').onclick = () => {
-  $('mar_semilla').value = Math.floor(Math.random() * 100000); generar();
-};
-
 $('cua-recolocar').onclick = () => {
   $('cua_pos').value = ''; $('cua_titulo_x').value = '0'; generar();
 };
@@ -1690,7 +1383,6 @@ function preguntar(titulo, detalle) {
 function mostrarResultado(id, textoUsado) {
   $('baja-3mf').href = `/api/generacion/${id}/3mf`;
   $('baja-stl').href = `/api/generacion/${id}/stl`;
-  $('baja-zip').href = `/api/generacion/${id}/zip`;
   $('aviso-invitado').hidden = !invitado;
   if (invitado && textoUsado) $('texto-invitado').textContent = textoUsado;
   $('resultado').hidden = false;
@@ -1708,8 +1400,7 @@ async function generarArchivos() {
   const limitada = !invitado && resumen && resumen.restantes !== null;
   if (limitada && resumen.restantes <= 0) {
     msg.className = 'err';
-    msg.innerHTML = 'No te quedan generaciones. Escribe a '
-      + `<a href="mailto:${contacto}">${contacto}</a> y te amplío la licencia.`;
+    msg.textContent = 'No te quedan generaciones. Pídele una licencia al administrador.';
     return;
   }
   if (limitada) {
@@ -1755,7 +1446,6 @@ async function cargarYo() {
   $('nav_admin').hidden = !d.es_admin;
   $('yo_invitado').hidden = !d.es_invitado;
   document.querySelectorAll('.solo-admin').forEach(el => { el.hidden = !d.es_admin; });
-  document.querySelectorAll('.nada-admin').forEach(el => { el.hidden = !!d.es_admin; });
   invitado = !!d.es_invitado;
   $('cambiar-clave').hidden = invitado;   // los invitados no tienen contraseña
   resumen = d.resumen;
@@ -1783,9 +1473,8 @@ function aplicarParametros(p) {
   for (const k of CAMPOS) if (k in p) $(k)[$(k).type === 'checkbox' ? 'checked' : 'value'] = p[k];
   $('usar_adorno').checked = !!p.adorno;        // vacío = sin adorno / sin patrón
   $('usar_patron').checked = !!p.patron;
-  // si venían vacíos (adorno o patrón apagados), se deja uno puesto por si los encienden
-  if (!$('adorno').value) $('adorno').value = (cfg.adornos || [''])[0];
-  if (!$('patron').value) $('patron').value = (cfg.patrones || [''])[0];
+  if (!$('adorno').value) $('adorno').selectedIndex = 0;   // deja uno elegido por si la activan
+  if (!$('patron').value) $('patron').selectedIndex = 0;
   $('pos-adorno2').hidden = !libre();
   $('usar_chaflan').checked = (+p.chaflan || 0) > 0;
   sincronizarTipo();
@@ -1827,70 +1516,17 @@ for (const k of AJUSTES_CALC) {
 // miniatura del patrón y del adorno elegidos
 // el nombre puede llevar subcarpeta ('desktop/lapiz.svg'): la barra va tal cual en la ruta
 const rutaSvg = (tipo, n) => n ? '/api/svg/' + tipo + '/' + n.split('/').map(encodeURIComponent).join('/') : '';
-
-// ---------- biblioteca de dibujos: todos ven los de la carpeta común y, además, los de
-// la suya propia (adornos/llavero, adornos/cuadro...), por si algún día hay exclusivos.
-const CARPETA_SVG = { nombre: 'llavero', organizador: 'organizador',
-                      cuadro: 'cuadro', marca: 'marcapaginas' };
-const bonito = n => n.split('/').pop().replace(/\.svg$/i, '').replace(/[_-]+/g, ' ');
-
-function listaSvg(clase) {
-  const todos = (clase === 'patron' ? cfg.patrones : cfg.adornos) || [];
-  const mia = (CARPETA_SVG[$('tipo').value] || '') + '/';
-  return todos.filter(n => !n.includes('/') || n.startsWith(mia));
+function pintarMiniSvg() {
+  $('vista_patron').src = rutaSvg('patron', $('patron').value);
+  $('vista_adorno').src = rutaSvg('adorno', $('adorno').value);
+  $('vista_org_adorno').src = rutaSvg('adorno', $('org_adorno_svg').value);
+  $('vista_cua_adorno').src = rutaSvg('adorno', $('cua_adorno_svg').value);
+  $('vista_mar_adorno').src = rutaSvg('adorno', $('mar_adorno_svg').value);
+  $('vista_cua_patron').src = rutaSvg('patron', $('cua_patron_svg').value);
 }
-
-function pintarBotonSvg(campo) {
-  const b = document.querySelector(`.svgbtn[data-campo="${campo}"]`);
-  if (!b) return;
-  const v = $(campo).value;
-  b.querySelector('img').src = rutaSvg(b.dataset.clase, v);
-  b.querySelector('.nom').textContent = v ? bonito(v) : '(ninguno)';
-}
-const pintarMiniSvg = () => document.querySelectorAll('.svgbtn')
-  .forEach(b => pintarBotonSvg(b.dataset.campo));
-
-let galeriaCampo = null, galeriaClase = 'adorno';
-function pintarGaleria() {
-  const busca = $('galeria-buscar').value.trim().toLowerCase();
-  const actual = $(galeriaCampo).value;
-  const lista = listaSvg(galeriaClase).filter(n => !busca || bonito(n).toLowerCase().includes(busca));
-  const propios = lista.filter(n => n.includes('/'));
-  const comunes = lista.filter(n => !n.includes('/'));
-  const tarjeta = n => `<button type="button" class="tarjeta${n === actual ? ' sel' : ''}" data-n="${esc(n)}">`
-    + `<img src="${rutaSvg(galeriaClase, n)}" alt="" loading="lazy"><span>${esc(bonito(n))}</span></button>`;
-  const trozo = (etq, l) => l.length ? `<p class="grupo">${etq}</p>` + l.map(tarjeta).join('') : '';
-  $('galeria-lista').innerHTML = lista.length
-    ? trozo('De este diseño', propios) + trozo(propios.length ? 'De la biblioteca' : '', comunes)
-    : '<p class="nota">No hay ninguno con ese nombre.</p>';
-  $('galeria-pie').textContent = `${lista.length} dibujo${lista.length === 1 ? '' : 's'}`
-    + ' · ¿quieres otro? Escríbeme y lo preparo: ' + contacto;
-}
-function abrirGaleria(campo, clase) {
-  galeriaCampo = campo; galeriaClase = clase;
-  $('galeria-titulo').textContent = clase === 'patron' ? 'Motivos del patrón' : 'Dibujos';
-  $('galeria-buscar').value = '';
-  pintarGaleria();
-  $('galeria').hidden = false;
-  $('galeria-buscar').focus();
-}
-const cerrarGaleria = () => { $('galeria').hidden = true; };
-document.addEventListener('click', e => {
-  const b = e.target.closest('.svgbtn');
-  if (b) { abrirGaleria(b.dataset.campo, b.dataset.clase); return; }
-  const t = e.target.closest('#galeria-lista .tarjeta');
-  if (t) {
-    $(galeriaCampo).value = t.dataset.n;
-    pintarBotonSvg(galeriaCampo);
-    cerrarGaleria();
-    generar();
-  }
-});
-$('galeria-buscar').addEventListener('input', pintarGaleria);
-$('galeria-cerrar').onclick = cerrarGaleria;
-$('galeria').addEventListener('click', e => { if (e.target.id === 'galeria') cerrarGaleria(); });
-addEventListener('keydown', e => { if (e.key === 'Escape' && !$('galeria').hidden) cerrarGaleria(); });
-
+['patron', 'adorno', 'org_adorno_svg', 'cua_adorno_svg', 'cua_patron_svg',
+ 'mar_adorno_svg']
+  .forEach(k => $(k).addEventListener('change', pintarMiniSvg));
 $('cua-otro-reparto').onclick = () => {
   $('cua_semilla').value = Math.floor(Math.random() * 100000); generar();
 };
@@ -1899,43 +1535,31 @@ $('cua-otro-reparto').onclick = () => {
 function pintarPlantillas(ps) {
   const grupo = (etq, l) => l.length ? `<optgroup label="${etq}">` + l.map(
     p => `<option value="${p.id}" data-mia="${p.mia}">${esc(p.nombre)}</option>`).join('') + '</optgroup>' : '';
-  $('plantilla').innerHTML =
-    '<option value="">Sin cambios — lo que hay ahora</option>' +
-    '<option value="__cero__">↺ Empezar de cero (este modelo)</option>' +
-    grupo('Mías', ps.filter(p => p.mia)) + grupo('De la casa', ps.filter(p => !p.mia));
+  $('plantilla').innerHTML = grupo('Mías', ps.filter(p => p.mia)) + grupo('De la casa', ps.filter(p => !p.mia))
+                             || '<option value="">(todavía no hay)</option>';
   marcarBorrable();
 }
 function marcarBorrable() {     // solo se pueden borrar las propias
   const o = $('plantilla').selectedOptions[0];
   $('borrar-plantilla').hidden = !(o && o.dataset.mia === '1');
 }
-// elegir una la carga en el acto: no hace falta otro botón para eso
-$('plantilla').onchange = async () => {
-  marcarBorrable();
+$('plantilla').onchange = marcarBorrable;
+async function cargarPlantillas() {
+  const r = await fetch('/api/plantillas');
+  if (!r.ok) return;
+  pintarPlantillas((await r.json()).plantillas);
+}
+$('usar-plantilla').onclick = async () => {
   const id = $('plantilla').value;
   if (!id) return;
-  if (id === '__cero__') {
-    const tipo = $('tipo').value;            // se reinicia el modelo que estás haciendo
-    aplicarParametros({ ...cfg.defaults, tipo });
-    $('plantilla').value = '';
-    generacion = null;
-    $('msg').className = ''; $('msg').textContent = 'Valores de fábrica.';
-    generar();
-    return;
-  }
   const r = await fetch('/api/plantilla/' + id);
   if (!r.ok) return;
   aplicarParametros((await r.json()).parametros);
   generacion = null;
   generar();
 };
-async function cargarPlantillas() {
-  const r = await fetch('/api/plantillas');
-  if (!r.ok) return;
-  pintarPlantillas((await r.json()).plantillas);
-}
 $('guardar-plantilla').onclick = async () => {
-  const nombre = prompt('¿Con qué nombre la guardo?');
+  const nombre = prompt('Nombre de la plantilla:');
   if (!nombre) return;
   const msg = $('msg');
   try {
@@ -1944,19 +1568,19 @@ $('guardar-plantilla').onclick = async () => {
       body: JSON.stringify({ nombre, parametros: leer() }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'No se pudo guardar');
-    msg.className = ''; msg.textContent = 'Configuración guardada.';
+    msg.className = ''; msg.textContent = 'Plantilla guardada.';
     pintarPlantillas(d.plantillas);
   } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
 };
 $('borrar-plantilla').onclick = async () => {
   const o = $('plantilla').selectedOptions[0];
-  if (!o || !confirm(`¿Borrar la configuración "${o.textContent}"?`)) return;
+  if (!o || !confirm(`¿Borrar la plantilla "${o.textContent}"?`)) return;
   const msg = $('msg');
   try {
     const r = await fetch('/api/plantillas/' + o.value, { method: 'DELETE' });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'No se pudo borrar');
-    msg.className = ''; msg.textContent = 'Configuración borrada.';
+    msg.className = ''; msg.textContent = 'Plantilla borrada.';
     pintarPlantillas(d.plantillas);
   } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
 };
@@ -1964,16 +1588,6 @@ $('borrar-plantilla').onclick = async () => {
 // ---------- valores por defecto desde el servidor
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cfg = await (await fetch('/api/config')).json();
-const contacto = (cfg.app && cfg.app.contacto) || '';
-camaMm = (cfg.app && cfg.app.cama) || camaMm;
-dibujarCama();
-$('ver').textContent = (cfg.app && cfg.app.version) || '';
-document.title = (cfg.app && cfg.app.nombre) || document.title;
-for (const a of document.querySelectorAll('a.correo')) {
-  a.textContent = contacto; a.href = 'mailto:' + contacto;
-}
-$('correo-invitado').textContent = contacto;
-$('correo-invitado').href = 'mailto:' + contacto;
 // fuentes: dos grupos (las de la carpeta y las del equipo). Se llenan ANTES de poner los valores.
 const opcionesFuentes = g => g.map(f => `<option value="${esc(f)}">${esc(f)}</option>`).join('');
 const htmlFuentes = `<optgroup label="De la carpeta fuentes">${opcionesFuentes(cfg.fuentes.carpeta)}</optgroup>` +
@@ -1981,6 +1595,16 @@ const htmlFuentes = `<optgroup label="De la carpeta fuentes">${opcionesFuentes(c
 $('fuente_inicial').innerHTML = $('fuente_texto').innerHTML =
   $('org_fuente').innerHTML = $('cua_fuente').innerHTML =
   $('mar_fuente').innerHTML = $('mar_fuente_inicial').innerHTML = htmlFuentes;
+// las listas se llenan ANTES de poner los valores, si no el select no los acepta
+listarPatrones(cfg.patrones, cfg.defaults.patron);
+const opcionesAdorno = elegido => cfg.adornos
+  .map(n => `<option${n === elegido ? ' selected' : ''}>${esc(n)}</option>`).join('');
+$('adorno').innerHTML = opcionesAdorno(cfg.defaults.adorno);
+$('org_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.org_adorno_svg);
+$('cua_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.cua_adorno_svg);
+$('mar_adorno_svg').innerHTML = opcionesAdorno(cfg.defaults.mar_adorno_svg);
+$('cua_patron_svg').innerHTML = cfg.patrones
+  .map(n => `<option${n === cfg.defaults.cua_patron_svg ? ' selected' : ''}>${esc(n)}</option>`).join('');
 aplicarParametros(cfg.defaults);
 await cargarYo();
 $('caja-plantillas').hidden = false;

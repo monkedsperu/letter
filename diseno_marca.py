@@ -6,11 +6,11 @@ import re
 
 import trimesh
 from shapely import affinity
-from shapely.geometry import LineString, Polygon, box
+from shapely.geometry import LineString
 from shapely.ops import unary_union
 
-from comun import (GROSOR_MINIMO, _analizar, _poligonos, adorno_en_grupos,
-                   apartar_por_color, extruir, repartir_patron, texto_a_poligono)
+from comun import (GROSOR_MINIMO, HUECO_APARTE, _analizar, adorno_en_grupos, extruir,
+                   texto_a_poligono)
 from parametros import Parametros
 
 MAX_LETRAS_MARCA = 16
@@ -94,23 +94,7 @@ def construir_marca(a: Parametros):
             cx + a.mar_adorno_x, cy + a.mar_adorno_y - a.mar_adorno_alto / 2,
             {"cuerpo": a.mar_color_cuerpo, "texto": a.mar_color_texto,
              "inicial": a.mar_color_inicial, "extra": a.mar_color_adorno},
-            [a.mar_adorno_c1, a.mar_adorno_c2, a.mar_adorno_c3], a.mar_color_adorno,
-            ("extra", "cuerpo", "texto"),
-            (a.mar_adorno_tinta1, a.mar_adorno_tinta2, a.mar_adorno_tinta3))
-        # delante el icono tapa las letras; detrás son ellas las que lo cortan. En los dos
-        # casos el que manda deja un aire alrededor, para que la junta se vea a propósito
-        letras = unary_union([g for _, g, _ in piezas])
-        aire = max(a.mar_adorno_aire, 0.0)
-        if not letras.is_empty:
-            if a.mar_adorno_detras:
-                corte = letras.buffer(aire, join_style=1) if aire else letras
-                partes = [(c, g.difference(corte)) for c, g in partes]
-                partes = [(c, g) for c, g in partes if not g.is_empty]
-            else:
-                dibujo = unary_union([g for _, g in partes])
-                corte = dibujo.buffer(aire, join_style=1) if aire else dibujo
-                piezas = [(n, g.difference(corte), c) for n, g, c in piezas]
-                piezas = [(n, g, c) for n, g, c in piezas if not g.is_empty]
+            [a.mar_adorno_c1, a.mar_adorno_c2, a.mar_adorno_c3], a.mar_color_adorno)
         varios = len(partes) > 1
         for i, (color, g) in enumerate(partes, 1):
             piezas.append((f"Icono {i}" if varios else "Icono", g, color))
@@ -128,54 +112,6 @@ def construir_marca(a: Parametros):
     if cuerpo.is_empty:
         raise ValueError("El marcapáginas salió vacío. Revisa las medidas.")
 
-    # ---- el tope: un murito cruzado justo debajo de lo que lleva escrito, para que el
-    # marcapáginas no se cuele entero entre las páginas y se pierda dentro del libro
-    pie = min([g.bounds[1] for _, g, _ in piezas] or [a.mar_largo]) - hueco
-    tope = Polygon()
-    if a.mar_tope and a.mar_tope_alto > 0 and a.mar_tope_grueso > 0:
-        if pie - a.mar_tope_grueso <= radio:
-            raise ValueError("No queda sitio para el tope: baja el nombre o alarga la lámina.")
-        bx0, _, bx1, _ = cuerpo.bounds
-        tope = cuerpo.intersection(box(bx0 - 1, pie - a.mar_tope_grueso, bx1 + 1, pie))
-
-    # ---- el estilo de la lámina: entera, con una ranura o calada con un patrón
-    estilo = (a.mar_estilo or "solido").strip().lower()
-    alto_libre = pie - a.mar_tope_grueso - 2 * radio      # lo que queda de lámina por debajo
-    if estilo not in ("solido", "ranura", "calado"):
-        raise ValueError("El estilo de la lámina debe ser: solido, ranura o calado.")
-    if estilo != "solido" and alto_libre < 10:
-        raise ValueError("La lámina se queda sin sitio para el calado: alárgala o sube el "
-                         "nombre.")
-    if estilo == "ranura":
-        # una LENGÜETA que cuelga de arriba y queda suelta por abajo, con el hueco dándole
-        # la vuelta: la hoja del libro se mete entre ella y el marco, y por eso agarra. Si
-        # la lengüeta acabara pegada al final de la lámina no habría por dónde meter la hoja
-        hueco_lado = max(a.mar_ranura_ancho, 0.8)
-        gorda = max(a.mar_ranura_centro, 2.0)
-        if gorda + 2 * hueco_lado + 4 * GROSOR_MINIMO > a.mar_ancho:
-            raise ValueError("La lengüeta y su hueco no caben a lo ancho: estréchalos o "
-                             "ensancha la lámina.")
-        arriba = pie - a.mar_tope_grueso - 2
-        abajo = radio + hueco_lado + 2
-        if arriba - abajo < 15:
-            raise ValueError("No hay sitio para la lengüeta: alarga la lámina o sube el "
-                             "nombre.")
-        lengueta = LineString([(0, abajo), (0, arriba)]).buffer(gorda / 2, quad_segs=24)
-        ranura = lengueta.buffer(hueco_lado, join_style=1).difference(lengueta)
-        ranura = ranura.intersection(box(-1e4, -1e4, 1e4, arriba))   # arriba sigue unida
-        cuerpo = cuerpo.difference(ranura)
-    elif estilo == "calado":
-        zona = cuerpo.intersection(box(-1e4, radio, 1e4, pie - a.mar_tope_grueso - 2))
-        zona = zona.buffer(-max(GROSOR_MINIMO * 2, 1.6))
-        if not zona.is_empty:
-            deco = repartir_patron(zona, a.mar_patron_svg, a.mar_tam_patron,
-                                   a.mar_separacion_patron, a.mar_semilla, False)
-            if not deco.is_empty:
-                cuerpo = cuerpo.difference(deco)
-    if len(_poligonos(cuerpo)) > 1:
-        raise ValueError("El calado parte la lámina en trozos: hazlo más pequeño o menos "
-                         "ancho.")
-
     # ---- las alturas. Sueltas, las piezas crecen una espiga hacia dentro de la lámina y
     # la lámina se vacía su silueta con holgura, así al pegarlas caen solas en su sitio
     suelo, techo = a.mar_grueso, a.mar_grueso + a.mar_relieve
@@ -188,10 +124,6 @@ def construir_marca(a: Parametros):
             extruir(cuerpo.difference(bolsa), hondo, suelo - hondo)
     else:
         mallas = extruir(cuerpo, suelo, 0.0)
-    if not tope.is_empty:      # el murito va con la lámina: mismo color y misma pieza.
-        # arranca medio milímetro por debajo de la cara para que queden pegados de verdad
-        mordida = min(0.5, a.mar_grueso / 3)
-        mallas += extruir(tope, a.mar_tope_alto + mordida, suelo - mordida)
     niveles = [("Lamina", a.mar_color_cuerpo, trimesh.util.concatenate(mallas))]
     for etiqueta, region, z0, z1, color in regiones[1:]:
         trozos = extruir(region, z1 - z0, z0)
@@ -200,15 +132,16 @@ def construir_marca(a: Parametros):
     if len(niveles) < 2 and not espiga and len(piezas) == 0:
         raise ValueError("No se generó geometría. Revisa los parámetros.")
 
-    if espiga:      # cada color en fila al lado de la lámina, apoyado en la mesa
-        apartar_por_color([p for p in niveles if p[0] != "Lamina"], cuerpo.bounds[2])
+    if espiga:      # cada pieza al lado de la lámina y apoyada en la mesa, lista de imprimir
+        sueltas = [m for n, _, m in niveles if n != "Lamina"]
+        dx = cuerpo.bounds[2] + HUECO_APARTE - min(m.bounds[0][0] for m in sueltas)
+        dz = -min(m.bounds[0][2] for m in sueltas)
+        for m in sueltas:
+            m.apply_translation([dx, 0, dz])
 
-    analisis = _analizar(niveles, cuerpo, regiones, [c for c, _ in partes])
+    analisis = _analizar(niveles, cuerpo, regiones, len(partes))
     analisis["avisos"].append("Todo es plano: se imprime tumbado, con la cara buena hacia "
                               "arriba y sin soportes.")
-    if not tope.is_empty:
-        analisis["avisos"].append(f"El tope de {a.mar_tope_alto:.0f} mm va debajo del nombre: "
-                                  "apoya en el canto del libro y no se cuela entre las hojas.")
     if espiga:
         analisis["avisos"].append(
             f"Cada color sale suelto y al lado de la lámina: imprímelo con su filamento y "
