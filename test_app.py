@@ -414,10 +414,13 @@ movido = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_pos="0,0;0
 antes = [m for n, _, m in cuadro if n == "Gancho 3"][0].centroid
 ahora = [m for n, _, m in movido if n == "Gancho 3"][0].centroid
 assert abs(ahora[0] - antes[0] - 30) < 0.6 and abs(ahora[1] - antes[1] + 20) < 0.6,     ("el gancho no acompaña al nombre", antes, ahora)
-# la palabra de arriba también se mueve
-corrida = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_titulo_x=25))[0]
+# la palabra de arriba también se mueve (sin adorno: si no, al correrla choca con él y
+# es el adorno el que la recorta, que es justo lo que se espera de la capa "delante")
+_quieta = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_adorno=False))[0]
+corrida = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_adorno=False,
+                                                    cua_titulo_x=25))[0]
 assert abs([m for n, _, m in corrida if n == "Titulo"][0].centroid[0]
-           - [m for n, _, m in cuadro if n == "Titulo"][0].centroid[0] - 25) < 0.6
+           - [m for n, _, m in _quieta if n == "Titulo"][0].centroid[0] - 25) < 0.6
 
 # sin nombres no hay ni fila ni ganchos, pero el cuadro sigue saliendo
 solo = gen.construir_con_analisis(gen.Parametros(tipo="cuadro", cua_integrantes=" "))[0]

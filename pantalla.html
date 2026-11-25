@@ -406,7 +406,7 @@
         <div><label>Y (mm)<input id="adorno_y" type="number" step="0.5"></label></div>
       </div>
       <div class="fila">
-        <div><label>Capa<span class="q" tabindex="0" data-tip="Delante tapa la letra; detrás la letra lo tapa.">?</span>
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Delante el adorno tapa la letra y el texto; detrás son ellos los que lo tapan a él. El que manda deja siempre su aire alrededor.">?</span>
           <select id="adorno_detras">
             <option value="false">Delante</option>
             <option value="true">Detrás</option>
@@ -422,6 +422,11 @@
         <div><label>X2 (mm)<input id="adorno2_x" type="number" step="0.5"></label></div>
         <div><label>Y2 (mm)<input id="adorno2_y" type="number" step="0.5"></label></div>
         <div><label>Giro 2 (°)<input id="giro_adorno2" type="number" step="5"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="adorno_aire" type="number" step="0.2" min="0"></label></div>
+        <div></div>
       </div>
       <label class="check"><input id="cortar_adorno" type="checkbox"> Separar con borde
         <span class="q" tabindex="0" data-tip="Deja un borde entre el adorno y la letra para que se distingan.">?</span></label>
@@ -623,6 +628,15 @@
         <div><label>Dibujo del adorno<button type="button" class="svgbtn" data-campo="org_adorno_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="org_adorno_svg"></div>
         <div><label>Color extra<span class="q" tabindex="0" data-tip="El 4º filamento, por si alguna forma del adorno no lleva ninguno de los otros tres colores.">?</span>
           <input id="org_color_adorno" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa las letras y detrás son ellas las que lo tapan a él. El que manda deja siempre su aire alrededor.">?</span>
+          <select id="org_adorno_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="org_adorno_aire" type="number" step="0.2" min="0"></label></div>
       </div>
       <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
       <div class="formas">
@@ -830,6 +844,15 @@
       <div class="fila">
         <div><label>Dibujo del adorno<button type="button" class="svgbtn" data-campo="cua_adorno_svg" data-clase="adorno"><img alt=""><span class="nom">…</span></button></label><input type="hidden" id="cua_adorno_svg"></div>
         <div><label>Color extra<input id="cua_color_adorno" type="color"></label></div>
+      </div>
+      <div class="fila">
+        <div><label>Capa<span class="q" tabindex="0" data-tip="Si se tocan: delante el adorno tapa las letras y detrás son ellas las que lo tapan a él. El que manda deja siempre su aire alrededor.">?</span>
+          <select id="cua_adorno_detras">
+            <option value="false">Delante</option>
+            <option value="true">Detrás</option>
+          </select></label></div>
+        <div><label>Aire al cortar (mm)<span class="q" tabindex="0" data-tip="Hueco que deja el que manda alrededor del otro, para que la junta se vea a propósito. 0 = pegados.">?</span>
+          <input id="cua_adorno_aire" type="number" step="0.2" min="0"></label></div>
       </div>
       <label>Color de cada forma<span class="q" tabindex="0" data-tip="Con «Automático» (lo normal) manda el dibujo cuando trae color de verdad y son dos colores o menos: una estrella turquesa sale turquesa. Un icono en negro, blanco o gris -como vienen casi todos- y los dibujos de tres colores se pintan con la paleta de la pieza, para no perderse sobre el fondo ni inflar los filamentos. «Del dibujo» fuerza siempre su color, y el resto de opciones lo mandan al color que elijas. Solo salen tantos selectores como formas tenga el dibujo.">?</span></label>
       <div class="formas">
@@ -1539,7 +1562,7 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'alto_nivel1','color_nivel1','alto_nivel2','color_nivel2','alto_nivel3','color_nivel3','cortar_letra',
                 'patron','tam_patron','separacion_patron','margen_patron','semilla','girar_patron',
                 'adorno','tam_adorno','adorno_x','adorno_y','giro_adorno','segundo_adorno','adorno2_x','adorno2_y','giro_adorno2',
-                'cortar_adorno','color_adorno',
+                'cortar_adorno','adorno_aire','color_adorno',
                 'aro','aro_diametro','aro_agujero','aro_x','aro_y',
                 'curva_texto','separacion_lineas','texto_x','texto_y',
                 'iman','iman_diametro','iman_hondo','iman_x','iman_y','adorno_detras',
@@ -1549,7 +1572,7 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'org_borde','org_color_borde','org_aparte','org_hueco','org_holgura',
                 'org_fondo','org_margen','org_suave','org_base','org_pared','org_canto','org_canto_pasos',
                 'org_adorno','org_adorno_svg','org_adorno_alto','org_adorno_x','org_adorno_y',
-                'org_adorno_giro','org_color_adorno','org_adorno_borde',
+                'org_adorno_giro','org_adorno_detras','org_adorno_aire','org_color_adorno','org_adorno_borde',
                 'org_adorno_c1','org_adorno_c2','org_adorno_c3',
                 'org_movil','org_movil_x','org_movil_ancho','org_movil_grueso','org_movil_suelo','org_movil_angulo',
                 'org_vaso','org_vaso_x','org_vaso_diametro','org_vaso_alto','org_vaso_hondo',
@@ -1563,7 +1586,7 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'cua_alto_integrantes','cua_separacion','cua_hueco','cua_placa','cua_relieve',
                 'cua_margen','cua_suave','cua_color_placa','cua_color_familia',
                 'cua_color_integrantes','cua_adorno','cua_adorno_svg','cua_adorno_alto',
-                'cua_adorno_x','cua_adorno_y','cua_adorno_giro','cua_adorno_c1','cua_adorno_c2',
+                'cua_adorno_x','cua_adorno_y','cua_adorno_giro','cua_adorno_detras','cua_adorno_aire','cua_adorno_c1','cua_adorno_c2',
                 'cua_adorno_c3','cua_color_adorno','cua_patron','cua_patron_svg','cua_tam_patron',
                 'cua_separacion_patron','cua_margen_patron','cua_semilla','cua_girar_patron',
                 'cua_patron_corta','cua_patron_relieve','cua_color_patron',

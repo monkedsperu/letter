@@ -132,10 +132,12 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
      interruptor: dibujo, alto, sitio en mm, giro, capa y el color de cada forma. Se miden
      desde el centro de la pieza grande -la letra, el apellido, el texto del topper- y se
      arrastran en la vista 3D como todo lo demás.
-   - LA CAPA de esos adornos decide quién corta a quién cuando se tocan: "Detrás" (lo
-     normal) deja que las letras lo recorten y "Delante" hace que sea él quien las tape;
-     el "aire al cortar" es el hueco que deja el que manda, para que la junta se vea a
-     propósito. Nunca quedan superpuestos.
+   - LA CAPA funciona igual en TODOS los adornos de todos los diseños -el de siempre y
+     los sueltos- y decide quién corta a quién cuando se tocan: "Delante" el adorno tapa
+     las letras y "Detrás" son ellas las que lo tapan a él. Se mide contra TODO lo que
+     tiene debajo: la letra grande, el nombre, el apellido, la palabra de arriba... Y el
+     que manda deja siempre el "aire al cortar" (0,8 mm de serie) alrededor del otro, para
+     que la junta se vea a propósito y no salgan pegados. Nunca quedan superpuestos.
    - Adorno (cuernos), patrón y aro de llavero se activan con su casilla; los tres son
      opcionales y por defecto vienen: adorno sí, patrón sí, aro no.
    - El aro de llavero va en el nivel 1 (su mismo grosor y color) y su agujero atraviesa

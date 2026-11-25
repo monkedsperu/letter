@@ -574,7 +574,6 @@ def adornos_extra(a, pre: str, numeros, cx: float, cy: float, paleta: dict,
     corta lo de abajo, y "delante" devuelve en `recorte` lo que el adorno le quita a eso,
     para que nunca queden pisados."""
     puestos, por_adorno, recorte = [], {}, Polygon()
-    abajo = Polygon() if abajo is None else abajo
     for i in numeros:
         if not getattr(a, f"{pre}ad{i}"):
             continue
@@ -585,21 +584,52 @@ def adornos_extra(a, pre: str, numeros, cx: float, cy: float, paleta: dict,
             paleta, [getattr(a, f"{pre}ad{i}_c{j}") for j in (1, 2, 3)],
             por_defecto, reserva,
             tuple(getattr(a, f"{pre}ad{i}_tinta{j}") for j in (1, 2, 3)))
-        aire = max(getattr(a, f"{pre}ad{i}_aire"), 0.0)
-        if partes and not abajo.is_empty:
-            if getattr(a, f"{pre}ad{i}_detras"):
-                corte = abajo.buffer(aire, join_style=1) if aire else abajo
-                partes = [(c, g.difference(corte)) for c, g in partes]
-                partes = [(c, g) for c, g in partes if not g.is_empty]
-            else:
-                dibujo = unary_union([g for _, g in partes])
-                recorte = recorte.union(dibujo.buffer(aire, join_style=1) if aire else dibujo)
         varios = len(partes) > 1
         for j, (color, g) in enumerate(partes, 1):
             puestos.append((f"{pre}ad{i}", f"Adorno {i}" + (f".{j}" if varios else ""),
                             g, color))
         por_adorno[f"{pre}ad{i}"] = [c for c, _ in partes]
+    if abajo is not None and not abajo.is_empty:
+        puestos, recorte = aplicar_capas(a, pre, puestos, abajo)
+        for clave in por_adorno:         # los colores, con lo que haya quedado de verdad
+            por_adorno[clave] = [c for k, _, _, c in puestos if k == clave]                 or por_adorno[clave]
     return puestos, por_adorno, recorte
+
+
+def capa_simple(partes, abajo, detras: bool, aire: float):
+    """La capa de UN adorno -[(color, polígono)]- sobre lo que tiene debajo: "detrás" lo
+    corta `abajo` y "delante" lo corta él. Devuelve (partes, lo que le quita a `abajo`)."""
+    aire = max(aire, 0.0)
+    if not partes or abajo.is_empty:
+        return partes, Polygon()
+    if detras:
+        corte = abajo.buffer(aire, join_style=1) if aire else abajo
+        partes = [(c, g.difference(corte)) for c, g in partes]
+        return [(c, g) for c, g in partes if not g.is_empty], Polygon()
+    dibujo = unary_union([g for _, g in partes])
+    return partes, (dibujo.buffer(aire, join_style=1) if aire else dibujo)
+
+
+def aplicar_capas(a, pre: str, puestos, abajo):
+    """Recorta unos adornos ya colocados contra lo que tienen debajo, según la capa de cada
+    uno: "detrás" lo corta `abajo` y "delante" lo corta él a `abajo`. El que manda deja
+    siempre su aire alrededor, para que la junta no salga pegada.
+    Devuelve (puestos recortados, lo que hay que quitarle a `abajo`)."""
+    if abajo.is_empty or not puestos:
+        return puestos, Polygon()
+    recorte, salida = Polygon(), []
+    for clave in dict.fromkeys(p[0] for p in puestos):
+        i = clave.rsplit("ad", 1)[1]
+        suyos = [p for p in puestos if p[0] == clave]
+        aire = max(getattr(a, f"{pre}ad{i}_aire"), 0.0)
+        if getattr(a, f"{pre}ad{i}_detras"):
+            corte = abajo.buffer(aire, join_style=1) if aire else abajo
+            salida += [(k, n, g.difference(corte), c) for k, n, g, c in suyos]
+        else:
+            dibujo = unary_union([p[2] for p in suyos])
+            recorte = recorte.union(dibujo.buffer(aire, join_style=1) if aire else dibujo)
+            salida += suyos
+    return [p for p in salida if not p[2].is_empty], recorte
 
 
 def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: float,

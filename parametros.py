@@ -52,6 +52,7 @@ class Parametros:
     giro_adorno2: float = 0.0
     cortar_adorno: bool = True     # True = deja un borde de separación entre adorno y letra
     adorno_detras: bool = False    # True = el adorno pasa por detrás y la letra lo corta
+    adorno_aire: float = 0.8       # hueco que deja el adorno alrededor del texto (mm)
     # El SVG solo sirve para separar las formas: el color sale de la paleta del llavero,
     # así nunca se pasa de 4 filamentos. Cada grupo va a "letra", "texto" o "extra".
     adorno_c1: str = "auto"
@@ -133,6 +134,8 @@ class Parametros:
     org_adorno: bool = False
     org_adorno_svg: str = "pincel.svg"
     org_adorno_borde: float = 0.0       # borde propio del adorno (mm); va aparte del texto
+    org_adorno_detras: bool = False     # True = pasa por detrás y el nombre lo corta
+    org_adorno_aire: float = 0.8        # hueco que deja el que manda alrededor (mm)
     org_adorno_alto: float = 52.0  # alto del adorno (mm)
     org_adorno_x: float = 107.0    # % del ancho del nombre; pasado de 100 se sale por la derecha
     org_adorno_y: float = 8.0      # altura de su base, desde la mesa (mm)
@@ -200,6 +203,8 @@ class Parametros:
     cua_adorno_x: float = 74.0          # % del ancho del apellido
     cua_adorno_y: float = -8.0          # mm desde lo alto del apellido; negativo = lo monta
     cua_adorno_giro: float = 0.0
+    cua_adorno_detras: bool = False     # True = pasa por detrás y las letras lo cortan
+    cua_adorno_aire: float = 0.8        # hueco que deja el que manda alrededor (mm)
     cua_adorno_c1: str = "auto"         # "auto": manda el dibujo si trae color
                                         # de verdad y son pocos; si no, la paleta
     cua_adorno_c2: str = "auto"

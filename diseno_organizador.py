@@ -12,7 +12,8 @@ from shapely.ops import transform as shapely_transform, unary_union
 
 from comun import (APOYO, HUECO_APARTE, HUECO_MINIMO, SOBRA, _analizar, _booleana,
                    _borde_que_une, _circulo, _extruido, _poligonos, _tumbado,
-                   adorno_en_grupos, apartar_por_color, texto_a_poligono)
+                   adorno_en_grupos, apartar_por_color, capa_simple,
+                   texto_a_poligono)
 from parametros import Parametros
 
 MAX_LETRAS_ORG = 20
@@ -180,6 +181,12 @@ def construir_organizador(a: Parametros):
         a.org_color_adorno, ("extra", "cuerpo", "nombre"),
         (a.org_adorno_tinta1, a.org_adorno_tinta2, a.org_adorno_tinta3)) \
         if a.org_adorno else []
+    # su capa, como en el marcapáginas: delante tapa el nombre y detrás es el nombre quien
+    # lo tapa a él, siempre con un aire para que la junta no salga pegada
+    partes_adorno, quita = capa_simple(partes_adorno, nombre, a.org_adorno_detras,
+                                       a.org_adorno_aire)
+    if not quita.is_empty:
+        nombre = nombre.difference(quita)
     adorno = unary_union([g for _, g in partes_adorno]) if partes_adorno else Polygon()
     puesto = nombre.union(adorno) if not adorno.is_empty else nombre
     borde_adorno = max(a.org_adorno_borde, 0.0)

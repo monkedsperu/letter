@@ -11,7 +11,8 @@ from shapely.geometry import Point, Polygon
 from shapely.ops import unary_union
 
 from comun import (GROSOR_MINIMO, _analizar, _booleana, _poligonos, adorno_en_grupos,
-                   adornos_extra, apartar_por_color, extruir, repartir_patron,
+                   adornos_extra, aplicar_capas, apartar_por_color, capa_simple,
+                   extruir, repartir_patron,
                    texto_a_poligono)
 from parametros import Parametros
 
@@ -228,19 +229,14 @@ def construir_cuadro(a: Parametros):
         a.cua_color_adorno, ("familia", "placa", "extra"),
         (a.cua_adorno_tinta1, a.cua_adorno_tinta2, a.cua_adorno_tinta3)) \
         if a.cua_adorno else []
-    adorno = unary_union([g for _, g in partes_adorno]) if partes_adorno else Polygon()
-
-    # ---- dos adornos más, sueltos: se miden en mm desde el centro del apellido y cada uno
-    # elige su capa, así que o los corta el apellido o lo cortan ellos a él
-    extra, formas_extra, recorte = adornos_extra(
+    # ---- dos adornos más, sueltos: se miden en mm desde el centro del apellido. Aquí solo
+    # se colocan; la capa de cada uno se aplica al final, cuando ya están los nombres
+    extra, formas_extra, _ = adornos_extra(
         a, "cua_", (2, 3), 0.0, alto_familia / 2,
         {"placa": a.cua_color_placa, "familia": a.cua_color_familia,
          "integrantes": a.cua_color_integrantes, "extra": a.cua_color_adorno},
-        a.cua_color_adorno, ("familia", "placa", "extra"), letras)
-    if not recorte.is_empty:
-        letras = letras.difference(recorte)
-    if extra:      # entran en la silueta: la corona los esquiva y la placa los recoge
-        adorno = unary_union([adorno] + [g for _, _, g, _ in extra])
+        a.cua_color_adorno, ("familia", "placa", "extra"))
+    adorno = unary_union([g for _, g in partes_adorno] + [g for _, _, g, _ in extra])         if (partes_adorno or extra) else Polygon()
 
     # ---- los de la casa: en fila debajo, o en corona alrededor del apellido
     fila = _fila_de_nombres(a, nombres) if nombres else []
@@ -269,6 +265,21 @@ def construir_cuadro(a: Parametros):
         fila = [affinity.translate(p, dx, dy) for p, (dx, dy)
                 in zip(fila, _desplazamientos(a.cua_pos, len(fila)))]
     integrantes = unary_union(fila) if fila else Polygon()
+
+    # ---- la capa de cada adorno, igual que en el marcapáginas: delante tapa los textos y
+    # detrás son ellos los que lo cortan, siempre con un aire alrededor para que la junta no
+    # salga pegada. Se hace aquí, con todos los nombres ya colocados
+    puestos = unary_union([letras, titulo, integrantes])
+    partes_adorno, quita = capa_simple(partes_adorno, puestos, a.cua_adorno_detras,
+                                       a.cua_adorno_aire)
+    extra, quita_extra = aplicar_capas(a, "cua_", extra, puestos)
+    quita = quita.union(quita_extra)
+    if not quita.is_empty:
+        letras = letras.difference(quita)
+        titulo = titulo.difference(quita)
+        fila = [p.difference(quita) for p in fila]
+        integrantes = unary_union(fila) if fila else Polygon()
+    adorno = unary_union([g for _, g in partes_adorno] + [g for _, _, g, _ in extra])         if (partes_adorno or extra) else Polygon()
 
     # ---- ganchos: uno bajo cada nombre, y la placa tiene que llegar hasta ellos
     sitios = []

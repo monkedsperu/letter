@@ -13,7 +13,7 @@ from shapely import affinity
 from shapely.geometry import LineString, Point, Polygon
 from shapely.ops import nearest_points, unary_union
 
-from comun import (CARPETA_ADORNOS, GROSOR_MINIMO, _analizar, adornos_extra,
+from comun import (CARPETA_ADORNOS, GROSOR_MINIMO, _analizar, adornos_extra, aplicar_capas,
                    apartar_por_color, capas_con_chaflan, color_de_la_forma,
                    extruir, grupos_adorno, repartir_patron, svg_dentro_de,
                    texto_a_poligono, texto_en_lineas)
@@ -180,14 +180,12 @@ def _construir_llavero(a: Parametros):
         hb = h.buffer(a.borde, join_style=1) if a.borde > 0 else h
         base = letra.difference(hb if a.cortar_adorno else h)
         recorte_adorno = Polygon()
-    # dos adornos más, sueltos y con su propia capa: delante tapan el fondo y detrás es
-    # él quien los corta. Entran en la silueta, así que el borde del nivel 1 los rodea
-    extra, formas_extra, recorte_extra = adornos_extra(
+    # dos adornos más, sueltos. Aquí solo se colocan: su capa se aplica más abajo, cuando
+    # ya existe el texto, porque se recortan contra la letra Y contra él
+    extra, formas_extra, _ = adornos_extra(
         a, "", (2, 3), (minx + maxx) / 2, (miny + maxy) / 2,
         {"base": a.color_nivel1, "letra": a.color_nivel2, "texto": a.color_nivel3,
-         "extra": a.color_adorno}, a.color_adorno, ("extra", "base", "texto"), letra)
-    if not recorte_extra.is_empty:
-        base = base.difference(recorte_extra)
+         "extra": a.color_adorno}, a.color_adorno, ("extra", "base", "texto"))
     sueltos = unary_union([g for _, _, g, _ in extra]) if extra else Polygon()
     silueta = letra.union(h).union(sueltos)
     if silueta.is_empty and not a.texto.strip():
@@ -226,6 +224,25 @@ def _construir_llavero(a: Parametros):
     # cortar_letra: el texto con sus bordes tapa letra y adorno (el borde 1 los corta).
     # Si no, el borde 2 del texto se fusiona con la letra y el borde 1 solo se ve por fuera.
     tapa = t1 if a.cortar_letra else t2
+
+    # ---- las capas, igual que en el marcapáginas: cada adorno pasa por delante o por
+    # detrás de la letra Y del texto, y el que manda deja su aire alrededor del otro, para
+    # que la junta se vea a propósito y nunca salgan pegados
+    debajo = unary_union([letra, t1])
+    extra, quita = aplicar_capas(a, "", extra, debajo)
+    sueltos = unary_union([g for _, _, g, _ in extra]) if extra else Polygon()
+    aire = max(a.adorno_aire, 0.0)
+    tapa_adorno = Polygon()
+    if not h.is_empty and not t1.is_empty:
+        if a.adorno_detras:
+            tapa_adorno = t1.buffer(aire, join_style=1) if aire else t1
+        else:
+            quita = quita.union(h.buffer(aire, join_style=1) if aire else h)
+    if not quita.is_empty:     # lo que los adornos de delante le quitan al texto y a la letra
+        base = base.difference(quita)
+        t, t2 = t.difference(quita), t2.difference(quita)
+        tapa = tapa.difference(quita)
+
     deco = Polygon()           # motivos del patrón (pieza aparte del texto)
     n2 = base.difference(tapa).union(t2.difference(t))
     # Patrón: solo sobre la parte de la letra en nivel 2, lejos del texto, del adorno y del borde.
@@ -241,8 +258,7 @@ def _construir_llavero(a: Parametros):
     h1, h2, h3 = a.alto_nivel1, a.alto_nivel2, a.alto_nivel3
     centro = ((minx + maxx) / 2, (miny + maxy) / 2)
     arriba = t.union(deco)
-    cuerpo = unary_union([contorno, t1, n2, h.difference(tapa), sueltos.difference(tapa),
-                          arriba])
+    cuerpo = unary_union([contorno, t1, n2, h.difference(tapa_adorno), sueltos, arriba])
     anillo, agujero = aro_llavero(a, *centro, cuerpo)
     todo = cuerpo.union(anillo)
     nivel1 = todo.difference(anillo)
@@ -256,15 +272,12 @@ def _construir_llavero(a: Parametros):
         varios = len(lista) > 1
         for i, (color, g) in enumerate(lista, 1):
             nombre = f"{etiqueta} {i}" if varios else etiqueta
-            visible = g.difference(tapa)
+            visible = g.difference(tapa_adorno) if not tapa_adorno.is_empty else g
             if not recorte_adorno.is_empty:      # por detrás: la letra lo tapa
                 visible = visible.difference(recorte_adorno)
             regiones.append((nombre, visible, h1, h2, color))
-    for _, nombre, g, color in extra:
-        visible = g.difference(tapa)
-        if not recorte_adorno.is_empty:
-            visible = visible.difference(recorte_adorno)
-        regiones.append((nombre, visible, h1, h2, color))
+    for _, nombre, g, color in extra:            # estos ya vienen recortados por su capa
+        regiones.append((nombre, g, h1, h2, color))
     if not agujero.is_empty:   # el agujero del llavero atraviesa todas las capas
         regiones = [(n, r.difference(agujero), z0, z1, c) for n, r, z0, z1, c in regiones]
 
