@@ -37,8 +37,7 @@
 <div class="caja">
   <h1>Monkeds Letter <small class="ver">0.0.1 beta</small></h1>
   <p class="sub">Entra con tu usuario para generar tus letras.</p>
-  <p class="pide-cuenta">¿No tienes cuenta? Escribe a
-     <a href="mailto:medientg@gmail.com">medientg@gmail.com</a> y te la creo.</p>
+  <p class="pide-cuenta">¿No tienes cuenta? Créala aquí abajo en un minuto.</p>
 
   <form method="post" action="/login">
     <label>Usuario<input name="usuario" autocomplete="username" autofocus required></label>
@@ -46,25 +45,45 @@
     <button type="submit">Entrar</button>
   </form>
 
+  <div class="separador">o crea tu cuenta</div>
+
+  <form method="post" action="/registro">
+    <label>Usuario<input name="usuario" minlength="3" maxlength="40" autocomplete="username" required></label>
+    <label>Correo<input name="correo" type="email" autocomplete="email" required></label>
+    <label>Contraseña<input name="clave" type="password" minlength="6" autocomplete="new-password" required></label>
+    <button type="submit" class="sec">Crear cuenta y entrar</button>
+  </form>
+  <p class="nota">Con tu cuenta puedes diseñar y generar los archivos desde el primer día,
+     y la primera va de regalo, sin marcas. A partir de ahí, mientras no tengas licencia el
+     texto sale MARCADO, partido con un «+» por la mitad. Para quitarle la marca pide tu
+     licencia a <a href="mailto:medientg@gmail.com">medientg@gmail.com</a>.</p>
+
   <div class="separador">o sin cuenta</div>
 
   <form method="post" action="/invitado">
     <label>Alias<input name="alias" minlength="2" maxlength="40" placeholder="cómo te llamamos" required></label>
     <button type="submit" class="sec">Entrar como invitado</button>
   </form>
-  <p class="nota">Como invitado puedes diseñar y ver la vista previa sin límite, pero los archivos
-     salen con el texto modificado. Pide tu cuenta en <a href="mailto:medientg@gmail.com">medientg@gmail.com</a> para generarlos tal cual.</p>
+  <p class="nota">Como invitado puedes diseñar y ver la vista previa sin límite, pero NO
+     generar archivos: para eso hace falta una cuenta, que es gratis y se crea aquí arriba.</p>
 
   <div id="err" class="err" hidden></div>
+  <p id="soy-invitado" class="nota" hidden>Ahora mismo estás dentro como invitado. Al crear
+     la cuenta se cambia la sesión y tu diseño se mantiene tal como lo dejaste.</p>
 </div>
 <script>
+  // si quien abre esta pantalla ya está dentro como invitado, se le dice
+  fetch('/api/yo').then(r => r.ok ? r.json() : null).then(d => {
+    if (d && d.es_invitado) document.getElementById('soy-invitado').hidden = false;
+  }).catch(() => {});
   const e = new URLSearchParams(location.search).get('error');
   if (e) {
     const caja = document.getElementById('err');
     caja.textContent = e === 'espera'
-      ? 'Demasiados intentos fallidos. Espera unos minutos y vuelve a probar.'
+      ? 'Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.'
       : e === 'alias' ? 'Pon un alias de al menos 2 caracteres.'
-      : 'Usuario o contraseña incorrectos.';
+      : e === '1' ? 'Usuario o contraseña incorrectos.'
+      : e;                     // el registro devuelve el motivo escrito tal cual
     caja.hidden = false;
   }
 </script>

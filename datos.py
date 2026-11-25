@@ -7,6 +7,7 @@ solo los parámetros y una miniatura PNG pequeña. Los archivos se rehacen al vu
 import json
 import os
 import secrets
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -27,7 +28,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
     creado     TEXT NOT NULL,
     es_invitado INTEGER NOT NULL DEFAULT 0,
     alias      TEXT,
-    ultima_ip  TEXT
+    ultima_ip  TEXT,
+    correo     TEXT
 );
 CREATE TABLE IF NOT EXISTS licencias (
     id               INTEGER PRIMARY KEY,
@@ -107,10 +109,15 @@ def _migrar(con):
     nuevas = [("usuarios", "es_invitado", "INTEGER NOT NULL DEFAULT 0"),
               ("usuarios", "alias", "TEXT"),
               ("usuarios", "ultima_ip", "TEXT"),
+              ("usuarios", "correo", "TEXT"),
               ("generaciones", "ip", "TEXT")]
     for tabla, col, tipo in nuevas:
         if col not in columnas(tabla):
             con.execute(f"ALTER TABLE {tabla} ADD COLUMN {col} {tipo}")
+    # un correo, una cuenta (los invitados y las cuentas de antes no tienen y no estorban).
+    # Va aquí y no en el esquema porque la columna puede acabar de nacer en el ALTER
+    con.execute("CREATE UNIQUE INDEX IF NOT EXISTS correo_unico ON usuarios(correo) "
+                "WHERE correo IS NOT NULL AND correo <> ''")
     # plantillas: antes eran globales y el nombre era único para todos; ahora cada
     # usuario tiene las suyas, así que hay que rehacer la tabla (SQLite no quita un UNIQUE).
     if "usuario_id" not in columnas("plantillas"):
@@ -141,20 +148,32 @@ def iniciar():
 
 
 # ------------------------------------------------------------------ usuarios
-def crear_usuario(usuario: str, clave: str, es_admin: bool = False) -> int:
+CORREO = re.compile(r"^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$")
+
+
+def crear_usuario(usuario: str, clave: str, es_admin: bool = False, correo: str = "") -> int:
     usuario = (usuario or "").strip()
+    correo = (correo or "").strip().lower()
     if not usuario:
         raise ValueError("Falta el nombre de usuario.")
+    if len(usuario) > 40:
+        raise ValueError("El nombre de usuario es demasiado largo.")
     if len(clave or "") < 6:
         raise ValueError("La contraseña debe tener al menos 6 caracteres.")
+    if correo and not CORREO.match(correo):
+        raise ValueError("Ese correo no parece válido.")
     with conexion() as con:
         try:
             cur = con.execute(
-                "INSERT INTO usuarios (usuario, clave_hash, es_admin, creado) VALUES (?,?,?,?)",
-                (usuario, generate_password_hash(clave), int(es_admin), ahora()))
+                "INSERT INTO usuarios (usuario, clave_hash, es_admin, creado, correo) "
+                "VALUES (?,?,?,?,?)",
+                (usuario, generate_password_hash(clave), int(es_admin), ahora(),
+                 correo or None))
             con.commit()
             return cur.lastrowid
-        except sqlite3.IntegrityError:
+        except sqlite3.IntegrityError as e:
+            if correo and "correo" in str(e):
+                raise ValueError("Ya hay una cuenta con ese correo.")
             raise ValueError(f"El usuario '{usuario}' ya existe.")
 
 
@@ -176,7 +195,8 @@ def obtener_usuario(usuario_id: int):
 def listar_usuarios():
     with conexion() as con:
         filas = con.execute("""
-            SELECT u.id, u.usuario, u.es_admin, u.activo, u.creado, u.es_invitado, u.alias, u.ultima_ip,
+            SELECT u.id, u.usuario, u.es_admin, u.activo, u.creado, u.es_invitado, u.alias,
+                   u.ultima_ip, u.correo,
                    (SELECT COUNT(*) FROM generaciones g WHERE g.usuario_id = u.id) AS generaciones
             FROM usuarios u ORDER BY u.es_invitado, u.es_admin DESC, u.usuario""").fetchall()
     return [dict(f) for f in filas]

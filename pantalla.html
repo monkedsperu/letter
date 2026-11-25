@@ -991,9 +991,9 @@
       <a id="baja-zip" class="descarga"
          data-tip="Un STL por filamento, todos en las mismas coordenadas, y un leeme con los pasos. Para Snapmaker Luban y cualquier programa que no lea los colores del 3MF: cargas los STL uno a uno y le asignas su extrusor a cada objeto.">Un STL por color (ZIP)</a>
     </div>
-    <p id="aviso-invitado" class="aviso-inv" hidden><b>⚠</b><span>El texto sale modificado
-       (<i id="texto-invitado"></i>). Escribe a <a id="correo-invitado" href="#"></a>
-       para tener cuenta y generarlos tal cual.</span></p>
+    <p id="aviso-invitado" class="aviso-inv" hidden><b>⚠</b><span>El texto sale marcado
+       (<i id="texto-invitado"></i>) porque no tienes licencia. Pídela a
+       <a id="correo-invitado" href="#"></a> y los próximos saldrán tal cual.</span></p>
     <p class="nota">Quedan guardados en <a href="/generaciones">Mis generaciones</a>: puedes volver a
        bajarlos cuando quieras sin gastar otra generación.</p>
   </div>
@@ -1103,7 +1103,8 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
 const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
-let generacion = null, resumen = null, invitado = false, analisis = null, pedido = 0, temporizador = null;
+let generacion = null, resumen = null, invitado = false, conMarca = false;
+let analisis = null, pedido = 0, temporizador = null;
 const pronto = () => { clearTimeout(temporizador); temporizador = setTimeout(generar, 350); };
 
 // ---------- visor 3D
@@ -1676,6 +1677,14 @@ $('cua-recolocar').onclick = () => {
   $('cua_pos').value = ''; $('cua_titulo_x').value = '0'; generar();
 };
 
+// al irse a crear la cuenta, el diseño de ahora se guarda en el navegador y se recupera
+// al volver: nadie debería perder lo que lleva hecho por registrarse
+const CAJON = 'monkeds_diseno';
+$('msg').addEventListener('click', e => {
+  if (!e.target.closest('a[data-registro]')) return;
+  try { localStorage.setItem(CAJON, JSON.stringify(leer())); } catch (_) { /* sin sitio */ }
+});
+
 $('generar').onclick = generar;
 
 // ---------- generar archivos (esto SÍ descuenta 1 de la licencia)
@@ -1696,10 +1705,21 @@ function mostrarResultado(id, textoUsado) {
   $('baja-3mf').href = `/api/generacion/${id}/3mf`;
   $('baja-stl').href = `/api/generacion/${id}/stl`;
   $('baja-zip').href = `/api/generacion/${id}/zip`;
-  $('aviso-invitado').hidden = !invitado;
-  if (invitado && textoUsado) $('texto-invitado').textContent = textoUsado;
+  $('aviso-invitado').hidden = !conMarca;
+  if (conMarca && textoUsado) $('texto-invitado').textContent = textoUsado;
   $('resultado').hidden = false;
 }
+
+// la misma regla que aplica el servidor, para poder enseñar cómo quedará de verdad
+const marcar = t => {
+  t = (t || '').trim();
+  if (!t) return '';
+  const mitad = Math.floor(t.length / 2);
+  return t.length > 1 ? t.slice(0, mitad) + '+' + t.slice(mitad) : t + '+';
+};
+const textoDelDiseno = () =>
+  $({ organizador: 'org_texto', cuadro: 'cua_familia',
+      marca: 'mar_texto' }[$('tipo').value] || 'texto').value.trim();
 
 async function generarArchivos() {
   const msg = $('msg'); msg.className = ''; msg.textContent = '';
@@ -1710,7 +1730,23 @@ async function generarArchivos() {
     msg.textContent = 'Estos archivos ya estaban generados (no se descontó nada).';
     return;
   }
-  const limitada = !invitado && resumen && resumen.restantes !== null;
+  if (invitado) {        // los invitados diseñan y ven, pero no generan
+    msg.className = 'err';
+    msg.innerHTML = 'Para generar los archivos necesitas una cuenta, y es gratis: '
+      + '<a href="/login" data-registro>créala aquí</a> en un minuto. '
+      + 'Tu diseño se guarda y lo tendrás esperando al volver.';
+    return;
+  }
+  if (conMarca) {        // sin licencia: se genera igual, pero el texto sale marcado
+    const suyo = textoDelDiseno();
+    const ok = await preguntar(
+      suyo ? `Sin licencia el texto sale marcado: «${suyo}» saldrá como «${marcar(suyo)}».`
+           : 'Sin licencia el texto sale marcado, partido con un «+» por la mitad.',
+      `Los archivos se generan igual y no se te descuenta nada. Para que salgan tal cual `
+      + `los escribes, pide tu licencia a ${contacto}.`);
+    if (!ok) return;
+  }
+  const limitada = !conMarca && resumen && resumen.restantes !== null;
   if (limitada && resumen.restantes <= 0) {
     msg.className = 'err';
     msg.innerHTML = 'No te quedan generaciones. Escribe a '
@@ -1736,7 +1772,10 @@ async function generarArchivos() {
     resumen = d.resumen;
     pintarCupo();
     mostrarResultado(d.id, d.texto);
-    msg.textContent = invitado ? 'Archivos listos.' : 'Listo: se descontó 1 de tu licencia.';
+    conMarca = !!d.con_marca;
+    pintarCupo();
+    msg.textContent = d.con_marca ? 'Archivos listos, con el texto marcado.'
+                                  : 'Listo: se descontó 1 de tu licencia.';
   } catch (e) {
     msg.className = 'err'; msg.textContent = e.message;
   } finally { $('generar-archivos').disabled = false; }
@@ -1745,7 +1784,14 @@ $('generar-archivos').onclick = generarArchivos;
 
 // ---------- datos de la cuenta
 function pintarCupo() {
-  if (invitado) { $('yo_cupo').textContent = 'Sin límite, con el texto modificado'; return; }
+  if (invitado) {
+    $('yo_cupo').textContent = 'Invitado: puedes diseñar, pero no generar archivos';
+    return;
+  }
+  if (conMarca) {
+    $('yo_cupo').textContent = 'Sin licencia: generas con el texto marcado';
+    return;
+  }
   if (!resumen) return;
   const disp = resumen.restantes === null ? 'ilimitadas' : resumen.restantes;
   $('yo_cupo').textContent = `${disp} generaciones disponibles` +
@@ -1762,6 +1808,9 @@ async function cargarYo() {
   document.querySelectorAll('.solo-admin').forEach(el => { el.hidden = !d.es_admin; });
   document.querySelectorAll('.nada-admin').forEach(el => { el.hidden = !!d.es_admin; });
   invitado = !!d.es_invitado;
+  conMarca = !invitado && !d.con_licencia;   // sin licencia, el texto sale con el '+'
+  $('generar-archivos').textContent = invitado ? 'Crear cuenta para generar STL, 3MF, Multicolor, Por piezas!'
+                                               : 'Generar archivos';
   $('cambiar-clave').hidden = invitado;   // los invitados no tienen contraseña
   resumen = d.resumen;
   pintarCupo();
@@ -1990,6 +2039,13 @@ $('fuente_inicial').innerHTML = $('fuente_texto').innerHTML =
   $('org_fuente').innerHTML = $('cua_fuente').innerHTML =
   $('mar_fuente').innerHTML = $('mar_fuente_inicial').innerHTML = htmlFuentes;
 aplicarParametros(cfg.defaults);
+try {                       // ¿veníamos de crear la cuenta? se recupera lo que había
+  const guardado = localStorage.getItem(CAJON);
+  if (guardado) {
+    localStorage.removeItem(CAJON);
+    aplicarParametros(JSON.parse(guardado));
+  }
+} catch (_) { /* da igual: se queda con los valores de fábrica */ }
 await cargarYo();
 $('caja-plantillas').hidden = false;
 await cargarPlantillas();

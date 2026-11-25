@@ -678,6 +678,54 @@ import zipfile as _z2   # noqa: E402
 _modelo = _z2.ZipFile(_io.BytesIO(gen.exportar_3mf(marca))).read("3D/3dmodel.model").decode()
 assert _cfg["app"]["marca"] in _modelo, "el 3MF no lleva el nombre de la aplicación"
 
+# --------------------------------------------------- registro y marca del texto
+# cualquiera puede crearse una cuenta con su correo, y sin licencia genera igual pero el
+# texto sale marcado; con licencia sale tal cual y se descuenta 1
+_r = cliente.post("/registro", data={"usuario": "nueva", "correo": "Nueva@Ejemplo.com",
+                                     "clave": "clave123"})
+assert _r.status_code == 302 and _r.headers["Location"] == "/", _r.headers
+_nueva = datos.verificar_login("nueva", "clave123")
+assert _nueva and _nueva["correo"] == "nueva@ejemplo.com", _nueva
+for _mal, _dice in (({"usuario": "nueva", "correo": "otra@ejemplo.com", "clave": "clave123"},
+                     "ya%20existe"),
+                    ({"usuario": "otra", "correo": "nueva@ejemplo.com", "clave": "clave123"},
+                     "ese%20correo"),
+                    ({"usuario": "otra", "correo": "no-es-correo", "clave": "clave123"},
+                     "v%C3%A1lido"),
+                    ({"usuario": "otra", "correo": "a@b.co", "clave": "123"},
+                     "contrase")):
+    _resp = cliente.post("/registro", data=_mal)
+    assert _dice in _resp.headers.get("Location", ""), (_mal, _resp.headers.get("Location"))
+
+# los invitados pueden ver, pero no generar: para eso hay que tener cuenta
+_inv = datos.crear_invitado("mirón", "1.2.3.4")
+_resp_inv = como(_inv["id"]).post("/api/generar", json={"tipo": "cuadro",
+                                                        "cua_familia": "Medina"})
+assert _resp_inv.status_code == 403, _resp_inv.status_code
+assert "cuenta" in _resp_inv.get_json()["error"], _resp_inv.get_json()
+assert como(_inv["id"]).post("/api/preview", json={"tipo": "cuadro"}).status_code == 200
+# y puede abrir la pantalla de entrada para crearse la cuenta: antes se le echaba al editor
+_pantalla = como(_inv["id"]).get("/login")
+assert _pantalla.status_code == 200 and b"/registro" in _pantalla.data, _pantalla.status_code
+assert como(ana).get("/login").status_code == 302, "con cuenta no hace falta volver ahí"
+
+# toda cuenta nueva nace con una generación de regalo: esa sale limpia
+_regalo = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
+                                                        "cua_familia": "Medina"}).get_json()
+assert _regalo["con_marca"] is False and _regalo["texto"] == "Medina", _regalo
+assert _regalo["resumen"]["restantes"] == 0, _regalo["resumen"]
+# y a partir de ahí, mientras no le den licencia, el texto sale marcado y no cuesta nada
+_sin = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
+                                                     "cua_familia": "Medina"}).get_json()
+assert _sin["con_marca"] is True and "+" in _sin["texto"], _sin
+assert _sin["resumen"]["restantes"] == 0, _sin["resumen"]
+datos.crear_licencia(_nueva["id"], 30, 3)
+_con = como(_nueva["id"]).post("/api/generar", json={"tipo": "cuadro",
+                                                     "cua_familia": "Medina"}).get_json()
+assert _con["con_marca"] is False and _con["texto"] == "Medina", _con
+assert _con["resumen"]["restantes"] == 2, _con["resumen"]
+assert como(_nueva["id"]).get("/api/yo").get_json()["con_licencia"] is True
+
 # por la web: el diseño entero y un error claro cuando las medidas no encajan
 assert como(ana).post("/api/preview", json={"tipo": "organizador"}).status_code == 200
 mal = como(ana).post("/api/preview", json={"tipo": "organizador", "org_vaso_diametro": 200})

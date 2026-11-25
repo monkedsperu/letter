@@ -18,6 +18,7 @@ from dataclasses import asdict
 from datetime import timedelta
 from functools import wraps
 from io import BytesIO, StringIO
+from urllib.parse import quote
 
 from flask import Flask, Response, jsonify, redirect, request, send_file, session
 
@@ -29,6 +30,7 @@ from generador_stl import (APP, AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, CONTACT
                            miniatura_png, parametros_desde_dict, patrones_disponibles,
                            svg_a_poligono, svg_dentro_de)
 
+REGALO_DE_BIENVENIDA = 1    # generaciones limpias que lleva de serie una cuenta nueva
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
 LIMITE_INVITADO = 40      # vistas previas por minuto e IP (los invitados no pagan nada)
@@ -172,7 +174,10 @@ def cuerpo_json():
 # ------------------------------------------------------------------ entrar / salir
 @app.get("/login")
 def login_form():
-    return redirect("/") if usuario_actual() else pagina("login.html")
+    """Un invitado SÍ puede abrir esta pantalla: es la única forma de que se cree la cuenta
+    que necesita para generar. Solo se redirige a quien ya tiene cuenta de verdad."""
+    u = usuario_actual()
+    return redirect("/") if (u and not u["es_invitado"]) else pagina("login.html")
 
 
 @app.post("/login")
@@ -191,6 +196,28 @@ def login():
     datos.anotar_ip(u["id"], ip)
     session.clear()
     session["uid"] = u["id"]
+    session.permanent = True
+    return redirect("/")
+
+
+@app.post("/registro")
+def registro():
+    """Cualquiera puede crearse una cuenta con su correo. Sin licencia ya puede generar,
+    pero los archivos salen con el texto marcado; la licencia la da el administrador."""
+    if not permitido("registro:" + ip_cliente(), 6):
+        return redirect("/login?error=espera")
+    try:
+        uid = datos.crear_usuario(request.form.get("usuario", ""),
+                                  request.form.get("clave", ""),
+                                  correo=request.form.get("correo", ""))
+    except ValueError as e:
+        return redirect("/login?error=" + quote(str(e)))
+    # de bienvenida, una generación limpia: para probarlo de verdad hay que poder bajarse
+    # un archivo sin la marca, y ya luego se pide licencia
+    datos.crear_licencia(uid, None, REGALO_DE_BIENVENIDA, nota="regalo de bienvenida")
+    datos.anotar_ip(uid, ip_cliente())
+    session.clear()
+    session["uid"] = uid
     session.permanent = True
     return redirect("/")
 
@@ -269,7 +296,9 @@ def api_svg(tipo, nombre):
 def api_yo():
     u = request.usuario
     return jsonify(usuario=u["alias"] or u["usuario"], es_admin=bool(u["es_admin"]),
-                   es_invitado=bool(u["es_invitado"]), resumen=datos.resumen_usuario(u["id"]))
+                   es_invitado=bool(u["es_invitado"]), correo=u["correo"],
+                   con_licencia=bool(datos.licencia_vigente(u["id"])),
+                   contacto=CONTACTO, resumen=datos.resumen_usuario(u["id"]))
 
 
 @app.post("/api/clave")
@@ -306,7 +335,7 @@ def _construir_desde(cuerpo):
 
 
 def texto_de_invitado(texto: str) -> str:
-    """Los invitados reciben el texto partido por la mitad con un '+': Edgar -> Ed+gar."""
+    """Sin licencia, el texto sale partido por la mitad con un '+': Medina -> Med+ina."""
     t = (texto or "").strip()
     if not t:
         return t
@@ -357,23 +386,26 @@ def api_preview():
 @app.post("/api/generar")
 @pide_login
 def api_generar():
-    """Consume 1 de la licencia y registra la generación. Deja listos los DOS formatos:
-    se bajan después por /api/generacion/<id>/3mf, /stl o /zip, sin volver a cobrar."""
+    """Registra la generación y deja listos los formatos: se bajan después por
+    /api/generacion/<id>/3mf, /stl o /zip, sin volver a cobrar.
+    Los invitados no generan: para eso hay que tener cuenta, que es gratis. Con licencia
+    vigente consume 1 y el texto sale tal cual; sin licencia no consume nada, pero el texto
+    sale marcado con un '+'."""
     try:
         cuerpo = cuerpo_json()
     except ValueError as e:
         return jsonify(error=str(e)), 400
+    if request.usuario["es_invitado"]:
+        return jsonify(error="Como invitado puedes diseñar y ver la vista previa todo lo que "
+                             "quieras, pero para generar los archivos necesitas una cuenta. "
+                             "Créala en un minuto desde la pantalla de entrada."), 403
     uid = request.usuario["id"]
-    invitado = bool(request.usuario["es_invitado"])
-    if invitado:
-        c = cuerpo or {}
-        cuerpo = dict(c, texto=texto_de_invitado(c.get("texto", "")),
-                      org_texto=texto_de_invitado(c.get("org_texto", "")),
-                      cua_familia=texto_de_invitado(c.get("cua_familia", "")),
-                      mar_texto=texto_de_invitado(c.get("mar_texto", "")))
-    elif not datos.licencia_vigente(uid):    # aviso rápido antes de calcular
-        return jsonify(error="No tienes generaciones disponibles. Escribe a "
-                                 f"{CONTACTO} y te amplío la licencia."), 402
+    con_marca = not datos.licencia_vigente(uid)
+    if con_marca:      # solo se marca lo que venga escrito: un campo ausente sigue ausente
+        cuerpo = dict(cuerpo or {})
+        for campo in ("texto", "org_texto", "cua_familia", "mar_texto"):
+            if cuerpo.get(campo):
+                cuerpo[campo] = texto_de_invitado(cuerpo[campo])
     try:
         p, niveles, analisis = _construir_desde(cuerpo)
     except ValueError as e:
@@ -383,10 +415,10 @@ def api_generar():
         mini = miniatura_png(niveles)
     try:
         gen_id = datos.registrar_generacion(uid, _nombre_archivo(p), "3mf+stl", asdict(p), mini,
-                                            ip=ip_cliente(), exigir_licencia=not invitado)
+                                            ip=ip_cliente(), exigir_licencia=not con_marca)
     except datos.SinLicencia as e:
         return jsonify(error=str(e)), 402
-    return jsonify(id=gen_id, nombre=_nombre_archivo(p),
+    return jsonify(id=gen_id, nombre=_nombre_archivo(p), con_marca=con_marca,
                    texto={"organizador": p.org_texto, "cuadro": p.cua_familia,
                           "marca": p.mar_texto}.get(p.tipo, p.texto),
                    analisis=analisis, resumen=datos.resumen_usuario(uid))

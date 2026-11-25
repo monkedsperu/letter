@@ -29,8 +29,22 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
                 (detrás de nginx o un balanceador con HTTPS)
 
 4) USUARIOS Y LICENCIAS
+   - CUALQUIERA SE CREA SU CUENTA desde la pantalla de entrada: usuario, correo y
+     contraseña. Un correo, una cuenta. Cada cuenta nueva nace con una LICENCIA DE
+     BIENVENIDA de 1 generación -sin caducidad y con la nota "regalo de bienvenida", así se
+     reconoce en Administración-, para que pueda bajarse un archivo limpio y probarlo de
+     verdad. Gastada esa, sigue pudiendo generar, pero el texto sale MARCADO (partido con
+     un "+" por la mitad) y no se le descuenta nada. Antes de generar se le avisa, con SU
+     texto de ejemplo -"Monkeds" saldrá como "Monk+eds"- y con el correo al que pedir
+     licencia; al terminar, el aviso se repite junto a los archivos.
+     El regalo se cambia con REGALO_DE_BIENVENIDA, en app.py.
+   - LOS INVITADOS ya NO generan: diseñan y ven la vista previa sin límite, y al pulsar
+     "Generar" se les invita a crearse la cuenta (el botón incluso lo dice). Un invitado SÍ
+     puede abrir /login -es la única manera de registrarse- y, al irse a crear la cuenta, su
+     diseño se guarda en el navegador y lo encuentra tal cual al volver.
+   - Con LICENCIA vigente el texto sale tal cual y cada generación descuenta 1.
    - El administrador entra y va a "Administración".
-   - Crear usuario: nombre + contraseña (mínimo 6 caracteres).
+   - Crear usuario a mano: nombre + contraseña (mínimo 6 caracteres).
    - Dar licencia: eliges el usuario, los DÍAS de validez y la CANTIDAD máxima de
      generaciones. Cualquiera de los dos puede quedar vacío = sin ese límite.
    - Un usuario puede tener varias licencias; se gasta primero la que vence antes.
@@ -38,6 +52,8 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
 
 5) CÓMO SE CUENTA EL CUPO
    - La vista previa en 3D es GRATIS e ilimitada (si no, tocar los controles gastaría cupo).
+   - Sin licencia no se descuenta nada, pero los archivos salen con el texto marcado.
+     Los invitados no pueden generar: necesitan cuenta.
    - El botón "Generar archivos (3MF + STL)" es el único que descuenta: consume 1 y deja
      listos LOS DOS formatos. Si la licencia tiene límite de cantidad, antes de cobrar
      aparece un aviso diciendo cuántas quedan, con opción de cancelar.
@@ -75,7 +91,8 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
 7b) INVITADOS
    - Desde el login se puede entrar sin cuenta poniendo solo un alias.
    - Diseñan y previsualizan sin límite y no gastan licencia, pero al generar los archivos
-     el texto sale partido con un "+" por la mitad: Edgar -> Ed+gar, Miriam -> Mir+iam.
+     el texto sale partido con un "+" por la mitad: Medina -> Med+ina, Sophia -> Sop+hia.
+     La pantalla avisa antes de generar usando TU texto, no un ejemplo inventado.
      Bajo los botones de descarga se les avisa de que pidan una cuenta al administrador.
    - Se les guarda la IP. El administrador puede bloquear IPs (pestaña "Generaciones"):
      una IP bloqueada no puede abrir el sitio y se le cierra la sesión. No puedes bloquear
