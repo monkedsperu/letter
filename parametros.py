@@ -22,6 +22,8 @@ class Parametros:
     borde_texto2: float = 2.0      # ancho del segundo borde (interior) del texto
     giro_texto: float = 15.0       # grados, positivo = antihorario
     curva_texto: float = 0.0       # arco en grados: 0 = recto, + hacia arriba, - hacia abajo
+    separacion_lineas: float = 0.0 # ajuste del hueco entre las líneas del texto (mm);
+                                   # en negativo se juntan hasta tocarse
     posicion: str = "sobre"        # sobre | arriba | derecha
     separacion: float = 5.0        # separación letra-texto (arriba / derecha)
     texto_x: float = 0.0           # desplazamiento fino del texto (se mueve arrastrando)

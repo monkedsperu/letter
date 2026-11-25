@@ -190,7 +190,7 @@ def _construir_llavero(a: Parametros):
         base = base.difference(recorte_extra)
     sueltos = unary_union([g for _, _, g, _ in extra]) if extra else Polygon()
     silueta = letra.union(h).union(sueltos)
-    if silueta.is_empty:
+    if silueta.is_empty and not a.texto.strip():
         raise ValueError("No hay nada que imprimir: enciende la letra grande, un adorno "
                          "o escribe un texto.")
     contorno = silueta.buffer(a.borde, join_style=1) if a.borde > 0 else silueta
@@ -199,7 +199,8 @@ def _construir_llavero(a: Parametros):
     # Texto + sus dos bordes. t2 = texto con borde interior, t1 = huella completa.
     t = t1 = t2 = Polygon()
     if a.texto.strip():
-        t = texto_en_lineas(a.texto, a.fuente_texto, a.tam_texto, a.curva_texto)
+        t = texto_en_lineas(a.texto, a.fuente_texto, a.tam_texto, a.curva_texto,
+                            a.separacion_lineas)
         if a.giro_texto:
             t = affinity.rotate(t, a.giro_texto, origin="center")
         t2 = t.buffer(a.borde_texto2, join_style=1) if a.borde_texto2 > 0 else t

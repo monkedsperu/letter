@@ -211,6 +211,9 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
    - Texto: hasta 6 letras en la inicial. El cuadro del texto admite varias líneas
      (pulsa Enter dentro del recuadro; también vale escribir "|"), tiene curva/arco en
      grados, y se arrastra en la vista 3D como los adornos y el aro.
+     "Entre líneas (mm)" acerca o separa una línea de la otra: en negativo se juntan hasta
+     TOCARSE y el borde las funde en un solo bloque, que es el aspecto de los carteles de
+     dos pisos. Nunca deja que una se monte del todo sobre la otra.
    - Contraseña: con el botón "Cambiar contraseña" (arriba, junto a tu nombre) cada uno
      cambia la suya escribiendo antes la que tenía. El administrador puede ponerle otra a
      cualquiera desde Admin > Usuarios > "Cambiar clave", sin saber la anterior.

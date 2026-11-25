@@ -403,8 +403,11 @@ def _arquear(g, grados: float):
     return shapely_transform(lambda x, y: tuple(np.array(v) for v in doblar(x, y)), g).buffer(0)
 
 
-def texto_en_lineas(texto: str, fuente: str, tam: float, curva: float = 0.0):
-    """El texto completo. Con '|' se parte en varias líneas, centradas una sobre otra."""
+def texto_en_lineas(texto: str, fuente: str, tam: float, curva: float = 0.0,
+                    junta: float = 0.0):
+    """El texto completo. Con '|' se parte en varias líneas, centradas una sobre otra.
+    `junta` acerca o separa las líneas: en negativo se juntan hasta tocarse, que es lo que
+    se busca cuando las dos llevan borde y se quieren ver como un bloque."""
     lineas = [l for l in str(texto).replace("\n", "|").split("|")]
     piezas, y = [], 0.0
     for linea in lineas:
@@ -412,7 +415,7 @@ def texto_en_lineas(texto: str, fuente: str, tam: float, curva: float = 0.0):
             g = texto_a_poligono(linea, fuente, tam)
             minx, miny, maxx, maxy = g.bounds
             piezas.append(affinity.translate(g, -(minx + maxx) / 2, y - maxy))
-        y -= tam * 1.25
+        y -= max(tam * 1.25 + junta, tam * 0.2)   # juntas, pero nunca una sobre otra
     if not piezas:
         raise ValueError("El texto está vacío.")
     return _arquear(unary_union(piezas), curva)

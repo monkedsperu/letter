@@ -339,6 +339,11 @@
           <input id="curva_texto" type="number" step="5"></label></div>
       </div>
       <div class="fila">
+        <div><label>Entre líneas (mm)<span class="q" tabindex="0" data-tip="Acerca o separa las dos lineas. En negativo se juntan hasta tocarse y el borde las une en un solo bloque. Solo cuenta si el texto tiene mas de una linea.">?</span>
+          <input id="separacion_lineas" type="number" step="1"></label></div>
+        <div></div>
+      </div>
+      <div class="fila">
         <div><label>Posición<span class="q" tabindex="0" data-tip="Dónde se coloca el texto respecto a la letra.">?</span>
           <select id="posicion">
             <option value="sobre">Sobre la letra</option>
@@ -1536,7 +1541,7 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
                 'adorno','tam_adorno','adorno_x','adorno_y','giro_adorno','segundo_adorno','adorno2_x','adorno2_y','giro_adorno2',
                 'cortar_adorno','color_adorno',
                 'aro','aro_diametro','aro_agujero','aro_x','aro_y',
-                'curva_texto','texto_x','texto_y',
+                'curva_texto','separacion_lineas','texto_x','texto_y',
                 'iman','iman_diametro','iman_hondo','iman_x','iman_y','adorno_detras',
                 'adorno_c1','adorno_c2','adorno_c3',
                 // diseño 2: organizador de escritorio
