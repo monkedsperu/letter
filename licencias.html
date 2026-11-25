@@ -84,7 +84,8 @@ async function cargar() {
         <td>${fecha(l.creada)}</td>
         <td>${esc(l.nota)}</td>
       </tr>`).join('')
-      : '<tr><td colspan="7" class="vacio">Todavía no tienes licencias. Pídele una al administrador.</td></tr>';
+      : '<tr><td colspan="7" class="vacio">Todavía no tienes licencias. Pídele una al '
+        + 'administrador escribiendo a <a href="mailto:medientg@gmail.com">medientg@gmail.com</a>.</td></tr>';
   } catch (e) {
     $('msg').className = 'msg err';
     $('msg').textContent = 'No se pudo cargar: ' + e.message;

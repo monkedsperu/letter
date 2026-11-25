@@ -1,5 +1,12 @@
-MONKEDS LETTER — generador de letras 3D con usuarios y licencias
-================================================================
+MONKEDS LETTER 0.0.1 beta — generador 3D con usuarios y licencias
+=================================================================
+Monkeds Letter: cuatro diseños listos para imprimir (llavero, organizador de escritorio,
+cuadro para las llaves y marcapáginas), con su pantalla web, usuarios y licencias.
+El nombre y la versión salen en todo lo que genera: en los metadatos del 3MF, en el leeme
+del ZIP por colores y en las pantallas. Para cambiarlos: APP y VERSION en comun.py (y el
+rótulo de login.html, que es una página suelta).
+Para pedir un usuario, más generaciones o que se añada un patrón nuevo, escribe a
+medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien.
 
 1) INSTALAR
    pip install -r requirements.txt
@@ -75,7 +82,28 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
      tu propia IP. Para que la IP sea fiable, el sitio debe ir detrás de nginx o un
      balanceador que ponga la cabecera X-Forwarded-For.
 
-8) PIEZAS OPCIONALES
+8) LA PANTALLA DEL GENERADOR
+   - EL VISOR muestra la pieza sobre una CAMA de 250 x 250 mm (la medida sale de
+     CAMA_TIPICA, en comun.py): bandeja gris, un cuadrito por centímetro, líneas marcadas
+     cada 5 cm y los números de la regla por los dos bordes de delante. Alrededor de la
+     pieza va una caja con el ANCHO, el FONDO y el ALTO escritos en sus aristas, y abajo a
+     la izquierda el mismo total en grande; si algo no cabe en la cama, se pone en rojo.
+     Los carteles no cambian de tamaño al acercar o alejar.
+   - Arriba del panel hay un BOTÓN POR MODELO (llavero, organizador, llaves, marcapáginas):
+     se cambia de uno a otro con un clic y el panel muestra solo lo de ese modelo.
+   - Debajo, CONFIGURACIÓN GUARDADA: elegir una la carga en el acto; "Empezar de cero"
+     devuelve todos los valores de fábrica del modelo en el que estés; "Guardar esta…" la
+     guarda con el nombre que le pongas y "Borrar" solo aparece para las tuyas.
+   - IMPRIMIR CADA COLOR POR SEPARADO está en los CUATRO modelos, siempre con el mismo
+     interruptor destacado al final del panel y las mismas dos medidas (hueco y holgura).
+     Cada FILAMENTO sale en su propio sitio, en fila y apoyado en la mesa, al lado de la
+     pieza de abajo, que lleva vaciada su silueta con holgura: así se imprime sin AMS y al
+     pegar cae solo en su sitio. Lo del mismo color va junto, porque sale de una impresión.
+     En el llavero cada nivel es una pieza; en el organizador, el nombre con su borde y su
+     adorno; en el cuadro, cada color (los ganchos salen rectos y el ángulo lo da su hueco);
+     en el marcapáginas, la letra grande, el nombre y el icono.
+
+9) PIEZAS OPCIONALES
    - Adorno (cuernos), patrón y aro de llavero se activan con su casilla; los tres son
      opcionales y por defecto vienen: adorno sí, patrón sí, aro no.
    - El aro de llavero va en el nivel 1 (su mismo grosor y color) y su agujero atraviesa
@@ -84,21 +112,46 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    - En la vista 3D, las piezas que se pueden arrastrar llevan un icono ✥ encima:
      los dos adornos y el aro. Se arrastran con el ratón (también desde el icono).
 
-9) PATRONES, ADORNOS Y FUENTES (carpetas junto a app.py)
-   Los SVG pueden ir en SUBCARPETAS: "adornos/desktop/lapiz.svg" aparece en la lista como
-   "desktop/lapiz.svg". Sirve para tener los adornos ordenados por tema.
+10) PATRONES, ADORNOS Y FUENTES (carpetas junto a app.py)
+   CÓMO ESTÁN ORDENADOS: en adornos/ está la BIBLIOTECA COMÚN, que ven los cuatro diseños,
+   con un dibujo por archivo y nombres claros (corazon.svg, gato.svg, casa.svg...). Además
+   hay una subcarpeta por diseño -adornos/llavero, adornos/organizador, adornos/cuadro y
+   adornos/marcapaginas- para los EXCLUSIVOS: lo que dejes ahí lo ve solo ese diseño, que
+   sigue viendo también toda la biblioteca común. Hoy están vacías.
+   CÓMO SE ELIGEN: ya no hay desplegable. El botón con la miniatura abre la BIBLIOTECA en
+   una ventana con todos los dibujos a la vista, buscador por nombre y el que está puesto
+   marcado; se elige con un clic.
+   Los SVG que el generador no sabe leer (solo trazos, sin relleno, o que salen como un
+   cuadrado) están apartados en svg_revisar/, fuera de adornos, para no ensuciar la
+   biblioteca: hay que reexportarlos con "Trayecto > Trazo a trayecto" antes de volver
+   a meterlos.
    - patrones/ : cada figura separada del SVG es un motivo; se reparten al azar por la
      letra, enteros y sin tocar el texto. Deben ser formas rellenas
      (en Inkscape: Trayecto > Trazo a trayecto).
-   - adornos/  : ej. horn.svg (un color), candy_cane.svg (varios colores). Va a la altura del nivel 2 con su propio color y con el
+   - adornos/  : ej. cuernos.svg (un color), casa.svg (tres colores). Va a la altura del nivel 2 con su propio color y con el
      mismo borde que la letra. El segundo adorno (la forma reflejada) puede ir en espejo
      automático, en posición libre (útil para letras como L) o quitarse.
      DELANTE O DETRÁS: por defecto el adorno va delante y tapa la letra. Puedes ponerlo
      detrás y entonces es la letra la que lo corta (solo se ve lo que sobresale).
-     ADORNOS DE VARIOS COLORES: del SVG solo se usan las FORMAS, nunca sus colores.
-     Al cargarlo se limpia así: se descarta lo negro o casi negro (suele ser el contorno),
-     los tonos casi iguales se juntan en uno (tres rojos distintos = un solo rojo) y queda
-     un máximo de 3 formas, de mayor a menor superficie. Luego tú decides de qué color va
+     COLOR DEL ADORNO: cada forma tiene su selector y por defecto va en "Automático".
+     Automático = manda el DIBUJO cuando trae color de verdad y son dos colores o menos
+     (una estrella turquesa sale turquesa, un bastón rojo y blanco sale rojo y blanco);
+     si el dibujo es negro, blanco o gris -como vienen casi todos los paquetes de iconos-
+     o trae tres colores, se pinta con la PALETA de la pieza, para que no se pierda sobre
+     el fondo ni se disparen los filamentos. "Del dibujo" fuerza su color siempre, y el
+     resto de opciones lo mandan a un color de la paleta. Si el total pasa de 4, se avisa.
+     Y SE PUEDEN CAMBIAR: al lado de cada forma hay un cuadrito de color con el tono que
+     ha salido; tócalo y esa forma pasa a llevar el que tú pongas, sin tocar las demás.
+     "↺ Colores del dibujo" deshace los que hayas puesto a mano. El cuadrito solo aparece
+     mientras manda el dibujo: si envías la forma a un sitio de la paleta, manda la paleta.
+     QUÉ SE LEE DEL DIBUJO: los rellenos y también los CONTORNOS dibujados con trazo, que
+     se convierten en una forma más del grueso que tengan (por eso una estrella turquesa
+     con línea negra alrededor sale con las dos cosas). Eso sí: un contorno que, al tamaño
+     al que vas a imprimir el adorno, saldría más fino que la boquilla (0,8 mm) se ignora;
+     no se imprimiría y no vale gastar un filamento en él. El negro cuenta como un color más:
+     muchos dibujos lo usan de contorno y sin él salían a medias. Los tonos casi iguales se
+     juntan en uno (tres rojos distintos = un solo rojo) y queda un máximo de 3 formas, de
+     mayor a menor superficie. Luego tú decides de qué color va
      cada forma: "Como la letra", "Como el texto" o "Color extra".
      Se respeta el orden de dibujo: lo que tapa una forma de encima no se duplica debajo.
    - fuentes/  : .ttf/.otf propios. En la pantalla salen agrupados aparte de los del equipo.
@@ -146,7 +199,7 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    previa siguen sueltas para poder arrastrarlas.
    Debajo de los botones se ve siempre cuántos filamentos gasta el diseño y cuáles son.
 
-10) EL OTRO DISEÑO: ORGANIZADOR DE ESCRITORIO
+11) EL SEGUNDO DISEÑO: ORGANIZADOR DE ESCRITORIO
    Se elige arriba del todo, en "Diseño". Es un nombre en relieve sobre un cuerpo que
    tiene su misma silueta, con tres módulos que se encienden por separado:
    - Soporte del móvil: ranura abierta por arriba, inclinable. De serie 84 x 14 mm,
@@ -176,10 +229,13 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    ("Suavizado"): poco margen y poco suavizado = se reconoce cada letra; mucho = un bloque.
    El nombre puede llevar BORDE: un contorno alrededor de las letras, con su propio color
    y a su misma altura (3 mm de serie). El cuerpo crece solo para que nunca se salga.
-   Y puede llevar ADORNO: un SVG de la carpeta "adornos" puesto en la cara, junto al nombre.
-   Comparte relieve con las letras, lo rodea el mismo borde y entra en el mismo hueco al
-   imprimirlo aparte. Su posición va en % del ancho del nombre y, pasado de 100, se sale
-   por la derecha: el cuerpo crece para recogerlo.
+   Y puede llevar ADORNO: un dibujo de la biblioteca puesto en la cara, junto al nombre.
+   Comparte relieve con las letras y entra en el mismo hueco al imprimirlo aparte, pero su
+   BORDE va por su cuenta ("Su borde", en mm): aunque el texto lleve borde, el adorno no
+   tiene por qué llevarlo, y por defecto no lo lleva. Su posición va en % del ancho del
+   nombre y, pasado de 100, se sale por la derecha: el cuerpo crece para recogerlo. También
+   se ARRASTRA en la vista 3D: como va en una cara vertical, se mueve por el plano de esa
+   cara.
    El color funciona igual que en el llavero: del SVG solo se aprovechan las FORMAS (hasta
    tres) y a cada una se le asigna uno de los colores de la pieza -cuerpo, nombre, borde o
    un cuarto color extra-, así que un adorno de varios colores sale de varios colores en
@@ -201,11 +257,14 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    Sin esa casilla, el nombre sobresale de una cara vertical: hay que tumbar la pieza sobre
    su parte de atrás o activar los soportes.
 
-11) EL TERCER DISEÑO: CUADRO PARA LAS LLAVES
+12) EL TERCER DISEÑO: CUADRO PARA LAS LLAVES
    Una placa plana que se cuelga en la pared. Arriba el APELLIDO en relieve; debajo, en
    una fila centrada, los NOMBRES de la casa (separados por coma, hasta 8), y bajo cada
-   nombre su GANCHO: un pincho inclinado con la punta redonda. Los ganchos salen hacia
-   fuera, así que la pieza se imprime tumbada y sin soportes.
+   nombre su GANCHO: sale de la placa en perpendicular y se curva hacia arriba como una C,
+   con la punta redonda para que la llave no se escape ni arañe; "Curva de la C" dice cuánto
+   cierra (60° es casi un pincho, 180° una C cerrada). Van del color de la palabra de arriba.
+   Imprimiendo el cuadro de una pieza, los ganchos piden soportes; con "imprimir cada color
+   por separado" salen tumbados de lado -la C es plana- y no hacen falta.
    La placa no se dibuja: sale de engordar todo lo que lleva encima -letras, adorno y los
    sitios de los ganchos- y fundirlo con el suavizado en un contorno continuo, igual que
    en el organizador. Lleva dos agujeros para colgarla, siempre a la misma altura para que
@@ -224,6 +283,7 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    apellido ni al vecino -contando el redondel que necesita su gancho-. Así la figura engorda
    por igual en todas las direcciones en vez de alargarse por un lado. Si no caben alrededor
    vuelven solos a la fila de abajo.
+   El ADORNO también se arrastra, igual que en el organizador y en el marcapáginas.
    Pongas el reparto que pongas, cada NOMBRE Y LA PALABRA DE ARRIBA se pueden ARRASTRAR en la
    vista 3D para dejarlos donde quieras; el gancho va con su nombre y la placa se rehace
    alrededor. Lo arrastrado se guarda en el modelo y "Deshacer lo movido" lo devuelve a su
@@ -245,13 +305,24 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    y de pie; la inclinación se la da su hueco, que va taladrado en ángulo. El hueco tiene que
    caber en el grosor de la placa: si no, avisa y no genera.
 
-12) EL CUARTO DISEÑO: MARCAPÁGINAS
+13) EL CUARTO DISEÑO: MARCAPÁGINAS
    Una lámina plana y alargada, con los dos extremos redondeados, que se queda dentro del
    libro. Manda la LETRA GRANDE: va arriba del todo, con su fuente, su alto, su color y su
-   distancia al extremo. Debajo va el NOMBRE, que baja solo lo justo si su sitio chocara con
+   distancia al extremo. Es opcional: tiene su propio interruptor y, al apagarla, el nombre
+   sube a ocupar su sitio. El NOMBRE también tiene el suyo, así que puedes hacer un
+   marcapáginas de solo letra, de solo nombre o de solo icono. Debajo va el NOMBRE, que baja solo lo justo si su sitio chocara con
    la letra. Y el ICONO es opcional: orbita alrededor de la letra grande (o del hueco sobre
    el nombre si no hay letra) y lo colocas con dos medidas o arrastrándolo en la vista 3D.
    Todo configurable: largo, ancho, grueso, relieve, margen y suavizado de la lámina.
+   LA LÁMINA TIENE TRES ESTILOS: sólida (la tira entera), con RANURA -una LENGÜETA ancha
+   que cuelga de arriba y acaba SUELTA, con el hueco dándole la vuelta por abajo: la hoja
+   del libro entra entre ella y el marco, y por eso agarra- o CALADA con un motivo
+   repartido, igual que el
+   patrón del apellido en el cuadro de las llaves pero agujereando de lado a lado. Si el
+   calado llegara a partir la lámina en dos, avisa y no genera.
+   Y lleva TOPE: un murito de 5 mm cruzado justo debajo del nombre, que apoya en el canto
+   del libro para que el marcapáginas no se deslice entre las hojas hasta perderse. Se puede
+   quitar o cambiarle el alto y el grueso; va en la misma pieza que la lámina.
    Lo que sobresale no se queda en el aire: la lámina crece alrededor de las letras y del
    icono y lo funde todo en un contorno continuo, así que se imprime tumbada, de una pieza
    y sin soportes. Si el grueso se pasa de 3,5 mm avisa (abulta al cerrar el libro) y si
@@ -265,13 +336,27 @@ MONKEDS LETTER — generador de letras 3D con usuarios y licencias
    detrás, así que al pegar cae sola en su sitio. Como la lámina es fina, el hueco por
    defecto es de 1,2 mm: si no cabe en el grueso, avisa y no genera.
 
-13) CAPAS DEL MODELO (diseño de llavero)
+14) FORMATOS QUE SE DESCARGAN
+   3MF a color       un objeto por filamento con su color dentro. Es lo que leen Bambu
+                     Studio y Orca: abres el archivo y te piden asignar un filamento a cada
+                     color. Lo normal si tienes AMS.
+   STL de una pieza  todo fundido en una malla, sin colores.
+   Un STL por color  un ZIP con un STL por filamento, todos en las MISMAS coordenadas, más
+     (ZIP)           un leeme con los pasos. Es la vía para los programas que no leen los
+                     colores del 3MF, como Snapmaker Luban: cargas los STL de uno en uno
+                     -caen alineados- y en la lista de objetos le asignas a cada uno su
+                     extrusor. Con impresora de un solo extrusor, imprimes cada archivo con
+                     su filamento y luego pegas (mejor aún con "imprimir cada color por
+                     separado" activado, que les pone hueco y espiga para que encajen).
+   Los tres salen de la misma generación y no gastan cupo al volver a bajarlos.
+
+15) CAPAS DEL MODELO (diseño de llavero)
    Nivel 1 = base completa; nivel 2 encima (letra y adorno); nivel 3 encima (texto y patrón).
    Cada capa es maciza y de un solo color. El 3MF lleva los colores en "m:colorgroup",
    que Bambu Studio / Orca leen para pedirte asignar un filamento a cada uno.
    El STL es una sola malla sin colores.
 
-14) USO POR CONSOLA (sin servidor, para pruebas; solo el diseño de llavero)
+16) USO POR CONSOLA (sin servidor, para pruebas; solo el diseño de llavero)
    python generador_stl.py --inicial M --texto "Matias" --salida salida.3mf
    Opciones: --patron, --tam-patron, --separacion-patron, --semilla, --sin-girar-patron,
              --adorno, --tam-adorno, --adorno-x, --adorno-y, --segundo-adorno libre|espejo|ninguno,

@@ -22,11 +22,12 @@ from io import BytesIO, StringIO
 from flask import Flask, Response, jsonify, redirect, request, send_file, session
 
 import datos
-from generador_stl import (AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, Parametros,
+from generador_stl import (APP, AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, CONTACTO,
+                           CAMA_TIPICA, MARCA, VERSION, Parametros,
                            adornos_disponibles, construir_con_analisis, exportar_3mf,
-                           exportar_stl, fuentes_instaladas, miniatura_png,
-                           parametros_desde_dict, patrones_disponibles, svg_a_poligono,
-                           svg_dentro_de)
+                           exportar_stl, exportar_stl_por_color, fuentes_instaladas,
+                           miniatura_png, parametros_desde_dict, patrones_disponibles,
+                           svg_a_poligono, svg_dentro_de)
 
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
@@ -119,7 +120,8 @@ def cortar_bloqueados():
         session.clear()   # además de cortar, se le cierra la sesión
         if request.path.startswith("/api/"):
             return jsonify(error="Acceso bloqueado."), 403
-        return "<h1>Acceso bloqueado</h1><p>Habla con el administrador.</p>", 403
+        return (f"<h1>Acceso bloqueado</h1><p>Escribe a {CONTACTO} "
+                "si crees que es un error.</p>"), 403
     limpiar_invitados_de_vez_en_cuando()
     return None
 
@@ -290,7 +292,9 @@ def api_cambiar_clave():
 @app.get("/api/config")
 @pide_login
 def api_config():
-    return jsonify(defaults=asdict(Parametros()), fuentes=fuentes_instaladas(),
+    return jsonify(app={"nombre": APP, "version": VERSION, "marca": MARCA,
+                        "contacto": CONTACTO, "cama": CAMA_TIPICA},
+                   defaults=asdict(Parametros()), fuentes=fuentes_instaladas(),
                    patrones=patrones_disponibles(), adornos=adornos_disponibles())
 
 
@@ -324,10 +328,13 @@ def _nombre_archivo(p: Parametros):
 def _responder_modelo(niveles, p: Parametros, formato: str):
     if formato == "stl":
         datos_bin, tipo = exportar_stl(niveles), "model/stl"
+    elif formato == "zip":   # un STL por filamento, para quien no lee los colores del 3MF
+        datos_bin, tipo = exportar_stl_por_color(niveles), "application/zip"
     else:   # al descargar se funde una pieza por color: un objeto por filamento
         datos_bin, tipo = exportar_3mf(niveles, fundir=True), "model/3mf"
+    nombre = _nombre_archivo(p) + ("_por_colores" if formato == "zip" else "")
     return send_file(BytesIO(datos_bin), mimetype=tipo, as_attachment=True,
-                     download_name=f"{_nombre_archivo(p)}.{formato}")
+                     download_name=f"{nombre}.{formato}")
 
 
 @app.post("/api/preview")
@@ -351,7 +358,7 @@ def api_preview():
 @pide_login
 def api_generar():
     """Consume 1 de la licencia y registra la generación. Deja listos los DOS formatos:
-    se bajan después por /api/generacion/<id>/3mf y /stl, que ya no vuelven a cobrar."""
+    se bajan después por /api/generacion/<id>/3mf, /stl o /zip, sin volver a cobrar."""
     try:
         cuerpo = cuerpo_json()
     except ValueError as e:
@@ -365,7 +372,8 @@ def api_generar():
                       cua_familia=texto_de_invitado(c.get("cua_familia", "")),
                       mar_texto=texto_de_invitado(c.get("mar_texto", "")))
     elif not datos.licencia_vigente(uid):    # aviso rápido antes de calcular
-        return jsonify(error="No tienes una licencia vigente con generaciones disponibles."), 402
+        return jsonify(error="No tienes generaciones disponibles. Escribe a "
+                                 f"{CONTACTO} y te amplío la licencia."), 402
     try:
         p, niveles, analisis = _construir_desde(cuerpo)
     except ValueError as e:
@@ -415,7 +423,7 @@ def api_gen_parametros(gen_id):
 @pide_login
 def api_gen_descargar(gen_id, formato):
     """Bajar de nuevo algo ya generado: se rehace con sus parámetros y NO vuelve a cobrar."""
-    if formato not in ("stl", "3mf"):
+    if formato not in ("stl", "3mf", "zip"):
         return jsonify(error="Formato no válido."), 400
     g = datos.generacion(gen_id, None if request.usuario["es_admin"] else request.usuario["id"])
     if not g:

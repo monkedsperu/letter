@@ -508,7 +508,8 @@ def registrar_generacion(usuario_id: int, nombre: str, formato: str, parametros:
             if exigir_licencia:
                 lic = con.execute(_SQL_LICENCIA_VIGENTE, (usuario_id, ahora())).fetchone()
                 if not lic:
-                    raise SinLicencia("No tienes una licencia vigente con generaciones disponibles.")
+                    raise SinLicencia("No tienes una licencia vigente con generaciones "
+                                      "disponibles. Pídele más al administrador.")
                 con.execute("UPDATE licencias SET usadas = usadas + 1 WHERE id = ?", (lic["id"],))
             cur = con.execute("""INSERT INTO generaciones
                      (usuario_id, licencia_id, creada, nombre, formato, parametros, miniatura, ip)

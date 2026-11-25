@@ -17,8 +17,13 @@ from matplotlib import font_manager
 from matplotlib.font_manager import FontProperties
 from matplotlib.textpath import TextPath
 from shapely import affinity
-from shapely.geometry import MultiPolygon, Point, Polygon, box
+from shapely.geometry import LineString, MultiPolygon, Point, Polygon, box
 from shapely.ops import transform as shapely_transform, unary_union
+
+APP = "Monkeds Letter"      # el nombre va en todo lo que sale: archivos, pantallas, textos
+VERSION = "0.0.1 beta"
+MARCA = f"{APP} {VERSION}"
+CONTACTO = "medientg@gmail.com"     # a quien escribirle para pedir usuario, cupo o patrones
 
 # En el ejecutable portable las carpetas (fuentes, patrones, adornos) están junto al .exe
 AQUI = os.path.dirname(sys.executable if getattr(sys, "frozen", False)
@@ -115,32 +120,73 @@ def adornos_disponibles():
     return svgs_en(CARPETA_ADORNOS)
 
 
+def _tinta(pintura):
+    """El color de un relleno o de un trazo, en #rrggbb, o None si no pinta nada."""
+    if pintura is None or pintura.value is None:
+        return None
+    try:
+        return pintura.hex[:7].lower()
+    except Exception:
+        return None
+
+
+def capas_con_chaflan(region, z0: float, z1: float, chaflan: float, pasos: int = 3):
+    """[(region, z0, z1)] de una capa. Con chaflán, el tramo de arriba se hace en escalones
+    cada vez más estrechos: a 0.2 mm de capa, impreso se ve igual que un bisel."""
+    if chaflan <= 0 or region.is_empty:
+        return [(region, z0, z1)]
+    chaflan = min(chaflan, (z1 - z0) * 0.6)
+    alto_paso = chaflan / pasos
+    tramos = [(region, z0, z1 - chaflan)]
+    for i in range(pasos):
+        encogido = region.buffer(-chaflan * (i + 1) / pasos, join_style=2)
+        if not encogido.is_empty:
+            tramos.append((encogido, z1 - chaflan + i * alto_paso, z1 - chaflan + (i + 1) * alto_paso))
+    return tramos
+
+
 def svg_por_color(ruta: str):
-    """SVG -> [(color, polígono)] respetando el orden de dibujo: lo de encima tapa lo de abajo.
-    Solo cuenta lo que tiene relleno; los huecos salen por la regla par-impar."""
+    """SVG -> [(color, polígono, grueso)] respetando el orden de dibujo: lo de encima tapa
+    lo de abajo. Cuentan los rellenos (los huecos salen por la regla par-impar) y también
+    los CONTORNOS dibujados con trazo, que se convierten en su propia forma del grueso que
+    tengan: así un dibujo con línea negra alrededor sale con esa línea y no a medias.
+    `grueso` es el ancho del trazo en las unidades del dibujo; 0 en los rellenos."""
     from svgelements import SVG, Close, Line, Move, Path, Shape
 
     formas = []   # (color, polígono) en el orden en que están dibujadas
     for e in SVG.parse(ruta).elements():
-        if not isinstance(e, Shape) or e.fill is None or e.fill.value is None:
+        if not isinstance(e, Shape):
             continue
-        forma = Polygon()
+        relleno, trazo = _tinta(e.fill), _tinta(e.stroke)
+        try:
+            grueso = float(e.implicit_stroke_width or 0)
+        except Exception:
+            grueso = 0.0
+        if relleno is None and (trazo is None or grueso <= 0):
+            continue
+        forma, linea = Polygon(), []
         for sub in Path(e).as_subpaths():
-            pts = []
+            pts, cerrado = [], False
             for seg in Path(sub):
                 if isinstance(seg, (Move, Line, Close)):
+                    cerrado = cerrado or isinstance(seg, Close)
                     if seg.end is not None:
                         pts.append((seg.end.x, seg.end.y))
                 else:  # curvas y arcos: 16 puntos por tramo
                     pts += [(q.x, q.y) for q in (seg.point(t) for t in np.linspace(0, 1, 17)[1:])]
             if len(pts) >= 3:
-                forma = forma.symmetric_difference(Polygon(pts).buffer(0))
-        if not forma.is_empty:
-            try:
-                color = e.fill.hex[:7].lower()
-            except Exception:
-                color = None
-            formas.append((color, forma))
+                if relleno is not None:
+                    forma = forma.symmetric_difference(Polygon(pts).buffer(0))
+                if cerrado and pts[0] != pts[-1]:
+                    pts.append(pts[0])
+            if trazo is not None and grueso > 0 and len(pts) >= 2:
+                linea.append(LineString(pts).buffer(grueso / 2, join_style=1, cap_style=1))
+        if relleno is not None and not forma.is_empty:
+            formas.append((relleno, forma, 0.0))
+        if linea:
+            contorno = unary_union(linea)
+            if not contorno.is_empty:
+                formas.append((trazo, contorno, grueso))
 
     if not formas:
         raise ValueError(f"'{os.path.basename(ruta)}' no tiene formas rellenas "
@@ -148,21 +194,23 @@ def svg_por_color(ruta: str):
 
     # de arriba hacia abajo: a cada forma se le quita lo que ya tapan las de encima
     visto, visibles = Polygon(), []
-    for color, forma in reversed(formas):
+    for color, forma, grueso in reversed(formas):
         trozo = forma.difference(visto)
         if not trozo.is_empty:
-            visibles.append((color, trozo))
+            visibles.append((color, trozo, grueso))
         visto = visto.union(forma)
     visibles.reverse()
 
-    grupos, orden = {}, []
-    for color, trozo in visibles:
+    grupos, gruesos, orden = {}, {}, []
+    for color, trozo, grueso in visibles:
         if color not in grupos:
             grupos[color] = []
             orden.append(color)
         grupos[color].append(trozo)
-    salida = [(c, affinity.scale(unary_union(grupos[c]), 1, -1, origin=(0, 0))) for c in orden]
-    salida = [(c, g) for c, g in salida if not g.is_empty and g.area > 0]
+        gruesos[color] = max(gruesos.get(color, 0.0), grueso)
+    salida = [(c, affinity.scale(unary_union(grupos[c]), 1, -1, origin=(0, 0)), gruesos[c])
+              for c in orden]
+    salida = [(c, g, t) for c, g, t in salida if not g.is_empty and g.area > 0]
     if not salida:
         raise ValueError(f"'{os.path.basename(ruta)}' no tiene formas rellenas.")
     return salida   # la Y del SVG va al revés, por eso el espejo vertical
@@ -170,11 +218,25 @@ def svg_por_color(ruta: str):
 
 def svg_a_poligono(ruta: str):
     """Todo el SVG en un solo polígono (para los patrones y para validar lo que se sube)."""
-    return unary_union([g for _, g in svg_por_color(ruta)])
+    return unary_union([g for _, g, _ in svg_por_color(ruta)])
 
 
 MAX_GRUPOS_ADORNO = 3     # un adorno no puede gastar más de 3 de los 4 filamentos
-NEGRO_HASTA = 60          # canal máximo por debajo del cual se considera negro y se descarta
+
+
+def _sin_pelos(formas, mm_alto: float):
+    """Quita los contornos que, al tamaño al que se va a imprimir el dibujo, saldrían más
+    finos que GROSOR_MINIMO. Si no queda nada, se devuelve lo que había: más vale un
+    contorno fino que un adorno vacío."""
+    if mm_alto <= 0:
+        return formas
+    y0 = min(g.bounds[1] for _, g, _ in formas)
+    y1 = max(g.bounds[3] for _, g, _ in formas)
+    if y1 <= y0:
+        return formas
+    escala = mm_alto / (y1 - y0)
+    gordas = [(c, g, t) for c, g, t in formas if t <= 0 or t * escala >= GROSOR_MINIMO]
+    return gordas or formas
 JUNTAR_SI_MENOS_DE = 60   # colores más parecidos que esto se tratan como uno solo
 
 
@@ -183,24 +245,55 @@ def _rgb(color: str):
     return tuple(int(c[i:i + 2], 16) for i in (0, 2, 4)) if len(c) >= 6 else (0, 0, 0)
 
 
-def _es_negro(color: str) -> bool:
-    return max(_rgb(color)) <= NEGRO_HASTA
-
-
 def _distancia(a: str, b: str) -> float:
     x, y = _rgb(a), _rgb(b)
     return sum((p - q) ** 2 for p, q in zip(x, y)) ** 0.5
 
 
-def grupos_adorno(ruta: str, maximo: int = MAX_GRUPOS_ADORNO):
-    """Formas del SVG agrupadas y limpiadas, listas para pintar con la paleta del llavero:
-    fuera lo negro (suele ser el contorno), los tonos casi iguales se juntan, y como mucho
-    quedan `maximo` grupos ordenados de mayor a menor superficie."""
-    grupos = svg_por_color(ruta)
-    sin_negro = [(c, g) for c, g in grupos if not _es_negro(c)]
-    if sin_negro:                      # si TODO era negro, es una silueta: se respeta
-        grupos = sin_negro
+GRIS_HASTA = 28    # diferencia entre canales por debajo de la cual el color es un gris
+COLORES_QUE_MANDAN = 2   # con estos colores o menos, el dibujo se respeta tal cual
 
+
+def _tiene_color(color: str) -> bool:
+    """Si el color es una decisión del dibujo o el negro/blanco/gris con el que los
+    paquetes de iconos exportan una silueta."""
+    r, g, b = _rgb(color or "#000000")
+    return max(r, g, b) - min(r, g, b) >= GRIS_HASTA
+
+
+def manda_el_dibujo(grupos) -> bool:
+    """Un dibujo de pocos colores y con color de verdad se respeta como viene; uno de
+    muchos, o en blanco y negro, se pinta con la paleta de la pieza para no pasarse de
+    filamentos ni perderse sobre el fondo."""
+    return (len(grupos) <= COLORES_QUE_MANDAN
+            and any(_tiene_color(c) for c, _ in grupos))
+
+
+def color_de_la_forma(i: int, grupos, destinos, paleta: dict, por_defecto: str,
+                      reserva=(), tintas=()):
+    """El color de la forma i del dibujo. Si se le ha puesto una tinta a mano, manda esa.
+    Si no: "svg" = el del dibujo siempre; "auto" = el del dibujo cuando manda, y si no el
+    sitio de la paleta que le toque por orden; cualquier otra cosa, ese sitio."""
+    destino = destinos[i] if i < len(destinos) else "extra"
+    tinta = (tintas[i] if i < len(tintas) else "") or ""
+    if destino in ("auto", "svg"):
+        if tinta:
+            return tinta
+        if destino == "svg" or manda_el_dibujo(grupos):
+            return grupos[i][0] or por_defecto
+        destino = reserva[i] if i < len(reserva) else "extra"
+    return paleta.get(destino, por_defecto)
+
+
+def grupos_adorno(ruta: str, maximo: int = MAX_GRUPOS_ADORNO, mm_alto: float = 0.0):
+    """Formas del dibujo agrupadas y limpiadas: los tonos casi iguales se juntan (tres
+    rojos distintos = un rojo) y como mucho quedan `maximo` grupos, de mayor a menor
+    superficie. El negro cuenta como un color más: muchos dibujos lo usan de contorno y
+    sin él salen a medias.
+    Con `mm_alto` (lo que va a medir el adorno ya impreso) se tira el contorno que saldría
+    más fino que la boquilla: un pelo de 0,2 mm no se imprime y no vale gastar un filamento
+    en él."""
+    grupos = [(c, g) for c, g, _ in _sin_pelos(svg_por_color(ruta), mm_alto)]
     juntos = []                        # tonos casi iguales (ej. tres rojos) -> uno solo
     for color, g in sorted(grupos, key=lambda x: -x[1].area):
         for i, (c0, gs) in enumerate(juntos):
@@ -467,7 +560,7 @@ def _borde_que_une(poligono, desde: float, maximo: float = 30.0):
 
 
 def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: float,
-                     paleta: dict, destinos, por_defecto: str):
+                     paleta: dict, destinos, por_defecto: str, reserva=(), tintas=()):
     """[(color, polígono)] de un SVG de la carpeta de adornos, escalado a `alto`, girado,
     centrado en `cx` y apoyado en `y_base`. Como en el llavero, del SVG solo se aprovechan
     las formas (hasta 3) y el color sale de la paleta de la pieza, así que por muchos
@@ -479,7 +572,7 @@ def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: f
         raise ValueError(f"No encontré el adorno '{nombre}' en la carpeta adornos.")
     if alto <= 0:
         raise ValueError("El alto del adorno debe ser mayor que 0.")
-    propios = grupos_adorno(ruta)       # [(color del dibujo, forma)]
+    propios = grupos_adorno(ruta, mm_alto=alto)    # [(color del dibujo, forma)]
     grupos = [g for _, g in propios]
     x_ini, y_ini, x_fin, y_fin = unary_union(grupos).bounds
     escala = alto / (y_fin - y_ini)
@@ -494,13 +587,12 @@ def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: f
     dx, dy = cx - (x_ini + x_fin) / 2, y_base - y_ini
     puestos = []
     for i, g in enumerate(grupos):
-        destino = destinos[i] if i < len(destinos) else "extra"
-        color = propios[i][0] if destino == "svg" else paleta.get(destino, por_defecto)
+        color = color_de_la_forma(i, propios, destinos, paleta, por_defecto, reserva, tintas)
         puestos.append((color, affinity.translate(g, dx, dy)))
     return puestos
 
 
-def _analizar(niveles, huella, regiones, grupos_del_adorno=0):
+def _analizar(niveles, huella, regiones, colores_del_adorno=()):
     """Volumen de cada pieza y avisos de imprimibilidad. No guarda nada: es informativo."""
     piezas = [{"nombre": n, "color": c, "cm3": round(m.volume / 1000, 2)} for n, c, m in niveles]
     colores = list(dict.fromkeys(p["color"].lower() for p in piezas))
@@ -526,7 +618,55 @@ def _analizar(niveles, huella, regiones, grupos_del_adorno=0):
         avisos.append(f"Mide {x1 - x0:.0f} × {y1 - y0:.0f} mm: no cabe en una cama de "
                       f"{CAMA_TIPICA / 10:.0f} cm.")
     return {"piezas": piezas, "cm3": round(sum(p["cm3"] for p in piezas), 2),
-            "colores": colores, "grupos_adorno": grupos_del_adorno, "avisos": avisos}
+            "colores": colores, "grupos_adorno": len(colores_del_adorno),
+            "colores_adorno": list(colores_del_adorno), "avisos": avisos}
+
+
+def apartar_por_color(piezas, desde_x: float) -> float:
+    """Deja cada color en su sitio: en fila a la derecha de `desde_x` y apoyado en la mesa.
+    Las piezas del mismo color se mueven juntas, porque salen de una sola impresión; las de
+    colores distintos quedan separadas, que es lo que hay que imprimir por separado.
+    Devuelve dónde termina la fila. `piezas` es [(nombre, color, malla)]."""
+    x = desde_x
+    for color in dict.fromkeys(c.upper() for _, c, _ in piezas):
+        grupo = [m for _, c, m in piezas if c.upper() == color]
+        dx = x + HUECO_APARTE - min(m.bounds[0][0] for m in grupo)
+        for m in grupo:
+            # el sitio en x es del grupo -van juntas-, pero cada pieza apoya en la mesa
+            m.apply_translation([dx, 0, -m.bounds[0][2]])
+        x = max(m.bounds[1][0] for m in grupo)
+    return x
+
+
+def exportar_stl_por_color(niveles) -> bytes:
+    """ZIP con un STL por filamento, todos en las mismas coordenadas. Para los programas
+    que no leen los colores del 3MF (Snapmaker Luban, por ejemplo): se cargan los STL uno
+    a uno, caen cada uno en su sitio y a cada objeto se le asigna su extrusor."""
+    buf = BytesIO()
+    piezas, lineas = fundir_por_color(niveles), []
+    nombres = {}
+    for nombre, color, _ in niveles:
+        nombres.setdefault(color.upper(), []).append(nombre)
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for i, (_, color, malla) in enumerate(piezas, 1):
+            archivo = f"{i}_{color.lstrip('#').lower()}.stl"
+            z.writestr(archivo, malla.export(file_type="stl"))
+            lineas.append(f"  {archivo}  ->  {', '.join(nombres[color.upper()])}")
+        z.writestr("leeme.txt", LEEME_POR_COLOR + "\n".join(lineas) + "\n")
+    return buf.getvalue()
+
+
+LEEME_POR_COLOR = f"""{MARCA} - un STL por color, todos con las mismas coordenadas.
+
+Para imprimir a varios colores en un programa que no lee los colores del 3MF
+(por ejemplo Snapmaker Luban):
+  1. Carga los STL de uno en uno; al caer cada uno en su sitio quedan alineados.
+  2. En la lista de objetos, asigna a cada uno su extrusor (o su filamento).
+  3. Si tu impresora es de un solo extrusor, imprime cada archivo por separado con
+     el filamento de su color y luego pega las piezas.
+
+Archivos y qué lleva cada uno:
+"""
 
 
 def exportar_stl(niveles) -> bytes:
@@ -586,12 +726,15 @@ def exportar_3mf(niveles, fundir: bool = False) -> bytes:
                        f'<mesh><vertices>{v}</vertices><triangles>{t}</triangles></mesh></object>')
         comps.append(f'<component objectid="{i}"/>')
     raiz = len(niveles) + 2
-    objetos.append(f'<object id="{raiz}" name="Monkeds Letter" type="model"><components>{"".join(comps)}</components></object>')
+    objetos.append(f'<object id="{raiz}" name="{APP}" type="model">'
+                   f'<components>{"".join(comps)}</components></object>')
     modelo = ('<?xml version="1.0" encoding="UTF-8"?>'
               '<model unit="millimeter" xml:lang="es" '
               'xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" '
               'xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">'
-              '<metadata name="Application">Monkeds Letter</metadata>'
+              f'<metadata name="Application">{MARCA}</metadata>'
+              f'<metadata name="Designer">{APP}</metadata>'
+              f'<metadata name="Description">Hecho con {MARCA}</metadata>'
               f'<resources><m:colorgroup id="1">{grupo}</m:colorgroup>{"".join(objetos)}</resources>'
               f'<build><item objectid="{raiz}"/></build></model>')
     buf = BytesIO()
