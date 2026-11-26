@@ -428,6 +428,28 @@ class Parametros:
     mar_holgura: float = 0.25           # aire del hueco, por las tolerancias (mm)
 
 
+# Cada diseño lleva sus campos con su prefijo; los del llavero son los que no llevan
+# ninguno. Con esto se sabe qué parámetros son de quién.
+PREFIJOS = {"nombre": "", "organizador": "org_", "cuadro": "cua_", "marca": "mar_",
+            "torta": "tor_"}
+
+
+def solo_del_tipo(d: dict) -> dict:
+    """Los parámetros que de verdad usa el diseño que viene en `d["tipo"]`, sin los de los
+    otros cuatro. Es lo que se guarda en una configuración: así, abrir la del marcapáginas
+    no te cambia el llavero ni te arrastra un dibujo que ya no tienes."""
+    tipo = d.get("tipo", "nombre")
+    mio = PREFIJOS.get(tipo, "")
+    ajenos = tuple(p for t, p in PREFIJOS.items() if p and t != tipo)
+    fuera = {"tipo": tipo}
+    for k, v in d.items():
+        if k == "tipo":
+            continue
+        if (k.startswith(mio) if mio else not k.startswith(ajenos)):
+            fuera[k] = v
+    return fuera
+
+
 def parametros_desde_dict(d: dict) -> Parametros:
     """Lo que manda la pantalla -todo texto- a unos Parametros con sus tipos.
     Un TEXTO en blanco es una respuesta válida: significa "sin letra", "sin nombre", "sin

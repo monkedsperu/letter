@@ -28,7 +28,7 @@ from generador_stl import (APP, AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, CONTACT
                            adornos_disponibles, construir_con_analisis, exportar_3mf,
                            exportar_stl, exportar_stl_por_color, fuentes_instaladas,
                            miniatura_png, parametros_desde_dict, patrones_disponibles,
-                           svg_a_poligono, svg_dentro_de)
+                           solo_del_tipo, svg_a_poligono, svg_dentro_de)
 
 REGALO_DE_BIENVENIDA = 3    # generaciones limpias que lleva de serie una cuenta nueva
 MAX_SVG = 2_000_000
@@ -505,7 +505,9 @@ def api_plantilla(pid):
     pl = _plantilla_visible(pid)
     if not pl:
         return jsonify(error="No encontrada"), 404
-    return jsonify(parametros=json.loads(pl["parametros"]))
+    # solo_del_tipo también aquí: las guardadas antes de separar por producto llevan los
+    # campos de los cinco, y abrirlas no debe tocarte los otros cuatro
+    return jsonify(parametros=solo_del_tipo(json.loads(pl["parametros"])))
 
 
 @app.get("/api/plantilla/<int:pid>/miniatura")
@@ -520,17 +522,58 @@ def api_plantilla_miniatura(pid):
 @app.post("/api/plantillas")
 @pide_login
 def api_guardar_plantilla():
+    """Guarda la configuración. Con "id" la pisa -es el botón Guardar trabajando sobre la
+    que tienes abierta-; sin él, crea una nueva con el nombre que le manden."""
     try:
         d = cuerpo_json()
+        pid = d.get("id")
+        if pid not in (None, ""):
+            pl = datos.plantilla(int(pid))
+            if not pl:
+                return jsonify(error="Esa configuración ya no existe."), 404
+            if pl["usuario_id"] != request.usuario["id"] and not request.usuario["es_admin"]:
+                return jsonify(error="Esa configuración no es tuya."), 403
+            pid = int(pid)
+        else:
+            pid = None
         p, niveles, _ = _construir_desde(d.get("parametros") or {})
         with _lock_dibujo:
             mini = miniatura_png(niveles)
         # el admin guarda para todos; el resto (y los invitados) solo para sí mismos
         dueno = None if request.usuario["es_admin"] else request.usuario["id"]
-        datos.guardar_plantilla(d.get("nombre", ""), asdict(p), mini, dueno)
+        # se guarda SOLO lo del producto que estás haciendo: una configuración de
+        # marcapáginas no tiene por qué llevarse los adornos del llavero a cuestas
+        guardada = datos.guardar_plantilla(d.get("nombre", ""), solo_del_tipo(asdict(p)),
+                                           mini, dueno, pid, p.tipo)
     except ValueError as e:
         return jsonify(error=str(e)), 400
-    return jsonify(plantillas=datos.listar_plantillas(request.usuario["id"]))
+    return jsonify(id=guardada, plantillas=datos.listar_plantillas(request.usuario["id"]))
+
+
+@app.post("/api/plantillas/<int:pid>/codigo")
+@pide_login
+def api_codigo_plantilla(pid):
+    """El código para compartir esa configuración. Se crea la primera vez y no cambia."""
+    pl = _plantilla_visible(pid)
+    if not pl:
+        return jsonify(error="No encontrada"), 404
+    try:
+        return jsonify(codigo=datos.codigo_de_plantilla(pid))
+    except ValueError as e:
+        return jsonify(error=str(e)), 400
+
+
+@app.get("/api/compartida/<codigo>")
+def api_compartida(codigo):
+    """Abrir una configuración con su código, sin cuenta ni permisos: el código ES el
+    permiso. Solo salen los valores del diseño, nada de quién lo hizo."""
+    if not permitido("codigo:" + ip_cliente(), 60):
+        return jsonify(error="Demasiados intentos, espera un momento."), 429
+    pl = datos.plantilla_por_codigo(codigo)
+    if not pl:
+        return jsonify(error="Ese código no existe. Repásalo: son 8 letras y números."), 404
+    return jsonify(nombre=pl["nombre"], tipo=pl["tipo"],
+                   parametros=solo_del_tipo(json.loads(pl["parametros"])))
 
 
 @app.delete("/api/plantillas/<int:pid>")

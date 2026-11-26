@@ -40,7 +40,8 @@ from diseno_llavero import _construir_llavero
 from diseno_marca import construir_marca
 from diseno_organizador import construir_organizador
 from diseno_torta import construir_torta
-from parametros import MAX_LETRAS, Parametros, parametros_desde_dict  # noqa: F401
+from parametros import (MAX_LETRAS, Parametros, parametros_desde_dict,  # noqa: F401
+                        solo_del_tipo)
 
 DISENOS = {"nombre": _construir_llavero, "organizador": construir_organizador,
            "cuadro": construir_cuadro, "marca": construir_marca,

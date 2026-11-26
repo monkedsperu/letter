@@ -67,7 +67,9 @@ CREATE TABLE IF NOT EXISTS plantillas (
     parametros TEXT NOT NULL,
     miniatura  BLOB,
     creada     TEXT NOT NULL,
-    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE  -- NULL = de la casa, la ve todo el mundo
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE, -- NULL = de la casa, la ve todo el mundo
+    codigo     TEXT,     -- el codigo para compartirla; se crea la primera vez que se comparte
+    tipo       TEXT NOT NULL DEFAULT 'nombre'   -- de qué producto es: cada uno tiene las suyas
 );
 CREATE TABLE IF NOT EXISTS ips_bloqueadas (
     ip     TEXT PRIMARY KEY,
@@ -106,7 +108,9 @@ def _migrar(con):
     """Añade a una base ya creada las columnas nuevas (invitados y IP)."""
     def columnas(tabla):
         return {f["name"] for f in con.execute(f"PRAGMA table_info({tabla})")}
-    nuevas = [("usuarios", "es_invitado", "INTEGER NOT NULL DEFAULT 0"),
+    nuevas = [("plantillas", "codigo", "TEXT"),
+              ("plantillas", "tipo", "TEXT"),
+              ("usuarios", "es_invitado", "INTEGER NOT NULL DEFAULT 0"),
               ("usuarios", "alias", "TEXT"),
               ("usuarios", "ultima_ip", "TEXT"),
               ("usuarios", "correo", "TEXT"),
@@ -118,6 +122,17 @@ def _migrar(con):
     # Va aquí y no en el esquema porque la columna puede acabar de nacer en el ALTER
     con.execute("CREATE UNIQUE INDEX IF NOT EXISTS correo_unico ON usuarios(correo) "
                 "WHERE correo IS NOT NULL AND correo <> ''")
+    con.execute("CREATE UNIQUE INDEX IF NOT EXISTS plantilla_codigo ON plantillas(codigo) "
+                "WHERE codigo IS NOT NULL")
+    # de qué producto es cada configuración: manda lo que digan sus propios parámetros.
+    # Así se colocan solas las que se guardaron antes de separarlas por producto
+    for f in con.execute("SELECT id, tipo, parametros FROM plantillas").fetchall():
+        try:
+            tipo = (json.loads(f["parametros"]) or {}).get("tipo") or "nombre"
+        except (ValueError, TypeError):
+            tipo = "nombre"
+        if f["tipo"] != tipo:
+            con.execute("UPDATE plantillas SET tipo = ? WHERE id = ?", (tipo, f["id"]))
     # plantillas: antes eran globales y el nombre era único para todos; ahora cada
     # usuario tiene las suyas, así que hay que rehacer la tabla (SQLite no quita un UNIQUE).
     if "usuario_id" not in columnas("plantillas"):
@@ -425,34 +440,91 @@ def canjear_codigo(codigo: str, usuario_id: int) -> int:
 MAX_PLANTILLAS = 30   # por usuario, para que nadie llene la base
 
 
-def guardar_plantilla(nombre: str, parametros: dict, miniatura: bytes, usuario_id=None):
-    """usuario_id None = plantilla de la casa (la guarda el admin y la ve todo el mundo)."""
+def guardar_plantilla(nombre: str, parametros: dict, miniatura: bytes, usuario_id=None,
+                      pid=None, tipo: str = "nombre"):
+    """usuario_id None = plantilla de la casa (la guarda el admin y la ve todo el mundo).
+    Con `pid` se guarda ENCIMA de esa plantilla -mismo id, mismo código para compartir-, que
+    es lo que hace el botón Guardar cuando ya estás trabajando sobre una. Devuelve su id."""
     nombre = (nombre or "").strip()[:60]
     if len(nombre) < 2:
         raise ValueError("Ponle un nombre de al menos 2 caracteres.")
+    datos = (nombre, json.dumps(parametros, ensure_ascii=False), miniatura)
     with conexion() as con:
-        # mismo nombre y mismo dueño = se pisa (IS compara bien con NULL)
-        cur = con.execute("DELETE FROM plantillas WHERE nombre = ? AND usuario_id IS ?",
-                          (nombre, usuario_id))
-        if not cur.rowcount and usuario_id is not None:
+        if pid is not None:      # pisar la que ya existe, sin tocar su código
+            con.execute("UPDATE plantillas SET nombre = ?, parametros = ?, miniatura = ?, "
+                        "creada = ? WHERE id = ?", datos + (ahora(), pid))
+            con.commit()
+            return pid
+        # mismo nombre, mismo dueño y mismo producto = se pisa (IS compara bien con NULL).
+        # Dos productos sí pueden tener una "principal" cada uno: no se estorban
+        viejo = con.execute("SELECT id, codigo FROM plantillas WHERE nombre = ? "
+                            "AND usuario_id IS ? AND tipo = ?",
+                            (nombre, usuario_id, tipo)).fetchone()
+        if viejo is None and usuario_id is not None:
             n = con.execute("SELECT COUNT(*) FROM plantillas WHERE usuario_id = ?",
                             (usuario_id,)).fetchone()[0]
             if n >= MAX_PLANTILLAS:
-                raise ValueError(f"Has llegado al máximo de {MAX_PLANTILLAS} plantillas. Borra alguna.")
-        con.execute("""INSERT INTO plantillas (nombre, parametros, miniatura, creada, usuario_id)
-                       VALUES (?,?,?,?,?)""",
-                    (nombre, json.dumps(parametros, ensure_ascii=False), miniatura,
-                     ahora(), usuario_id))
+                raise ValueError(f"Has llegado al máximo de {MAX_PLANTILLAS} plantillas. "
+                                 "Borra alguna.")
+        if viejo is not None:
+            con.execute("DELETE FROM plantillas WHERE id = ?", (viejo["id"],))
+        cur = con.execute(
+            """INSERT INTO plantillas (nombre, parametros, miniatura, creada, usuario_id,
+                                       codigo, tipo) VALUES (?,?,?,?,?,?,?)""",
+            datos + (ahora(), usuario_id, viejo["codigo"] if viejo else None, tipo))
         con.commit()
+        return cur.lastrowid
+
+
+# el código que se comparte: corto, en mayúsculas y sin letras que se confundan (ni O ni 0,
+# ni I ni 1), para poder dictarlo por teléfono sin equivocarse
+ALFABETO_CODIGO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+LARGO_CODIGO = 8
+
+
+def limpiar_codigo(codigo: str) -> str:
+    """El código tal y como se guarda: sin espacios ni guiones y en mayúsculas."""
+    return "".join(c for c in (codigo or "").upper() if c in ALFABETO_CODIGO)[:LARGO_CODIGO]
+
+
+def codigo_de_plantilla(pid: int) -> str:
+    """El código para compartir esa plantilla. Se crea la primera vez y ya no cambia, así
+    que un enlace repartido sigue valiendo aunque la plantilla se guarde otra vez."""
+    with conexion() as con:
+        f = con.execute("SELECT codigo FROM plantillas WHERE id = ?", (pid,)).fetchone()
+        if f is None:
+            raise ValueError("Esa configuración ya no existe.")
+        if f["codigo"]:
+            return f["codigo"]
+        for _ in range(20):      # a la primera, salvo choque astronómico
+            codigo = "".join(secrets.choice(ALFABETO_CODIGO) for _ in range(LARGO_CODIGO))
+            try:
+                con.execute("UPDATE plantillas SET codigo = ? WHERE id = ?", (codigo, pid))
+                con.commit()
+                return codigo
+            except sqlite3.IntegrityError:
+                continue
+        raise ValueError("No pude crear el código, inténtalo otra vez.")
+
+
+def plantilla_por_codigo(codigo: str):
+    """La plantilla que lleva ese código, sea de quien sea: el código ES el permiso."""
+    codigo = limpiar_codigo(codigo)
+    if len(codigo) < LARGO_CODIGO:
+        return None
+    with conexion() as con:
+        f = con.execute("SELECT * FROM plantillas WHERE codigo = ?", (codigo,)).fetchone()
+    return dict(f) if f else None
 
 
 def listar_plantillas(usuario_id=None):
     """Las de la casa (usuario_id NULL) más las del usuario que mira."""
     with conexion() as con:
         return [dict(f) for f in con.execute(
-            """SELECT id, nombre, creada, usuario_id IS NOT NULL AS mia FROM plantillas
+            """SELECT id, nombre, creada, codigo, tipo, usuario_id IS NOT NULL AS mia
+               FROM plantillas
                WHERE usuario_id IS NULL OR usuario_id = ?
-               ORDER BY mia, nombre""", (usuario_id,))]
+               ORDER BY mia, tipo, nombre""", (usuario_id,))]
 
 
 def plantilla(pid: int):

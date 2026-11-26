@@ -84,6 +84,57 @@ pid_casa = [p["id"] for p in como(ana).get("/api/plantillas").get_json()["planti
 assert como(ana).delete(f"/api/plantillas/{pid_casa}").status_code == 403
 assert como(admin).delete(f"/api/plantillas/{pid_casa}").status_code == 200
 
+# ------------------------------------- cada producto tiene sus propias configuraciones
+assert como(ana).post("/api/plantillas", json={
+    "nombre": "igual", "parametros": {"tipo": "marca", "mar_texto": "Sophia"}}).status_code == 200
+assert como(ana).post("/api/plantillas", json={
+    "nombre": "igual", "parametros": {"tipo": "nombre", "texto": "Hola"}}).status_code == 200
+_suyas = [p for p in como(ana).get("/api/plantillas").get_json()["plantillas"]
+          if p["nombre"] == "igual"]
+assert sorted(p["tipo"] for p in _suyas) == ["marca", "nombre"], _suyas   # no se pisan
+_marca = [p for p in _suyas if p["tipo"] == "marca"][0]
+_guardado = como(ana).get(f"/api/plantilla/{_marca['id']}").get_json()["parametros"]
+assert _guardado["tipo"] == "marca" and _guardado["mar_texto"] == "Sophia"
+assert not [k for k in _guardado if k.startswith(("org_", "cua_", "tor_"))], _guardado
+assert "adorno" not in _guardado, "una del marcapáginas no se lleva los campos del llavero"
+for _n in ("igual",):     # se dejan limpias para las pruebas de abajo
+    for p in _suyas:
+        como(ana).delete(f"/api/plantillas/{p['id']}")
+
+# ------------------------------------- guardar ENCIMA de la que tienes abierta y compartir
+r = como(ana).post("/api/plantillas", json={"nombre": "para_pisar", "parametros": PARAMS})
+pid = r.get_json()["id"]
+otros = {"inicial": "Z", "texto": "Otra cosa"}
+r = como(ana).post("/api/plantillas", json={"id": pid, "nombre": "para_pisar",
+                                            "parametros": otros})
+assert r.status_code == 200 and r.get_json()["id"] == pid, r.get_json()
+assert nombres(ana).count("para_pisar") == 1, "pisar no debe duplicar"
+assert como(ana).get(f"/api/plantilla/{pid}").get_json()["parametros"]["texto"] == "Otra cosa"
+
+# la de otro no se pisa ni se comparte
+r = como(ana).post("/api/plantillas", json={"nombre": "de_beto", "parametros": PARAMS})
+pid_suya = r.get_json()["id"]
+assert como(beto).post("/api/plantillas", json={"id": pid_suya, "nombre": "robada",
+                                                "parametros": PARAMS}).status_code == 403
+assert como(beto).post(f"/api/plantillas/{pid_suya}/codigo").status_code == 404
+
+# el codigo se crea una vez y no cambia aunque se vuelva a guardar encima
+codigo = como(ana).post(f"/api/plantillas/{pid}/codigo").get_json()["codigo"]
+assert len(codigo) == 8 and codigo.isupper(), codigo
+assert como(ana).post(f"/api/plantillas/{pid}/codigo").get_json()["codigo"] == codigo
+como(ana).post("/api/plantillas", json={"id": pid, "nombre": "para_pisar",
+                                        "parametros": PARAMS})
+assert como(ana).post(f"/api/plantillas/{pid}/codigo").get_json()["codigo"] == codigo
+
+# y con ese codigo la abre cualquiera, sin cuenta y en minusculas
+suelto = aplicacion.app.test_client()
+r = suelto.get("/api/compartida/" + codigo.lower())
+assert r.status_code == 200, r.status_code
+assert r.get_json()["nombre"] == "para_pisar"
+assert r.get_json()["parametros"]["texto"] == PARAMS["texto"]
+assert suelto.get("/api/compartida/ZZZZZZZZ").status_code == 404
+assert suelto.get("/api/compartida/corto").status_code == 404
+
 # tope por usuario
 for i in range(datos.MAX_PLANTILLAS):
     guardar(ana, f"relleno{i}")

@@ -642,7 +642,8 @@ def adorno_en_grupos(nombre: str, alto: float, giro: float, cx: float, y_base: f
     (el análisis avisa)."""
     ruta = svg_dentro_de(CARPETA_ADORNOS, nombre)
     if not ruta:
-        raise ValueError(f"No encontré el adorno '{nombre}' en la carpeta adornos.")
+        raise ValueError(f"Ya no está el dibujo '{nombre}' en la carpeta de adornos: "
+                         "elige otro en la galería.")
     if alto <= 0:
         raise ValueError("El alto del adorno debe ser mayor que 0.")
     propios = grupos_adorno(ruta, mm_alto=alto)    # [(color del dibujo, forma)]

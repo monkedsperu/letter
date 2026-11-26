@@ -101,6 +101,18 @@
   .guardadas select { margin-top:3px; font-size:13px; }
   .guardadas .botones { display:flex; gap:6px; margin-top:6px; }
   .guardadas .botones button { flex:1; }
+  /* el cartel que sale al compartir: el codigo bien grande y el enlace listo para copiar */
+  .compartir { margin-top:8px; padding:9px 10px; border:1px solid var(--bd); border-radius:10px;
+               background:var(--suave); }
+  .compartir .cod { display:flex; align-items:center; font-size:21px; font-weight:800;
+                    letter-spacing:3px; color:var(--acc2); user-select:all; line-height:1.1; }
+  .compartir .cod span { flex:1; }
+  .compartir .botones { display:flex; gap:6px; margin-top:6px; }
+  .compartir .botones button { flex:1; margin:0; font-size:11.5px; }
+  .compartir .pie { margin-top:5px; color:var(--mut); font-size:11px; }
+  .compartir input { margin-top:6px; font-size:11.5px; color:var(--mut); }
+  .compartir .cerrar { flex:none; margin:0; padding:1px 7px; font-size:12px; font-weight:600;
+                       letter-spacing:0; }
 
   /* capas: una fila por nivel */
   .capas { display:grid; grid-template-columns:1fr 64px 42px; gap:6px 8px; align-items:center; margin-top:8px; }
@@ -277,14 +289,29 @@
   <input type="hidden" id="tipo" value="nombre">
 
   <div class="guardadas" id="caja-plantillas" hidden>
-    <label>Configuración guardada
-      <select id="plantilla" aria-label="Configuraciones guardadas"></select>
+    <label>Configuraciones de <b id="modelo-guardadas">Llavero</b>
+      <span class="q" tabindex="0" data-tip="Cada producto tiene sus propias configuraciones: aquí solo salen las del que estás haciendo. Al cambiar de producto, cambia la lista.">?</span>
+      <select id="plantilla" aria-label="Configuraciones guardadas de este producto"></select>
     </label>
     <div class="botones">
       <button id="guardar-plantilla" class="sec"
-              data-tip="Guarda todos los valores de ahora con el nombre que le pongas.">💾 Guardar esta…</button>
+              data-tip="Guarda los valores de ahora. Si estás sobre una configuración tuya la pisa; si no, te pregunta el nombre y crea una nueva.">💾 Guardar</button>
+      <button id="compartir-plantilla" class="sec"
+              data-tip="Te da un código de 8 letras y un enlace: quien lo tenga abre esta misma configuración desde donde sea, aunque no tenga cuenta.">🔗 Compartir</button>
+      <button id="abrir-codigo" class="sec"
+              data-tip="Abre una configuración que te hayan compartido, pegando su código.">📥 Abrir código</button>
       <button id="borrar-plantilla" class="sec" hidden
               data-tip="Borra la configuración elegida. Solo puedes borrar las tuyas.">🗑 Borrar</button>
+    </div>
+    <div class="compartir" id="caja-compartir" hidden>
+      <div class="cod"><span id="codigo-texto"></span>
+        <button type="button" class="sec cerrar" id="cerrar-compartir" aria-label="Cerrar este aviso">✕</button></div>
+      <input id="enlace-compartir" readonly aria-label="Enlace para compartir">
+      <div class="botones">
+        <button type="button" class="sec" id="copiar-codigo">Copiar código</button>
+        <button type="button" class="sec" id="copiar-enlace">📋 Copiar enlace</button>
+      </div>
+      <div class="pie" id="pie-compartir"></div>
     </div>
   </div>
 
@@ -1921,6 +1948,7 @@ for (const b of $('modelos').children) b.onclick = () => {
   $('tipo').value = b.dataset.valor;
   generacion = null;            // los archivos de antes ya no valen para este modelo
   sincronizarTipo();
+  pintarPlantillas();           // cada producto, sus configuraciones
   encuadrado = false;
   generar();
 };
@@ -2410,6 +2438,9 @@ $('cambiar-clave').onclick = async () => {
 };
 
 function aplicarParametros(p) {
+  // lo que la configuración no traiga vuelve a los valores de fábrica: una configuración
+  // es de UN producto, y no tiene por qué arrastrar los campos de los otros cuatro
+  p = { ...(cfg.defaults || {}), ...p };
   for (const k of CAMPOS) if (k in p) $(k)[$(k).type === 'checkbox' ? 'checked' : 'value'] = p[k];
   $('usar_inicial').checked = !!(p.mar_inicial || '').trim();
   $('usar_nombre').checked = !!(p.mar_texto || '').trim();
@@ -2427,6 +2458,7 @@ function aplicarParametros(p) {
   sincronizarCajas();
   abrirSecciones();
   pintarMiniSvg();
+  pintarPlantillas();
 }
 
 async function cargarGeneracion(id) {
@@ -2533,13 +2565,25 @@ $('cua-otro-reparto').onclick = () => {
 };
 
 // ---------- plantillas
+// Las guardadas son de cada producto: se recuerdan todas y se enseñan solo las del
+// producto abierto, para que nadie abra en el llavero una del marcapaginas
+let plantillas = [];
+const nombreModelo = t => {
+  const b = [...$('modelos').children].find(x => x.dataset.valor === t);
+  return b ? b.textContent.trim() : t;
+};
 function pintarPlantillas(ps) {
+  if (ps) plantillas = ps;
+  const tipo = $('tipo').value;
+  const mias = plantillas.filter(p => p.tipo === tipo);
+  $('modelo-guardadas').textContent = nombreModelo(tipo);
   const grupo = (etq, l) => l.length ? `<optgroup label="${etq}">` + l.map(
     p => `<option value="${p.id}" data-mia="${p.mia}">${esc(p.nombre)}</option>`).join('') + '</optgroup>' : '';
   $('plantilla').innerHTML =
     '<option value="">Sin cambios — lo que hay ahora</option>' +
-    '<option value="__cero__">↺ Empezar de cero (este modelo)</option>' +
-    grupo('Mías', ps.filter(p => p.mia)) + grupo('De la casa', ps.filter(p => !p.mia));
+    '<option value="__cero__">↺ Empezar de cero (este producto)</option>' +
+    (mias.length ? '' : `<option disabled>— aún no has guardado ninguna de ${esc(nombreModelo(tipo))} —</option>`) +
+    grupo('Mías', mias.filter(p => p.mia)) + grupo('De la casa', mias.filter(p => !p.mia));
   marcarBorrable();
 }
 function marcarBorrable() {     // solo se pueden borrar las propias
@@ -2571,19 +2615,86 @@ async function cargarPlantillas() {
   if (!r.ok) return;
   pintarPlantillas((await r.json()).plantillas);
 }
-$('guardar-plantilla').onclick = async () => {
-  const nombre = prompt('¿Con qué nombre la guardo?');
-  if (!nombre) return;
+// Guardar: si estás trabajando sobre una configuración TUYA, la pisa sin preguntar nada;
+// si no (o si es de la casa), pide nombre y crea una nueva
+// Guarda y devuelve el id de la configuración, o null si no se pudo (o se canceló)
+async function guardarPlantilla() {
+  const o = $('plantilla').selectedOptions[0];
+  const encima = o && o.dataset.mia === '1' ? o.value : null;
+  const nombre = encima ? o.textContent : prompt('¿Con qué nombre la guardo?');
+  if (!nombre) return null;
   const msg = $('msg');
   try {
     const r = await fetch('/api/plantillas', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre, parametros: leer() }) });
+      body: JSON.stringify({ id: encima, nombre, parametros: leer() }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || 'No se pudo guardar');
-    msg.className = ''; msg.textContent = 'Configuración guardada.';
     pintarPlantillas(d.plantillas);
+    $('plantilla').value = d.id;          // se queda abierta la que acabas de guardar
+    marcarBorrable();
+    msg.className = '';
+    msg.textContent = encima ? `Guardada encima de "${nombre}".` : 'Configuración guardada.';
+    return d.id;
+  } catch (e) { msg.className = 'err'; msg.textContent = e.message; return null; }
+}
+$('guardar-plantilla').onclick = guardarPlantilla;
+
+// Compartir: un código de 8 letras (y su enlace) que abre esta misma configuración.
+// Si aún no estaba guardada, se guarda sola y sigue: un solo clic, no dos
+async function copiar(texto, pie) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    $('pie-compartir').textContent = pie + ' copiado al portapapeles.';
+  } catch (_) {
+    $('pie-compartir').textContent = 'Tu navegador no deja copiar solo: selecciónalo y copia.';
+    $('enlace-compartir').select();
+  }
+}
+$('compartir-plantilla').onclick = async () => {
+  const msg = $('msg');
+  let id = $('plantilla').value;
+  if (!id || id === '__cero__') id = await guardarPlantilla();
+  if (!id) return;
+  try {
+    const r = await fetch(`/api/plantillas/${id}/codigo`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo compartir');
+    const enlace = `${location.origin}/?c=${d.codigo}`;
+    $('codigo-texto').textContent = d.codigo;
+    $('enlace-compartir').value = enlace;
+    $('caja-compartir').hidden = false;
+    $('pie-compartir').textContent = 'Con el código o el enlace, cualquiera abre esta '
+      + 'configuración, aunque no tenga cuenta.';
+    await copiar(enlace, 'Enlace');
+    msg.className = ''; msg.textContent = 'Configuración lista para compartir.';
   } catch (e) { msg.className = 'err'; msg.textContent = e.message; }
+};
+$('copiar-codigo').onclick = () => copiar($('codigo-texto').textContent, 'Código');
+$('copiar-enlace').onclick = () => copiar($('enlace-compartir').value, 'Enlace');
+$('cerrar-compartir').onclick = () => { $('caja-compartir').hidden = true; };
+
+// Abrir código: vale el código pelado o el enlace entero
+async function abrirCodigo(codigo) {
+  const msg = $('msg');
+  const limpio = (codigo || '').trim().split(/[?&=/]/).pop().toUpperCase();
+  if (!limpio) return false;
+  try {
+    const r = await fetch('/api/compartida/' + encodeURIComponent(limpio));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || 'No se pudo abrir');
+    aplicarParametros(d.parametros);
+    $('plantilla').value = '';            // es de otro: al guardar se creará una tuya
+    marcarBorrable();
+    generacion = null;
+    msg.className = ''; msg.textContent = `Abierta la configuración "${d.nombre}".`;
+    generar();
+    return true;
+  } catch (e) { msg.className = 'err'; msg.textContent = e.message; return false; }
+}
+$('abrir-codigo').onclick = () => {
+  const codigo = prompt('Pega el código que te han pasado (o su enlace):');
+  if (codigo) abrirCodigo(codigo);
 };
 $('borrar-plantilla').onclick = async () => {
   const o = $('plantilla').selectedOptions[0];
@@ -2633,6 +2744,9 @@ await cargarPlantillas();
 // si se llega desde "Mis generaciones" con ?cargar=<id>, se abre ese diseño en el editor
 const pedirCargar = new URLSearchParams(location.search).get('cargar');
 if (pedirCargar) await cargarGeneracion(pedirCargar);
+// y con ?c=<código>, la configuración que alguien haya compartido
+const pedirCodigo = new URLSearchParams(location.search).get('c');
+if (pedirCodigo) await abrirCodigo(pedirCodigo);
 generar();
 </script>
 </body>

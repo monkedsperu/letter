@@ -110,9 +110,30 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
      Los carteles no cambian de tamaño al acercar o alejar.
    - Arriba del panel hay un BOTÓN POR MODELO (llavero, organizador, llaves, marcapáginas):
      se cambia de uno a otro con un clic y el panel muestra solo lo de ese modelo.
-   - Debajo, CONFIGURACIÓN GUARDADA: elegir una la carga en el acto; "Empezar de cero"
-     devuelve todos los valores de fábrica del modelo en el que estés; "Guardar esta…" la
-     guarda con el nombre que le pongas y "Borrar" solo aparece para las tuyas.
+   - Debajo, CONFIGURACIONES DE <PRODUCTO>: cada producto tiene las suyas y la lista solo
+     enseña las del que estás haciendo (el título lo dice: "Configuraciones de Llavero").
+     Al cambiar de producto cambia la lista, y si no hay ninguna lo avisa. Una
+     configuración guarda SOLO los campos de su producto, así que abrir la del
+     marcapáginas no te toca el llavero ni te arrastra un dibujo que ya no tengas. Por eso
+     dos productos pueden tener cada uno su "principal" sin pisarse.
+     Elegir una la carga en el acto y "Empezar de cero" devuelve los valores de fábrica
+     del producto en el que estés. Los botones:
+     · GUARDAR: si estás trabajando sobre una configuración tuya, la pisa sin preguntar
+       (mismo nombre, mismo código). Si no hay ninguna abierta -o es de la casa-, te
+       pregunta el nombre y crea una nueva.
+     · COMPARTIR: si aún no estaba guardada la guarda (te pregunta el nombre) y sigue sin
+       pedirte otro clic. Debajo de los botones aparece un cartel con el CÓDIGO en grande
+       -8 letras y números, sin O ni 0 ni I ni 1, para poder dictarlo- y el enlace
+       https://…/?c=CÓDIGO, con un botón para copiar cada cosa; el enlace se copia solo y
+       el pie te dice que ya está copiado. El cartel se cierra con la ✕. Quien lo reciba
+       abre esa misma configuración desde donde sea, incluso sin cuenta. El código se crea
+       la primera vez y ya no cambia, así que un enlace repartido sigue valiendo aunque
+       vuelvas a guardar encima.
+     · ABRIR CÓDIGO: pega el código (o el enlace entero) y carga esa configuración. Llega
+       como un diseño más: al guardarla se queda una copia tuya, sin tocar la del otro.
+     · BORRAR: solo aparece para las tuyas.
+     Las configuraciones viven en la base de datos, junto a las demás, con su código; no
+     hay carpeta de JSON que mantener ni archivos que se pierdan al cambiar de equipo.
    - IMPRIMIR CADA COLOR POR SEPARADO está en los CUATRO modelos, siempre con el mismo
      interruptor destacado al final del panel y las mismas dos medidas (hueco y holgura).
      Cada FILAMENTO sale en su propio sitio, en fila y apoyado en la mesa, al lado de la
