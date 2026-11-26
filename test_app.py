@@ -828,7 +828,31 @@ for _mal, _dice in (({"usuario": "nueva", "correo": "otra@ejemplo.com", "clave":
     _resp = cliente.post("/registro", data=_mal)
     assert _dice in _resp.headers.get("Location", ""), (_mal, _resp.headers.get("Location"))
 
-# los invitados pueden ver, pero no generar: para eso hay que tener cuenta
+# ------------------------------- sin cuenta: se entra al generador, pero no se generan
+# archivos. Es una VISITA: ni siquiera hay sesión
+visita = aplicacion.app.test_client()
+assert visita.get("/").status_code == 200, "el generador se abre sin cuenta"
+assert visita.get("/api/config").status_code == 200
+_yo = visita.get("/api/yo").get_json()
+assert _yo["anonimo"] is True and _yo["usuario"] == "" and _yo["resumen"] is None, _yo
+assert visita.post("/api/preview", json={"tipo": "marca"}).status_code == 200
+assert visita.post("/api/generar", json={"tipo": "marca"}).status_code == 401
+assert visita.post("/api/plantillas",
+                   json={"nombre": "x", "parametros": PARAMS}).status_code == 401
+assert visita.get("/generaciones").status_code == 302, "lo personal sigue pidiendo cuenta"
+# ve las configuraciones de la casa y abre cualquiera por su código
+_pid = como(admin).post("/api/plantillas", json={"nombre": "de_muestra",
+                                                 "parametros": PARAMS}).get_json()["id"]
+_cod = como(admin).post(f"/api/plantillas/{_pid}/codigo").get_json()["codigo"]
+_suyas = visita.get("/api/plantillas").get_json()["plantillas"]
+assert [p["nombre"] for p in _suyas if p["nombre"] == "de_muestra"], _suyas
+assert not [p for p in _suyas if p["mia"]], "una visita no tiene configuraciones propias"
+assert visita.get(f"/api/plantilla/{_pid}").status_code == 200
+assert visita.get("/api/compartida/" + _cod).status_code == 200, "el enlace vale sin cuenta"
+assert visita.get("/salir").headers["Location"].endswith("/"), "al salir, al generador"
+
+# los invitados de antes siguen pudiendo ver, pero no generar
+
 _inv = datos.crear_invitado("mirón", "1.2.3.4")
 _resp_inv = como(_inv["id"]).post("/api/generar", json={"tipo": "cuadro",
                                                         "cua_familia": "Medina"})

@@ -256,19 +256,20 @@
   <button id="btn-panel" aria-expanded="false">☰ Opciones</button>
   <nav>
     <a href="/" class="activo">Generador</a>
-    <a href="/generaciones">Mis generaciones</a>
+    <a id="nav_generaciones" href="/generaciones">Mis generaciones</a>
     <div class="usuario">
       <button id="btn-usuario" aria-expanded="false" aria-haspopup="true">
         <span id="yo_usuario">…</span>
-        <span id="yo_invitado" class="chip gris" hidden>invitado</span>
+        <span id="yo_invitado" class="chip gris" hidden>de visita</span>
         <span class="fle" aria-hidden="true">▾</span>
       </button>
       <div id="menu-usuario" hidden>
         <div class="cab"><span id="yo_cupo" class="cupo"></span></div>
-        <a href="/licencias">Mis licencias</a>
+        <a id="nav_entrar" href="/login" hidden>Entrar o crear cuenta</a>
+        <a id="nav_licencias" href="/licencias">Mis licencias</a>
         <button id="cambiar-clave" hidden>Cambiar contraseña</button>
         <a id="nav_admin" href="/admin" hidden>Administración</a>
-        <a href="/salir">Salir</a>
+        <a id="nav_salir" href="/salir">Salir</a>
       </div>
     </div>
   </nav>
@@ -1654,7 +1655,9 @@ const CAMPOS = ['tipo', 'aparte', 'espiga', 'holgura',
 const AJUSTES_CALC = ['c_kg', 'c_hora', 'c_vel', 'c_margen', 'c_dens', 'c_relleno', 'c_moneda'];
 const valor = el => el.type === 'checkbox' ? el.checked : el.value;
 const $ = id => document.getElementById(id);
-let generacion = null, resumen = null, invitado = false, conMarca = false;
+// `visita` = quien aún no tiene cuenta: diseña y ve todo, pero para generar hay que
+// crearla. `conMarca` = con cuenta pero sin licencia: genera con el texto marcado
+let generacion = null, resumen = null, visita = false, conMarca = false;
 let analisis = null, pedido = 0, temporizador = null;
 const pronto = () => { clearTimeout(temporizador); temporizador = setTimeout(generar, 350); };
 
@@ -2282,10 +2285,13 @@ $('cua-recolocar').onclick = () => {
 // al irse a crear la cuenta, el diseño de ahora se guarda en el navegador y se recupera
 // al volver: nadie debería perder lo que lleva hecho por registrarse
 const CAJON = 'monkeds_diseno';
-$('msg').addEventListener('click', e => {
-  if (!e.target.closest('a[data-registro]')) return;
+const guardarEnElCajon = () => {
   try { localStorage.setItem(CAJON, JSON.stringify(leer())); } catch (_) { /* sin sitio */ }
+};
+$('msg').addEventListener('click', e => {
+  if (e.target.closest('a[data-registro]')) guardarEnElCajon();
 });
+$('nav_entrar').addEventListener('click', guardarEnElCajon);
 
 $('generar').onclick = generar;
 
@@ -2332,9 +2338,9 @@ async function generarArchivos() {
     msg.textContent = 'Estos archivos ya estaban generados (no se descontó nada).';
     return;
   }
-  if (invitado) {        // los invitados diseñan y ven, pero no generan
+  if (visita) {          // sin cuenta se diseña y se ve todo, pero no se generan archivos
     msg.className = 'err';
-    msg.innerHTML = 'Para generar los archivos necesitas una cuenta, y es gratis: '
+    msg.innerHTML = 'Para bajarte los archivos necesitas una cuenta, y es gratis: '
       + '<a href="/login" data-registro>créala aquí</a> en un minuto. '
       + 'Tu diseño se guarda y lo tendrás esperando al volver.';
     return;
@@ -2388,8 +2394,9 @@ $('generar-archivos').onclick = generarArchivos;
 
 // ---------- datos de la cuenta
 function pintarCupo() {
-  if (invitado) {
-    $('yo_cupo').textContent = 'Invitado: puedes diseñar, pero no generar archivos';
+  if (visita) {
+    $('yo_cupo').textContent = 'De visita: diseña lo que quieras; para bajarte los '
+      + 'archivos, crea tu cuenta';
     return;
   }
   if (conMarca) {
@@ -2406,16 +2413,22 @@ async function cargarYo() {
   const r = await fetch('/api/yo');
   if (!r.ok) return;
   const d = await r.json();
-  $('yo_usuario').textContent = d.usuario;
+  visita = !!d.anonimo || !!d.es_invitado;      // sin cuenta de verdad
+  $('yo_usuario').textContent = visita ? 'Entrar' : d.usuario;
   $('nav_admin').hidden = !d.es_admin;
-  $('yo_invitado').hidden = !d.es_invitado;
+  $('yo_invitado').hidden = !visita;
   document.querySelectorAll('.solo-admin').forEach(el => { el.hidden = !d.es_admin; });
   document.querySelectorAll('.nada-admin').forEach(el => { el.hidden = !!d.es_admin; });
-  invitado = !!d.es_invitado;
-  conMarca = !invitado && !d.con_licencia;   // sin licencia, el texto sale con el '+'
-  $('generar-archivos').textContent = invitado ? 'Crear cuenta para generar STL, 3MF, Multicolor, Por piezas!'
-                                               : 'Generar archivos';
-  $('cambiar-clave').hidden = invitado;   // los invitados no tienen contraseña
+  // de visita no hay nada personal que enseñar: ni generaciones, ni licencias, ni salir
+  $('nav_entrar').hidden = !visita;
+  $('nav_generaciones').hidden = visita;
+  $('nav_licencias').hidden = visita;
+  $('nav_salir').hidden = visita;
+  conMarca = !visita && !d.con_licencia;        // sin licencia, el texto sale con el '+'
+  $('generar-archivos').textContent = visita
+    ? 'Crea tu cuenta para bajarte los archivos'
+    : 'Generar archivos';
+  $('cambiar-clave').hidden = visita;
   resumen = d.resumen;
   pintarCupo();
 }
@@ -2618,7 +2631,15 @@ async function cargarPlantillas() {
 // Guardar: si estás trabajando sobre una configuración TUYA, la pisa sin preguntar nada;
 // si no (o si es de la casa), pide nombre y crea una nueva
 // Guarda y devuelve el id de la configuración, o null si no se pudo (o se canceló)
+function pideCuenta(que) {
+  const msg = $('msg');
+  msg.className = 'err';
+  msg.innerHTML = `Para ${que} necesitas una cuenta, y es gratis: `
+    + '<a href="/login" data-registro>créala aquí</a> en un minuto. '
+    + 'Tu diseño se guarda y lo tendrás esperando al volver.';
+}
 async function guardarPlantilla() {
+  if (visita) { pideCuenta('guardar configuraciones'); return null; }
   const o = $('plantilla').selectedOptions[0];
   const encima = o && o.dataset.mia === '1' ? o.value : null;
   const nombre = encima ? o.textContent : prompt('¿Con qué nombre la guardo?');

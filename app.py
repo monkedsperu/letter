@@ -33,7 +33,7 @@ from generador_stl import (APP, AQUI, CARPETA_ADORNOS, CARPETA_PATRONES, CONTACT
 REGALO_DE_BIENVENIDA = 3    # generaciones limpias que lleva de serie una cuenta nueva
 MAX_SVG = 2_000_000
 CARPETA_WEB = os.path.join(AQUI, "web")
-LIMITE_INVITADO = 40      # vistas previas por minuto e IP (los invitados no pagan nada)
+LIMITE_VISITA = 40        # vistas previas por minuto e IP de quien aún no tiene cuenta
 LIMITE_CUENTA = 150
 LIMPIAR_CADA = 3600       # cada cuánto se revisa si hay invitados viejos (segundos)
 
@@ -148,6 +148,18 @@ def pide_login(f):
     return envoltorio
 
 
+def abierto(f):
+    """Para lo que puede ver cualquiera, con cuenta o sin ella: el generador, la vista
+    previa y las configuraciones de la casa. `request.usuario` queda en None si es una
+    visita, y cada ruta decide qué enseñarle."""
+    @wraps(f)
+    def envoltorio(*a, **kw):
+        u = usuario_actual()
+        request.usuario = u if (u and u["activo"]) else None
+        return f(*a, **kw)
+    return envoltorio
+
+
 def pide_admin(f):
     @wraps(f)
     @pide_login
@@ -174,8 +186,8 @@ def cuerpo_json():
 # ------------------------------------------------------------------ entrar / salir
 @app.get("/login")
 def login_form():
-    """Un invitado SÍ puede abrir esta pantalla: es la única forma de que se cree la cuenta
-    que necesita para generar. Solo se redirige a quien ya tiene cuenta de verdad."""
+    """Entrar o crear cuenta. Al generador se entra sin nada; esta pantalla es solo para
+    quien quiere bajarse los archivos. A quien ya tiene cuenta se le devuelve al taller."""
     u = usuario_actual()
     return redirect("/") if (u and not u["es_invitado"]) else pagina("login.html")
 
@@ -222,28 +234,15 @@ def registro():
     return redirect("/")
 
 
-@app.post("/invitado")
-def entrar_invitado():
-    """Entrada sin cuenta: solo pide un alias. Genera con el texto modificado."""
-    try:
-        u = datos.crear_invitado(request.form.get("alias", ""), ip_cliente())
-    except ValueError:
-        return redirect("/login?error=alias")
-    session.clear()
-    session["uid"] = u["id"]
-    session.permanent = True
-    return redirect("/")
-
-
 @app.get("/salir")
 def salir():
     session.clear()
-    return redirect("/login")
+    return redirect("/")      # el generador sigue abierto, solo que ya sin cuenta
 
 
 # ------------------------------------------------------------------ páginas
 @app.get("/")
-@pide_login
+@abierto
 def inicio():
     return pagina("pantalla.html")
 
@@ -272,7 +271,7 @@ def estilo():
 
 
 @app.get("/web/<path:resto>")
-@pide_login
+@abierto
 def estaticos(resto):
     ruta = os.path.normpath(os.path.join(CARPETA_WEB, resto))
     if not ruta.startswith(CARPETA_WEB + os.sep) or not os.path.isfile(ruta):
@@ -281,7 +280,7 @@ def estaticos(resto):
 
 
 @app.get("/api/svg/<tipo>/<path:nombre>")
-@pide_login
+@abierto
 def api_svg(tipo, nombre):
     """Sirve un patrón o adorno para verlo en la biblioteca."""
     ruta = _ruta_svg(tipo, nombre)
@@ -292,10 +291,14 @@ def api_svg(tipo, nombre):
 
 # ------------------------------------------------------------------ API del usuario
 @app.get("/api/yo")
-@pide_login
+@abierto
 def api_yo():
     u = request.usuario
-    return jsonify(usuario=u["alias"] or u["usuario"], es_admin=bool(u["es_admin"]),
+    if not u:      # una visita: puede diseñar y mirar, pero generar pide cuenta
+        return jsonify(usuario="", anonimo=True, es_admin=False, es_invitado=False,
+                       correo=None, con_licencia=False, contacto=CONTACTO, resumen=None)
+    return jsonify(usuario=u["alias"] or u["usuario"], anonimo=False,
+                   es_admin=bool(u["es_admin"]),
                    es_invitado=bool(u["es_invitado"]), correo=u["correo"],
                    con_licencia=bool(datos.licencia_vigente(u["id"])),
                    contacto=CONTACTO, resumen=datos.resumen_usuario(u["id"]))
@@ -319,7 +322,7 @@ def api_cambiar_clave():
 
 
 @app.get("/api/config")
-@pide_login
+@abierto
 def api_config():
     return jsonify(app={"nombre": APP, "version": VERSION, "marca": MARCA,
                         "contacto": CONTACTO, "cama": CAMA_TIPICA},
@@ -369,11 +372,13 @@ def _responder_modelo(niveles, p: Parametros, formato: str):
 
 
 @app.post("/api/preview")
-@pide_login
+@abierto
 def api_preview():
     """Vista previa 3D: no descuenta licencia ni se guarda. El análisis (volúmenes y avisos)
     viaja en una cabecera; el coste y el precio los calcula el navegador y no se guardan."""
-    limite = LIMITE_INVITADO if request.usuario["es_invitado"] else LIMITE_CUENTA
+    # sin cuenta se mira más despacio: es el freno para que nadie use el servidor de balde
+    con_cuenta = request.usuario and not request.usuario["es_invitado"]
+    limite = LIMITE_CUENTA if con_cuenta else LIMITE_VISITA
     if not permitido(ip_cliente(), limite):
         return jsonify(error="Demasiadas vistas previas seguidas. Espera un momento."), 429
     try:
@@ -486,21 +491,24 @@ def api_canjear():
 # ---------- plantillas: cada uno guarda las suyas (invitados incluidos).
 # Las del admin van sin dueño y las ve todo el mundo.
 def _plantilla_visible(pid):
-    """La plantilla si es de la casa o del que la pide; si no, None."""
+    """La plantilla si es de la casa o del que la pide; si no, None. Una visita sin cuenta
+    ve las de la casa, que para eso están."""
     pl = datos.plantilla(pid)
-    if pl and (pl["usuario_id"] is None or pl["usuario_id"] == request.usuario["id"]):
+    mio = request.usuario["id"] if getattr(request, "usuario", None) else None
+    if pl and (pl["usuario_id"] is None or pl["usuario_id"] == mio):
         return pl
     return None
 
 
 @app.get("/api/plantillas")
-@pide_login
+@abierto
 def api_plantillas():
-    return jsonify(plantillas=datos.listar_plantillas(request.usuario["id"]))
+    mio = request.usuario["id"] if request.usuario else None
+    return jsonify(plantillas=datos.listar_plantillas(mio))
 
 
 @app.get("/api/plantilla/<int:pid>")
-@pide_login
+@abierto
 def api_plantilla(pid):
     pl = _plantilla_visible(pid)
     if not pl:
@@ -511,7 +519,7 @@ def api_plantilla(pid):
 
 
 @app.get("/api/plantilla/<int:pid>/miniatura")
-@pide_login
+@abierto
 def api_plantilla_miniatura(pid):
     pl = _plantilla_visible(pid)
     if not pl or not pl["miniatura"]:

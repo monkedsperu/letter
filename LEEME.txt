@@ -40,10 +40,14 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
      El regalo se cambia con REGALO_DE_BIENVENIDA, en app.py. La respuesta de cada
      generación dice si TODAVÍA queda licencia, así que al gastar la última la pantalla
      pasa sola al modo "texto marcado" sin tener que recargar.
-   - LOS INVITADOS ya NO generan: diseñan y ven la vista previa sin límite, y al pulsar
-     "Generar" se les invita a crearse la cuenta (el botón incluso lo dice). Un invitado SÍ
-     puede abrir /login -es la única manera de registrarse- y, al irse a crear la cuenta, su
-     diseño se guarda en el navegador y lo encuentra tal cual al volver.
+   - SIN CUENTA TAMBIÉN SE ENTRA: quien abre la web va directo al generador, diseña lo que
+     quiera, ve la vista previa en 3D con sus medidas, abre las configuraciones de la casa
+     y las que le compartan por código o enlace. La cuenta hace falta solo para BAJARSE los
+     archivos y para guardar configuraciones propias; al pulsar "Generar" se le invita a
+     crearla (el botón lo dice: "Crea tu cuenta para bajarte los archivos"). Al irse a
+     registrarse su diseño se guarda en el navegador y lo encuentra tal cual al volver.
+     Ya no hay "entrar como invitado": las cuentas de invitado que quedaran de antes
+     siguen funcionando igual (ven, pero no generan).
    - Con LICENCIA vigente el texto sale tal cual y cada generación descuenta 1.
    - El administrador entra y va a "Administración".
    - Crear usuario a mano: nombre + contraseña (mínimo 6 caracteres).
@@ -55,7 +59,7 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
 5) CÓMO SE CUENTA EL CUPO
    - La vista previa en 3D es GRATIS e ilimitada (si no, tocar los controles gastaría cupo).
    - Sin licencia no se descuenta nada, pero los archivos salen con el texto marcado.
-     Los invitados no pueden generar: necesitan cuenta.
+     Sin cuenta no se genera: la vista previa sí, los archivos no.
    - El botón "Generar archivos (3MF + STL)" es el único que descuenta: consume 1 y deja
      listos LOS DOS formatos. Si la licencia tiene límite de cantidad, antes de cobrar
      aparece un aviso diciendo cuántas quedan, con opción de cancelar.
@@ -87,7 +91,8 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
      y el cliente los canjea solo desde "Mis licencias". Así no das de alta cada venta.
    - Pestaña "Resumen": totales, generaciones por día, quién genera más, lo más usado y
      descarga en CSV de generaciones y usuarios.
-   - Los invitados sin actividad se borran solos (INVITADOS_DIAS del .env, 2 por defecto).
+   - Las cuentas de invitado que quedaran de antes se borran solas cuando llevan tiempo sin
+     actividad (INVITADOS_DIAS del .env, 2 por defecto).
    - Las vistas previas tienen un tope por IP y minuto para que nadie sature el servidor.
 
 7b) INVITADOS
@@ -240,8 +245,10 @@ medientg@gmail.com: los SVG hay que dejarlos listos antes para que impriman bien
    - Contraseña: con el botón "Cambiar contraseña" (arriba, junto a tu nombre) cada uno
      cambia la suya escribiendo antes la que tenía. El administrador puede ponerle otra a
      cualquiera desde Admin > Usuarios > "Cambiar clave", sin saber la anterior.
-   - Plantillas: cualquiera (también los invitados) guarda sus diseños con nombre y los
-     vuelve a cargar cuando quiera; solo las ve su dueño, con un tope de 30 por usuario.
+   - Plantillas: cualquiera CON CUENTA guarda sus diseños con nombre y los vuelve a cargar
+     cuando quiera; solo las ve su dueño, con un tope de 30 por usuario. Quien entra sin
+     cuenta ve las de la casa y las que le compartan, pero para guardar las suyas se
+     registra.
      Las que guarda el administrador son "de la casa": las ve y las usa todo el mundo.
 
 9f) LOS 4 COLORES DEL LLAVERO (un AMS tiene 4 ranuras)
